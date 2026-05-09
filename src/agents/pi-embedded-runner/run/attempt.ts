@@ -1787,6 +1787,7 @@ export async function runEmbeddedAttempt(
         workspaceDir: params.workspaceDir,
       });
       trajectoryRecorder = createTrajectoryRuntimeRecorder({
+        agentId: sessionAgentId,
         cfg: params.config,
         env: process.env,
         runId: params.runId,
