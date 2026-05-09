@@ -66,6 +66,38 @@ This migration has one canonical runtime shape:
 Implementation work should keep deleting code until these statements are true
 without exceptions outside doctor/import/export/debug boundaries.
 
+## Companion Rebuild Contract
+
+Companion consumers may build their own search, audit, memory, export, or
+semantic databases from OpenClaw runtime state, but OpenClaw remains the
+canonical operational store.
+
+Supported rebuild path:
+
+- Read canonical session metadata from per-agent SQLite session rows.
+- Enumerate canonical transcripts with `listSqliteSessionTranscripts(...)`.
+- Replay canonical transcript rows with `loadSqliteSessionTranscriptEvents(...)`
+  when a lossless event stream is required.
+- Prefer `loadSqliteSessionTranscriptProjections(...)` for typed read models
+  that need `eventType`, `eventId`, `parentId`, `messageRole`, `toolCallIds`,
+  and `toolResultIds` without reparsing provider-specific blobs.
+- Prefer `loadActiveSqliteSessionTranscriptProjections(...)` when the consumer
+  needs the selected active branch rather than every historical fork. The helper
+  follows the latest transcript leaf through `parentId` links and includes the
+  nearest preceding compaction event when one anchors the kept branch.
+- Treat projection fields as derived read models. The original `event` payload
+  and `{agentId, sessionId, seq}` identity remain the durable replay source.
+- Make rebuilds idempotent. Consumers should key companion rows by
+  `{agentId, sessionId, seq}` or by a stable `eventId` where the event provides
+  one, and they should tolerate replaying already indexed rows.
+- Do not depend on runtime JSONL files. JSONL materialization is an explicit
+  import, export, or debug encoding, not a companion rebuild contract.
+
+Companion-specific semantic schemas, summary DAGs, recall indexes, and
+specialized compaction bookkeeping stay outside OpenClaw core. If multiple
+consumers need a new projection, add a small generic helper over canonical
+SQLite rows instead of letting each companion parse opaque event blobs.
+
 ## Code-Read Assumptions
 
 No follow-up product decisions are blocking this plan. The implementation should

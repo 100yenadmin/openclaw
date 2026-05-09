@@ -19,6 +19,10 @@ import { expandHomePrefix, resolveRequiredHomeDir } from "../infra/home-dir.js";
 import { DEFAULT_AGENT_ID, normalizeAgentId } from "../routing/session-key.js";
 
 // Narrow SQLite session row helpers for channel hot paths.
+// Companions should discover owned transcript scope from session rows/session
+// keys first, then project the resolved transcript scope. Maintenance-only
+// transcripts may exist without a canonical session row and are not the primary
+// discovery surface.
 
 export { resolveSessionRowEntry } from "../config/sessions/store-entry.js";
 export { resolveAndPersistSessionTranscriptScope } from "../config/sessions/session-scope.js";
@@ -36,16 +40,22 @@ export {
   upsertSessionEntry,
 } from "../config/sessions/store.js";
 export {
+  loadActiveSqliteSessionTranscriptProjections,
   getSqliteSessionTranscriptFrontier,
+  loadSqliteSessionTranscriptProjections,
   loadSqliteSessionTranscriptDelta,
   loadSqliteSessionTranscriptEvents,
+  projectSqliteSessionTranscriptEvent,
   replaceSqliteSessionTranscriptEvents,
+  selectActiveSqliteSessionTranscriptProjections,
 } from "../config/sessions/transcript-store.sqlite.js";
 export type {
   SqliteSessionTranscriptCursor,
   SqliteSessionTranscriptDelta,
   SqliteSessionTranscriptEvent,
   SqliteSessionTranscriptFrontier,
+  SqliteSessionTranscriptMessageRole,
+  SqliteSessionTranscriptProjectedEvent,
 } from "../config/sessions/transcript-store.sqlite.js";
 export {
   evaluateSessionFreshness,

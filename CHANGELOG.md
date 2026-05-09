@@ -6,6 +6,8 @@ Docs: https://docs.openclaw.ai
 
 ### Changes
 
+- Sessions: add companion-safe SQLite transcript projection helpers for message roles, tool-call ids, active-branch selection, and idempotent companion rebuilds from canonical rows. (#79905) Thanks @100yenadmin.
+
 ### Fixes
 
 - Feishu: auto-thread `message(action="send")` replies inside the topic when the active session is group_topic or group_topic_sender, and propagate `replyInThread` through text, card, and media outbound adapters so topic-scoped sessions no longer post at the group root. Fixes #74903. (#77151) Thanks @ai-hpc.
