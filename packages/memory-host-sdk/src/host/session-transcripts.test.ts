@@ -4,6 +4,7 @@ import path from "node:path";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import {
   closeOpenClawStateDatabaseForTest,
+  loadActiveSqliteSessionTranscriptProjections,
   replaceSqliteSessionTranscriptEvents,
 } from "./openclaw-runtime-session.js";
 import {
@@ -116,6 +117,54 @@ describe("listSessionTranscriptsForAgent", () => {
 
     await expect(listSessionTranscriptsForAgent("main")).resolves.toEqual([
       { agentId: "main", sessionId: "remembered" },
+    ]);
+  });
+
+  it("exposes typed active-branch projections through the host runtime seam", () => {
+    const scope = seedTranscript({
+      sessionId: "projection-session",
+      events: [
+        { type: "session", id: "projection-session" },
+        { type: "compaction", id: "compact-1", firstKeptEntryId: "m1" },
+        {
+          type: "message",
+          id: "m1",
+          parentId: null,
+          message: { role: "user", content: "search" },
+        },
+        {
+          type: "message",
+          id: "abandoned",
+          parentId: "m1",
+          message: { role: "assistant", content: "old branch" },
+        },
+        {
+          type: "message",
+          id: "active",
+          parentId: "m1",
+          message: {
+            role: "assistant",
+            content: [{ type: "toolCall", id: "call_content", name: "read", arguments: {} }],
+            tool_calls: [{ id: "call_openai", function: { name: "shell", arguments: "{}" } }],
+          },
+        },
+      ],
+    });
+
+    expect(
+      loadActiveSqliteSessionTranscriptProjections(scope).map((entry) => ({
+        eventId: entry.eventId,
+        messageRole: entry.messageRole,
+        toolCallIds: entry.toolCallIds,
+      })),
+    ).toEqual([
+      { eventId: "compact-1", messageRole: undefined, toolCallIds: [] },
+      { eventId: "m1", messageRole: "user", toolCallIds: [] },
+      {
+        eventId: "active",
+        messageRole: "assistant",
+        toolCallIds: ["call_openai", "call_content"],
+      },
     ]);
   });
 });
