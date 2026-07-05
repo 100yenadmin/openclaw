@@ -71,11 +71,21 @@ Hand-written guards (repo idiom — see `01-conventions.md §validation`; NO zod
 
 ## Binding resolver (`src/data-read.ts`)
 
-`resolveBinding(binding, { api | context })`:
-- `rpc`: method ∈ `DATA_READ_RPC_ALLOWLIST` (start: the read methods L4's data widgets need — enumerate them when wiring L4; keep the const exported + tested) → invoke through the gateway's internal method dispatch available to plugins; return payload as-is.
+> **AMENDED 2026-07-06 (blocker found in execution — see issue #3):** plugin gateway-method handlers
+> cannot in-process-dispatch other gateway methods at this HEAD (`dispatchGatewayMethod` in
+> `src/plugin-sdk/gateway-method-runtime.ts` is gated to authenticated plugin HTTP routes via
+> `gatewayMethodDispatchAllowed`). Therefore **`rpc` bindings are resolved CLIENT-SIDE by the trusted
+> Control UI** (which holds operator scopes over its own authenticated socket — same authz boundary),
+> and `dashboard.data.read` serves `file`/`static` only. The `DATA_READ_RPC_ALLOWLIST` remains
+> plugin-side as a WRITE-TIME schema constraint (which methods a binding may name).
+
+`resolveBinding(binding, { context })`:
+- `rpc`: NOT resolved server-side. `dashboard.data.read` responds with typed
+  `{ code: "binding_client_resolved" }` so callers know to resolve via their own gateway client.
+  Schema validation (write time) still enforces method ∈ `DATA_READ_RPC_ALLOWLIST` (exported, tested).
 - `file`: normalize + jail under `<stateDir>/dashboard/data/`; ≤ 1 MB; parse JSON (or return raw text for `.md`/`.csv`); apply optional RFC-6901 `pointer` for JSON.
 - `static`: echo value.
-- Errors → typed `{ code: "binding_denied"|"binding_not_found"|"binding_too_large"|"binding_invalid", message }`.
+- Errors → typed `{ code: "binding_denied"|"binding_not_found"|"binding_too_large"|"binding_invalid"|"binding_client_resolved", message }`.
 
 ## Acceptance criteria
 
@@ -86,7 +96,7 @@ Hand-written guards (repo idiom — see `01-conventions.md §validation`; NO zod
 - [ ] Size cap: an oversized `workspace.replace` is rejected; doc on disk unchanged.
 - [ ] Mutex: two concurrent `mutate` calls serialize (test with artificial delay).
 - [ ] Broadcast fired once per successful write with correct payload; NOT fired on reads or failed writes.
-- [ ] `dashboard.data.read`: rpc non-allowlisted → `binding_denied`; file traversal (`../`, absolute) → `binding_invalid`; happy paths for all three sources.
+- [ ] `dashboard.data.read`: rpc bindings → `binding_client_resolved` (never proxied); file traversal (`../`, absolute) → `binding_invalid`; happy paths for file/static; write-time schema rejects non-allowlisted rpc method names.
 - [ ] Every schema reject path has a test (slug charset, dup slug, grid overflow, kind pattern, binding union, caps, createdBy pattern).
 
 ## Verification commands

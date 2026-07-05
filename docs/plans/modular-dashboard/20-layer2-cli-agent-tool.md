@@ -36,6 +36,7 @@ openclaw dashboard widget-scaffold <name> [--title …]  # creates <stateDir>/da
 ```
 
 - Output: human table by default (match cron CLI's themed-table helpers), `--json` for machine output on every read.
+- `tabs list` / `widgets list` read via `dashboard.workspace.get` and render client-side — there are no separate list RPCs (the 14-method surface is fixed by L1).
 - Binding shorthand parser: `value=file:<relpath>[#<json-pointer>]`, `value=rpc:<method>`, `value=static:<json>` — parse in CLI, send structured binding objects.
 - `widget-scaffold` writes: `widget.json` (manifest, status auto-`pending` unless invoked by operator CLI → `approved` since the human ran it), `index.html` template demonstrating the bridge (`ready` → `getData` → render + `onData` re-render), and a `README.md` telling the (agent) author the bridge contract. Registry entry via the store.
 
