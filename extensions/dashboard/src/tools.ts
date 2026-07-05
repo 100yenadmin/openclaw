@@ -574,7 +574,7 @@ export async function scaffoldDashboardWidget(
     await fs.mkdir(widgetDir, { mode: 0o700 });
   } catch (error) {
     if (isErrnoException(error) && error.code === "EEXIST") {
-      throw new Error("widget already exists");
+      throw new Error("widget already exists", { cause: error });
     }
     throw error;
   }

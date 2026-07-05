@@ -4,6 +4,9 @@
   "private": true,
   "description": "OpenClaw composable dashboard workspace plugin",
   "type": "module",
+  "dependencies": {
+    "typebox": "1.3.3"
+  },
   "devDependencies": {
     "@openclaw/plugin-sdk": "workspace:*",
     "openclaw": "workspace:*"

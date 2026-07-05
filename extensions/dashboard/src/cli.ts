@@ -44,7 +44,7 @@ function parseJson(value: string, label: string): JsonValue {
   try {
     return JSON.parse(value) as JsonValue;
   } catch (error) {
-    throw new Error(`invalid ${label} JSON: ${(error as Error).message}`);
+    throw new Error(`invalid ${label} JSON: ${(error as Error).message}`, { cause: error });
   }
 }
 
