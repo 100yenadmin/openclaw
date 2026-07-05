@@ -135,7 +135,7 @@ describe("mid-drag tab-switch cancellation", () => {
     // The host IS the render container so gridMetrics/pointer targets resolve.
     const host = document.createElement("div");
     document.body.append(host);
-    const request = vi.fn(async () => ({}));
+    const request = vi.fn(async (..._args: unknown[]) => ({}));
     const client = {
       request,
       addEventListener: vi.fn(() => () => {}),

@@ -10,7 +10,6 @@ import {
   resolvePlaywrightChromiumExecutablePath,
   startControlUiE2eServer,
   type ControlUiE2eServer,
-  type MockGatewayControls,
 } from "../test-helpers/control-ui-e2e.ts";
 
 const chromiumExecutablePath = resolvePlaywrightChromiumExecutablePath(chromium.executablePath());
@@ -111,10 +110,10 @@ function trackDiagnostics(page: Page): PageDiagnostics {
   return diagnostics;
 }
 
-async function gotoWorkspaces(page: Page, server: ControlUiE2eServer, slug?: string) {
+async function gotoWorkspaces(page: Page, e2eServer: ControlUiE2eServer, slug?: string) {
   const suffix = slug ? `&ws=${slug}` : "";
   const response = await page.goto(
-    `${server.baseUrl}plugin?plugin=dashboard&id=workspaces${suffix}`,
+    `${e2eServer.baseUrl}plugin?plugin=dashboard&id=workspaces${suffix}`,
   );
   expect(response?.status()).toBe(200);
 }

@@ -177,7 +177,7 @@ describe("optimistic mutations", () => {
     state.workspace = normalizeWorkspace(sampleDoc); // version 3
 
     // The mutation RPC hangs until we reject it, letting a concurrent refetch land.
-    let rejectMutation: ((err: Error) => void) | null = null;
+    let rejectMutation!: (err: Error) => void;
     const client = mockClient({
       request: vi.fn(
         (method: string) =>
@@ -201,7 +201,7 @@ describe("optimistic mutations", () => {
     state.workspace = fresher;
 
     // Now the in-flight mutation fails.
-    rejectMutation?.(new Error("rejected"));
+    rejectMutation(new Error("rejected"));
     await mutation;
 
     // The fresher doc must survive — no revert to the stale pre-mutation snapshot.
