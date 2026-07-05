@@ -597,6 +597,15 @@ importers:
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
 
+  extensions/dashboard:
+    devDependencies:
+      '@openclaw/plugin-sdk':
+        specifier: workspace:*
+        version: link:../../packages/plugin-sdk
+      openclaw:
+        specifier: workspace:*
+        version: link:../..
+
   extensions/deepgram:
     devDependencies:
       '@openclaw/plugin-sdk':
