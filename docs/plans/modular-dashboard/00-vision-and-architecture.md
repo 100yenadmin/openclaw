@@ -85,8 +85,8 @@ Rules (enforced in the plugin store, single source of truth):
 ### 3. Bindings, not fetches
 
 Widgets declare data sources; they never fetch:
-- `rpc`: an **allowlisted** gateway read method (initial allowlist: the read methods the builtin data widgets use — sessions/usage/cron/instances/activity reads). Allowlist lives in the plugin, enforced server-side in `dashboard.data.read`.
-- `file`: JSON/CSV/markdown **only under `<stateDir>/dashboard/data/`** (path-jailed server-side). The agent workflow: finance agent writes `data/q3.json` → bound widgets update on the next broadcast/poll.
+- `rpc`: an **allowlisted** gateway read method (initial allowlist: the read methods the builtin data widgets use — sessions/usage/cron/instances/activity reads). Allowlist lives in the plugin and is enforced at WRITE time (schema validation of which methods a binding may name). **Resolution happens CLIENT-SIDE in the trusted Control UI** over its own authenticated gateway socket — plugin gateway handlers cannot dispatch other gateway methods at this HEAD (SDK gate `gatewayMethodDispatchAllowed`; amended 2026-07-06, issue #3).
+- `file`: JSON/CSV/markdown **only under `<stateDir>/dashboard/data/`** (path-jailed server-side, served via `dashboard.data.read`). The agent workflow: finance agent writes `data/q3.json` → bound widgets update on the next broadcast/poll.
 - `static`: literal value in `props`.
 
 ### 4. One control plane, three faces
@@ -110,7 +110,7 @@ Because hello `controlUiTabs` is projected per-connection, individual workspace 
 
 - **Rendering**: `<iframe sandbox="allow-scripts">` — NEVER `allow-same-origin`, never anything else. The iframe's origin is opaque (`null`).
 - **Asset serving**: plugin HTTP route with `auth: "plugin"` (unauthenticated by design — sandboxed frames have no device token). Therefore this route serves ONLY static files from the widget's own directory: charset-validated name, logical-path normalization, containment check, correct Content-Type, strict `Content-Security-Policy` header. It never serves data, never accepts writes.
-- **Data plane = bridge only**: the child posts `getData(bindingId)`; the PARENT (authenticated Control UI) resolves it via `dashboard.data.read` over its gateway socket and posts the result back. The child never holds credentials and never talks to the gateway.
+- **Data plane = bridge only**: the child posts `getData(bindingId)`; the PARENT (authenticated Control UI) resolves it — `file`/`static` via `dashboard.data.read`, `rpc` by calling the (manifest-declared, allowlist-named) read method directly on its own gateway client — and posts the result back. The child never holds credentials and never talks to the gateway.
 - **postMessage protocol** (versioned envelope `{ v:1, type, … }`):
   - child→parent: `dashboard:ready`, `dashboard:getData {requestId, bindingId}`, `dashboard:getTheme {requestId}`, `dashboard:sendPrompt {requestId, text}`
   - parent→child: `dashboard:data {requestId, bindingId, data}`, `dashboard:push {bindingId, data}`, `dashboard:theme {requestId, tokens}`, `dashboard:error {requestId, code, message}`
