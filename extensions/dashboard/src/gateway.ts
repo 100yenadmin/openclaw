@@ -189,7 +189,12 @@ function makeUniqueWidgetId(widget: Record<string, unknown>, doc: WorkspaceDoc):
     }
     return explicit;
   }
-  const title = typeof widget.title === "string" ? widget.title : String(widget.kind ?? "widget");
+  const title =
+    typeof widget.title === "string"
+      ? widget.title
+      : typeof widget.kind === "string"
+        ? widget.kind
+        : "widget";
   const base = makeWidgetIdBase(title);
   if (!existing.has(base)) {
     return base;

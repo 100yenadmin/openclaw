@@ -1,4 +1,4 @@
-import { DATA_READ_RPC_ALLOWLIST, normalizeDashboardDataLogicalPath } from "./data-read.js";
+import { DATA_READ_RPC_ALLOWLIST, normalizeDashboardDataLogicalPath } from "./binding-contract.js";
 
 export type JsonValue =
   | null

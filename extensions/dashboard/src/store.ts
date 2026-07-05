@@ -25,7 +25,7 @@ function assertWorkspaceSize(serialized: string): void {
   }
 }
 
-async function readJsonFile(filePath: string): Promise<unknown | undefined> {
+async function readJsonFile(filePath: string): Promise<unknown> {
   try {
     return JSON.parse(await fs.readFile(filePath, "utf8")) as unknown;
   } catch (error) {

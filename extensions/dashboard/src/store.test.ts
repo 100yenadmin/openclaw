@@ -143,7 +143,9 @@ async function viWaitFor(assertion: () => void): Promise<void> {
       if (Date.now() > deadline) {
         throw error;
       }
-      await new Promise((resolve) => setTimeout(resolve, 5));
+      await new Promise((resolve) => {
+        setTimeout(resolve, 5);
+      });
     }
   }
 }

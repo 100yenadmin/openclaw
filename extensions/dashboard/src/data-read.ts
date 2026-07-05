@@ -1,43 +1,18 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { resolveStateDir } from "openclaw/plugin-sdk/state-paths";
+import {
+  DashboardBindingResolutionError,
+  normalizeDashboardDataLogicalPath,
+} from "./binding-contract.js";
 import type { DashboardBinding, JsonValue } from "./schema.js";
 
-export const DATA_READ_RPC_ALLOWLIST = [
-  "health",
-  "usage.status",
-  "usage.cost",
-  "agents.list",
-  "sessions.list",
-  "sessions.resolve",
-  "sessions.get",
-  "sessions.usage",
-  "sessions.usage.timeseries",
-  "sessions.usage.logs",
-  "node.list",
-  "node.describe",
-  "cron.get",
-  "cron.list",
-  "cron.status",
-  "cron.runs",
-] as const;
-
-export type DashboardBindingErrorCode =
-  | "binding_denied"
-  | "binding_not_found"
-  | "binding_too_large"
-  | "binding_invalid"
-  | "binding_client_resolved";
-
-export class DashboardBindingResolutionError extends Error {
-  constructor(
-    readonly code: DashboardBindingErrorCode,
-    message: string,
-  ) {
-    super(message);
-    this.name = "DashboardBindingResolutionError";
-  }
-}
+export {
+  DATA_READ_RPC_ALLOWLIST,
+  DashboardBindingResolutionError,
+  normalizeDashboardDataLogicalPath,
+  type DashboardBindingErrorCode,
+} from "./binding-contract.js";
 
 export type ResolveBindingOptions = {
   stateDir?: string;
@@ -47,36 +22,6 @@ const MAX_FILE_BYTES = 1024 * 1024;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function hasControlCharacter(value: string): boolean {
-  for (const char of value) {
-    const code = char.charCodeAt(0);
-    if (code < 0x20 || code === 0x7f) {
-      return true;
-    }
-  }
-  return false;
-}
-
-export function normalizeDashboardDataLogicalPath(value: string): string {
-  if (
-    value.startsWith("/") ||
-    path.isAbsolute(value) ||
-    path.win32.isAbsolute(value) ||
-    hasControlCharacter(value)
-  ) {
-    throw new DashboardBindingResolutionError("binding_invalid", "file binding path is invalid");
-  }
-  const normalized = value.replaceAll("\\", "/");
-  const parts = normalized.split("/").filter(Boolean);
-  if (
-    parts.length === 0 ||
-    parts.some((part) => part === "." || part === ".." || part.includes(":"))
-  ) {
-    throw new DashboardBindingResolutionError("binding_invalid", "file binding path is invalid");
-  }
-  return parts.join("/");
 }
 
 function resolveDashboardDataPath(bindingPath: string, stateDir = resolveStateDir()): string {
@@ -190,7 +135,7 @@ async function resolveFileBinding(
 }
 
 export async function resolveBinding(
-  bindingInput: DashboardBinding | unknown,
+  bindingInput: unknown,
   options: ResolveBindingOptions = {},
 ): Promise<unknown> {
   const binding = readBinding(bindingInput);
