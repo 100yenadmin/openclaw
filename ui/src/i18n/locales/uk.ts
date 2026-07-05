@@ -638,6 +638,46 @@ export const uk: TranslationMap = {
       submit: "Ask",
     },
   },
+  dashboard: {
+    tabs: {
+      label: "Робочі простори",
+      hidden: "Приховані ({count})",
+    },
+    error: {
+      title: "Не вдалося завантажити робочі простори",
+    },
+    empty: {
+      onboardingTitle: "Ще немає робочих просторів",
+      onboardingSubtitle:
+        "Попросіть свого агента створити панель керування або створіть її з командного рядка.",
+      onboardingCommand: "openclaw dashboard tabs create …",
+      tabTitle: "Цей робочий простір порожній",
+      tabSubtitle: "Попросіть агента додати віджет або додайте його самостійно.",
+      noVisibleTabs:
+        "Усі вкладки робочих просторів приховано. Відновіть одну з них у меню прихованих.",
+    },
+    widget: {
+      collapse: "Згорнути віджет",
+      expand: "Розгорнути віджет",
+      moveHandle: "Перемістити віджет",
+      resizeHandle: "Змінити розмір віджета",
+      menuLabel: "Параметри віджета",
+      provenanceChip: "ШІ",
+      provenanceTooltip: "Створено {agent}",
+      errorTitle: "Не вдалося відобразити цей віджет",
+      customPlaceholder: "Користувацький віджет — стане доступним після випуску хоста віджетів.",
+      markdownEmpty: "Ще немає вмісту.",
+      unknownKind: "Невідомий тип віджета: {kind}",
+      editTitlePrompt: "Заголовок віджета",
+      moveToTabPrompt: "Перемістити на яку вкладку робочого простору? Введіть її slug.",
+      menu: {
+        editTitle: "Редагувати заголовок",
+        moveToTab: "Перемістити на вкладку…",
+        hide: "Приховати",
+        remove: "Видалити",
+      },
+    },
+  },
   workboard: {
     disabledHelpStart: "Workboard вимкнено. Увімкніть",
     enableConfigKey: "plugins.entries.workboard.enabled = true",

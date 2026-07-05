@@ -640,6 +640,48 @@ export const de: TranslationMap = {
       submit: "Ask",
     },
   },
+  dashboard: {
+    tabs: {
+      label: "Arbeitsbereiche",
+      hidden: "Ausgeblendet ({count})",
+    },
+    error: {
+      title: "Ihre Arbeitsbereiche konnten nicht geladen werden",
+    },
+    empty: {
+      onboardingTitle: "Noch keine Arbeitsbereiche",
+      onboardingSubtitle:
+        "Bitten Sie Ihren Agenten, ein Dashboard zu erstellen, oder erstellen Sie eines über die Befehlszeile.",
+      onboardingCommand: "openclaw dashboard tabs create …",
+      tabTitle: "Dieser Arbeitsbereich ist leer",
+      tabSubtitle:
+        "Bitten Sie Ihren Agenten, ein Widget hinzuzufügen, oder fügen Sie selbst eines hinzu.",
+      noVisibleTabs:
+        "Jeder Arbeitsbereich-Tab ist ausgeblendet. Stellen Sie einen über das Menü „Ausgeblendet“ wieder her.",
+    },
+    widget: {
+      collapse: "Widget einklappen",
+      expand: "Widget ausklappen",
+      moveHandle: "Widget verschieben",
+      resizeHandle: "Widgetgröße ändern",
+      menuLabel: "Widget-Optionen",
+      provenanceChip: "KI",
+      provenanceTooltip: "Erstellt von {agent}",
+      errorTitle: "Dieses Widget konnte nicht gerendert werden",
+      customPlaceholder:
+        "Benutzerdefiniertes Widget – verfügbar, sobald der Widget-Host veröffentlicht wird.",
+      markdownEmpty: "Noch kein Inhalt.",
+      unknownKind: "Unbekannter Widget-Typ: {kind}",
+      editTitlePrompt: "Widget-Titel",
+      moveToTabPrompt: "Zu welchem Arbeitsbereich-Tab verschieben? Slug eingeben.",
+      menu: {
+        editTitle: "Titel bearbeiten",
+        moveToTab: "Auf Tab verschieben…",
+        hide: "Ausblenden",
+        remove: "Entfernen",
+      },
+    },
+  },
   workboard: {
     disabledHelpStart: "Workboard ist deaktiviert. Aktivieren Sie",
     enableConfigKey: "plugins.entries.workboard.enabled = true",

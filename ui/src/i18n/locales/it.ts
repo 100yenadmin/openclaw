@@ -640,6 +640,46 @@ export const it: TranslationMap = {
       submit: "Ask",
     },
   },
+  dashboard: {
+    tabs: {
+      label: "Aree di lavoro",
+      hidden: "Nascoste ({count})",
+    },
+    error: {
+      title: "Impossibile caricare le aree di lavoro",
+    },
+    empty: {
+      onboardingTitle: "Ancora nessuna area di lavoro",
+      onboardingSubtitle:
+        "Chiedi al tuo agente di creare una dashboard, oppure creane una dalla riga di comando.",
+      onboardingCommand: "openclaw dashboard tabs create …",
+      tabTitle: "Questa area di lavoro è vuota",
+      tabSubtitle: "Chiedi al tuo agente di aggiungere un widget, oppure aggiungine uno tu.",
+      noVisibleTabs: "Ogni scheda dell'area di lavoro è nascosta. Ripristinala dal menu nascosto.",
+    },
+    widget: {
+      collapse: "Comprimi widget",
+      expand: "Espandi widget",
+      moveHandle: "Sposta widget",
+      resizeHandle: "Ridimensiona widget",
+      menuLabel: "Opzioni widget",
+      provenanceChip: "AI",
+      provenanceTooltip: "Creato da {agent}",
+      errorTitle: "Rendering del widget non riuscito",
+      customPlaceholder:
+        "Widget personalizzato — disponibile una volta rilasciato l'host dei widget.",
+      markdownEmpty: "Nessun contenuto ancora.",
+      unknownKind: "Tipo di widget sconosciuto: {kind}",
+      editTitlePrompt: "Titolo del widget",
+      moveToTabPrompt: "Spostare in quale scheda dell'area di lavoro? Inserire il suo slug.",
+      menu: {
+        editTitle: "Modifica titolo",
+        moveToTab: "Sposta nella scheda…",
+        hide: "Nascondi",
+        remove: "Rimuovi",
+      },
+    },
+  },
   workboard: {
     disabledHelpStart: "Workboard è disabilitata. Abilita",
     enableConfigKey: "plugins.entries.workboard.enabled = true",

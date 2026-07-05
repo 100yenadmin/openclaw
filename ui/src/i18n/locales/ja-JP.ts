@@ -640,6 +640,47 @@ export const ja_JP: TranslationMap = {
       submit: "Ask",
     },
   },
+  dashboard: {
+    tabs: {
+      label: "ワークスペース",
+      hidden: "非表示 ({count})",
+    },
+    error: {
+      title: "ワークスペースを読み込めませんでした",
+    },
+    empty: {
+      onboardingTitle: "まだワークスペースがありません",
+      onboardingSubtitle:
+        "エージェントにダッシュボードの作成を依頼するか、コマンドラインから作成してください。",
+      onboardingCommand: "openclaw dashboard tabs create …",
+      tabTitle: "このワークスペースは空です",
+      tabSubtitle: "エージェントにウィジェットの追加を依頼するか、自分で追加してください。",
+      noVisibleTabs:
+        "すべてのワークスペースタブが非表示になっています。非表示メニューから復元してください。",
+    },
+    widget: {
+      collapse: "ウィジェットを折りたたむ",
+      expand: "ウィジェットを展開する",
+      moveHandle: "ウィジェットを移動",
+      resizeHandle: "ウィジェットのサイズ変更",
+      menuLabel: "ウィジェットオプション",
+      provenanceChip: "AI",
+      provenanceTooltip: "{agent}による作成",
+      errorTitle: "このウィジェットのレンダリングに失敗しました",
+      customPlaceholder:
+        "カスタムウィジェット — ウィジェットホストの提供開始後に利用可能になります。",
+      markdownEmpty: "まだコンテンツがありません。",
+      unknownKind: "不明なウィジェットタイプ: {kind}",
+      editTitlePrompt: "ウィジェットのタイトル",
+      moveToTabPrompt: "どのワークスペースタブに移動しますか？スラグを入力してください。",
+      menu: {
+        editTitle: "タイトルを編集",
+        moveToTab: "タブに移動…",
+        hide: "非表示",
+        remove: "削除",
+      },
+    },
+  },
   workboard: {
     disabledHelpStart: "Workboard は無効になっています。有効にするには",
     enableConfigKey: "plugins.entries.workboard.enabled = true",

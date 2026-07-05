@@ -635,6 +635,45 @@ export const ar: TranslationMap = {
       submit: "Ask",
     },
   },
+  dashboard: {
+    tabs: {
+      label: "مساحات العمل",
+      hidden: "مخفي ({count})",
+    },
+    error: {
+      title: "تعذر تحميل مساحات العمل الخاصة بك",
+    },
+    empty: {
+      onboardingTitle: "لا توجد مساحات عمل حتى الآن",
+      onboardingSubtitle:
+        "اطلب من الوكيل الخاص بك إنشاء لوحة معلومات، أو قم بإنشاء واحدة من سطر الأوامر.",
+      onboardingCommand: "openclaw dashboard tabs create …",
+      tabTitle: "مساحة العمل هذه فارغة",
+      tabSubtitle: "اطلب من الوكيل الخاص بك إضافة أداة، أو أضف واحدة بنفسك.",
+      noVisibleTabs: "كل علامات تبويب مساحات العمل مخفية. قم باستعادة واحدة من القائمة المخفية.",
+    },
+    widget: {
+      collapse: "طي الأداة",
+      expand: "توسيع الأداة",
+      moveHandle: "تحريك الأداة",
+      resizeHandle: "تغيير حجم الأداة",
+      menuLabel: "خيارات الأداة",
+      provenanceChip: "AI",
+      provenanceTooltip: "تم الإنشاء بواسطة {agent}",
+      errorTitle: "فشلت الأداة في العرض",
+      customPlaceholder: "أداة مخصصة — متاحة بمجرد إصدار مضيف الأداة.",
+      markdownEmpty: "لا يوجد محتوى حتى الآن.",
+      unknownKind: "نوع أداة غير معروف: {kind}",
+      editTitlePrompt: "عنوان الأداة",
+      moveToTabPrompt: "نقل إلى أي تبويب لمساحة العمل؟ أدخل slug.",
+      menu: {
+        editTitle: "تعديل العنوان",
+        moveToTab: "نقل إلى تبويب…",
+        hide: "إخفاء",
+        remove: "إزالة",
+      },
+    },
+  },
   workboard: {
     disabledHelpStart: "لوحة العمل معطّلة. فعّل",
     enableConfigKey: "plugins.entries.workboard.enabled = true",

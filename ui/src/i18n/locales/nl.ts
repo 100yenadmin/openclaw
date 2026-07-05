@@ -638,6 +638,46 @@ export const nl: TranslationMap = {
       submit: "Ask",
     },
   },
+  dashboard: {
+    tabs: {
+      label: "Werkruimtes",
+      hidden: "Verborgen ({count})",
+    },
+    error: {
+      title: "Je werkruimtes konden niet worden geladen",
+    },
+    empty: {
+      onboardingTitle: "Nog geen werkruimtes",
+      onboardingSubtitle:
+        "Vraag je agent om een dashboard te bouwen, of maak er een aan via de opdrachtregel.",
+      onboardingCommand: "openclaw dashboard tabs create …",
+      tabTitle: "Deze werkruimte is leeg",
+      tabSubtitle: "Vraag je agent om een widget toe te voegen, of voeg er zelf een toe.",
+      noVisibleTabs:
+        "Alle werkruimte-tabbladen zijn verborgen. Herstel er een vanuit het verborgen menu.",
+    },
+    widget: {
+      collapse: "Widget samenvouwen",
+      expand: "Widget uitvouwen",
+      moveHandle: "Widget verplaatsen",
+      resizeHandle: "Grootte van widget wijzigen",
+      menuLabel: "Widget-opties",
+      provenanceChip: "AI",
+      provenanceTooltip: "Gebouwd door {agent}",
+      errorTitle: "Deze widget kon niet worden weergegeven",
+      customPlaceholder: "Aangepaste widget — beschikbaar zodra de widget-host wordt uitgebracht.",
+      markdownEmpty: "Nog geen inhoud.",
+      unknownKind: "Onbekend widgettype: {kind}",
+      editTitlePrompt: "Widget-titel",
+      moveToTabPrompt: "Naar welk tabblad van de werkruimte verplaatsen? Voer de slug in.",
+      menu: {
+        editTitle: "Titel bewerken",
+        moveToTab: "Verplaatsen naar tabblad…",
+        hide: "Verbergen",
+        remove: "Verwijderen",
+      },
+    },
+  },
   workboard: {
     disabledHelpStart: "Workboard is uitgeschakeld. Schakel",
     enableConfigKey: "plugins.entries.workboard.enabled = true",

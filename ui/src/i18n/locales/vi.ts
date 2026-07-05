@@ -637,6 +637,46 @@ export const vi: TranslationMap = {
       submit: "Ask",
     },
   },
+  dashboard: {
+    tabs: {
+      label: "Không gian làm việc",
+      hidden: "Đã ẩn ({count})",
+    },
+    error: {
+      title: "Không thể tải không gian làm việc của bạn",
+    },
+    empty: {
+      onboardingTitle: "Chưa có không gian làm việc nào",
+      onboardingSubtitle:
+        "Yêu cầu tác nhân của bạn xây dựng bảng điều khiển, hoặc tạo một cái từ dòng lệnh.",
+      onboardingCommand: "openclaw dashboard tabs create …",
+      tabTitle: "Không gian làm việc này đang trống",
+      tabSubtitle: "Yêu cầu tác nhân của bạn thêm tiện ích, hoặc tự thêm vào.",
+      noVisibleTabs:
+        "Tất cả các thẻ không gian làm việc đều đang ẩn. Hãy khôi phục một cái từ menu ẩn.",
+    },
+    widget: {
+      collapse: "Thu gọn tiện ích",
+      expand: "Mở rộng tiện ích",
+      moveHandle: "Di chuyển tiện ích",
+      resizeHandle: "Thay đổi kích thước tiện ích",
+      menuLabel: "Tùy chọn tiện ích",
+      provenanceChip: "AI",
+      provenanceTooltip: "Được tạo bởi {agent}",
+      errorTitle: "Tiện ích này không thể hiển thị",
+      customPlaceholder: "Tiện ích tùy chỉnh — sẽ có sẵn khi widget host ra mắt.",
+      markdownEmpty: "Chưa có nội dung nào.",
+      unknownKind: "Loại tiện ích không xác định: {kind}",
+      editTitlePrompt: "Tiêu đề tiện ích",
+      moveToTabPrompt: "Chuyển đến tab không gian làm việc nào? Nhập slug của nó.",
+      menu: {
+        editTitle: "Chỉnh sửa tiêu đề",
+        moveToTab: "Chuyển đến tab…",
+        hide: "Ẩn",
+        remove: "Xóa",
+      },
+    },
+  },
   workboard: {
     disabledHelpStart: "Workboard đã bị tắt. Bật",
     enableConfigKey: "plugins.entries.workboard.enabled = true",

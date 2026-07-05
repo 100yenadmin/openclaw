@@ -640,6 +640,46 @@ export const ru: TranslationMap = {
       submit: "Запрос",
     },
   },
+  dashboard: {
+    tabs: {
+      label: "Рабочие области",
+      hidden: "Скрытые ({count})",
+    },
+    error: {
+      title: "Не удалось загрузить рабочие области",
+    },
+    empty: {
+      onboardingTitle: "Рабочих областей пока нет",
+      onboardingSubtitle:
+        "Попросите своего агента создать панель управления или создайте её из командной строки.",
+      onboardingCommand: "openclaw dashboard tabs create …",
+      tabTitle: "Эта рабочая область пуста",
+      tabSubtitle: "Попросите агента добавить виджет или добавьте его самостоятельно.",
+      noVisibleTabs:
+        "Все вкладки рабочих областей скрыты. Восстановите одну из них в меню скрытых.",
+    },
+    widget: {
+      collapse: "Свернуть виджет",
+      expand: "Развернуть виджет",
+      moveHandle: "Переместить виджет",
+      resizeHandle: "Изменить размер виджета",
+      menuLabel: "Параметры виджета",
+      provenanceChip: "ИИ",
+      provenanceTooltip: "Создано {agent}",
+      errorTitle: "Не удалось отобразить этот виджет",
+      customPlaceholder: "Пользовательский виджет — будет доступен после выпуска хоста виджетов.",
+      markdownEmpty: "Контента пока нет.",
+      unknownKind: "Неизвестный тип виджета: {kind}",
+      editTitlePrompt: "Название виджета",
+      moveToTabPrompt: "Переместить на какую вкладку рабочего пространства? Введите её slug.",
+      menu: {
+        editTitle: "Изменить название",
+        moveToTab: "Переместить на вкладку…",
+        hide: "Скрыть",
+        remove: "Удалить",
+      },
+    },
+  },
   workboard: {
     disabledHelpStart: "Workboard отключен. Включите",
     enableConfigKey: "plugins.entries.workboard.enabled = true",

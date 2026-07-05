@@ -639,6 +639,46 @@ export const tr: TranslationMap = {
       submit: "Ask",
     },
   },
+  dashboard: {
+    tabs: {
+      label: "Çalışma Alanları",
+      hidden: "Gizli ({count})",
+    },
+    error: {
+      title: "Çalışma alanlarınız yüklenemedi",
+    },
+    empty: {
+      onboardingTitle: "Henüz çalışma alanı yok",
+      onboardingSubtitle:
+        "Ajanınızdan bir pano oluşturmasını isteyin veya komut satırından bir tane oluşturun.",
+      onboardingCommand: "openclaw dashboard tabs create …",
+      tabTitle: "Bu çalışma alanı boş",
+      tabSubtitle: "Ajanınızdan bir widget eklemesini isteyin veya kendiniz ekleyin.",
+      noVisibleTabs: "Tüm çalışma alanı sekmeleri gizli. Gizli menüden birini geri yükleyin.",
+    },
+    widget: {
+      collapse: "Widget'ı daralt",
+      expand: "Widget'ı genişlet",
+      moveHandle: "Widget'ı taşı",
+      resizeHandle: "Widget'ı yeniden boyutlandır",
+      menuLabel: "Widget seçenekleri",
+      provenanceChip: "Yapay Zeka",
+      provenanceTooltip: "{agent} tarafından oluşturuldu",
+      errorTitle: "Bu widget işlenemedi",
+      customPlaceholder:
+        "Özel widget — widget ana bilgisayarı kullanıma sunulduğunda kullanılabilir olacak.",
+      markdownEmpty: "Henüz içerik yok.",
+      unknownKind: "Bilinmeyen widget türü: {kind}",
+      editTitlePrompt: "Widget başlığı",
+      moveToTabPrompt: "Hangi çalışma alanı sekmesine taşı? Slug değerini girin.",
+      menu: {
+        editTitle: "Başlığı düzenle",
+        moveToTab: "Sekmeye taşı…",
+        hide: "Gizle",
+        remove: "Kaldır",
+      },
+    },
+  },
   workboard: {
     disabledHelpStart: "Workboard devre dışı. Etkinleştirin",
     enableConfigKey: "plugins.entries.workboard.enabled = true",

@@ -640,6 +640,46 @@ export const fr: TranslationMap = {
       submit: "Ask",
     },
   },
+  dashboard: {
+    tabs: {
+      label: "Espaces de travail",
+      hidden: "Masqués ({count})",
+    },
+    error: {
+      title: "Impossible de charger vos espaces de travail",
+    },
+    empty: {
+      onboardingTitle: "Aucun espace de travail pour le moment",
+      onboardingSubtitle:
+        "Demandez à votre agent de créer un tableau de bord, ou créez-en un depuis la ligne de commande.",
+      onboardingCommand: "openclaw dashboard tabs create …",
+      tabTitle: "Cet espace de travail est vide",
+      tabSubtitle: "Demandez à votre agent d'ajouter un widget, ou ajoutez-en un vous-même.",
+      noVisibleTabs:
+        "Tous les onglets d'espaces de travail sont masqués. Restaurez-en un depuis le menu masqué.",
+    },
+    widget: {
+      collapse: "Réduire le widget",
+      expand: "Développer le widget",
+      moveHandle: "Déplacer le widget",
+      resizeHandle: "Redimensionner le widget",
+      menuLabel: "Options du widget",
+      provenanceChip: "IA",
+      provenanceTooltip: "Créé par {agent}",
+      errorTitle: "Le rendu de ce widget a échoué",
+      customPlaceholder: "Widget personnalisé — disponible une fois l'hôte de widgets publié.",
+      markdownEmpty: "Aucun contenu pour le moment.",
+      unknownKind: "Type de widget inconnu : {kind}",
+      editTitlePrompt: "Titre du widget",
+      moveToTabPrompt: "Déplacer vers quel onglet d'espace de travail ? Entrez son slug.",
+      menu: {
+        editTitle: "Modifier le titre",
+        moveToTab: "Déplacer vers l'onglet…",
+        hide: "Masquer",
+        remove: "Supprimer",
+      },
+    },
+  },
   workboard: {
     disabledHelpStart: "Le tableau de travail est désactivé. Activez",
     enableConfigKey: "plugins.entries.workboard.enabled = true",
