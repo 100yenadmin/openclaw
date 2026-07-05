@@ -542,6 +542,9 @@ export function registerDashboardGatewayMethods(options: DashboardGatewayMethodO
     async (opts) => {
       try {
         const params = readParams(opts.params, ["tab", "id", "grid", "toTab", "actor"]);
+        if (params.grid !== undefined && params.toTab !== undefined) {
+          throw new Error("dashboard.widget.move accepts either grid or toTab, not both");
+        }
         const id = readWidgetId(params);
         const actor = readOptionalActor(params);
         const changedTabSlug =

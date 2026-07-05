@@ -173,6 +173,13 @@ describe("dashboard gateway methods", () => {
         { tab: "ops", id: "notes", grid: { x: 4, y: 0, w: 4, h: 2 } },
         broadcast,
       );
+      const ambiguousMove = await callMethod(
+        methods.get("dashboard.widget.move")!,
+        { tab: "ops", id: "notes", grid: { x: 0, y: 0, w: 4, h: 2 }, toTab: "main" },
+        broadcast,
+      );
+      expect(ambiguousMove.response?.[0]).toBe(false);
+      expect(ambiguousMove.response?.[2]?.message).toContain("not both");
       await callMethod(
         methods.get("dashboard.widget.setLayout")!,
         { tab: "ops", layout: [{ id: "notes", grid: { x: 0, y: 3, w: 6, h: 3 } }] },
