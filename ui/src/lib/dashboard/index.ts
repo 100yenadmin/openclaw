@@ -40,6 +40,36 @@ type DashboardHost = object;
 const dashboardStates = new WeakMap<DashboardHost, DashboardUiState>();
 const dashboardEventUnsubscribers = new WeakMap<DashboardHost, () => void>();
 const dashboardEventClients = new WeakMap<DashboardHost, GatewayBrowserClient>();
+// Per-host teardown for an in-flight hand-rolled drag: the view registers window
+// pointermove/pointerup listeners while dragging, so a tab-switch/disconnect that
+// calls stopDashboard must cancel the drag (remove listeners, neutralize the
+// pending pointerup) rather than leak closures over the now-stale view state.
+const dashboardActiveDragCancel = new WeakMap<DashboardHost, () => void>();
+
+/**
+ * Register the teardown for an active drag on `host`. The view calls this when a
+ * drag begins; `cancel` must remove its window listeners and make any later
+ * pointerup a no-op. A previously registered drag is cancelled first so only one
+ * drag is ever live per host.
+ */
+export function registerActiveDrag(host: DashboardHost, cancel: () => void): void {
+  dashboardActiveDragCancel.get(host)?.();
+  dashboardActiveDragCancel.set(host, cancel);
+}
+
+/** Clear the active-drag teardown for `host` once the drag settles normally. */
+export function clearActiveDrag(host: DashboardHost): void {
+  dashboardActiveDragCancel.delete(host);
+}
+
+/** Cancel any in-flight drag on `host` (used by stopDashboard and re-registration). */
+export function cancelActiveDrag(host: DashboardHost): void {
+  const cancel = dashboardActiveDragCancel.get(host);
+  if (cancel) {
+    dashboardActiveDragCancel.delete(host);
+    cancel();
+  }
+}
 
 export function getDashboardState(host: DashboardHost): DashboardUiState {
   let state = dashboardStates.get(host);
@@ -321,6 +351,7 @@ export function stopDashboardEvents(host: DashboardHost): void {
 
 /** Full lifecycle teardown for the bundled-view `stop` hook. */
 export function stopDashboard(host: DashboardHost): void {
+  cancelActiveDrag(host);
   stopDashboardEvents(host);
 }
 
@@ -379,15 +410,19 @@ async function optimisticMutation(
     return;
   }
   const previous = state.workspace;
-  state.workspace = params.optimistic(previous);
+  const optimistic = params.optimistic(previous);
+  state.workspace = optimistic;
   state.pendingWidgetIds.add(params.widgetId);
   state.actionError = null;
   notify(state);
   try {
     await client.request(params.method, params.rpcParams);
   } catch (err) {
-    // Revert only if no newer load has replaced the doc we mutated.
-    if (state.workspace && state.workspace !== previous) {
+    // Revert ONLY if we are still showing the exact optimistic doc we installed.
+    // A concurrent loadWorkspace (e.g. a plugin.dashboard.changed refetch) may
+    // have landed a FRESHER doc while the RPC was in flight; reverting to the
+    // stale pre-mutation snapshot in that case would stomp the fresher state.
+    if (state.workspace === optimistic) {
       state.workspace = previous;
     }
     state.actionError = formatError(err);

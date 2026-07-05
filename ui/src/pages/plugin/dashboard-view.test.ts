@@ -1,6 +1,8 @@
 import { render } from "lit";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import type { GatewayBrowserClient } from "../../api/gateway.ts";
 import { getDashboardState } from "../../lib/dashboard/index.ts";
+import { stopDashboard } from "./dashboard-controller.ts";
 import {
   navigateToWorkspaceTab,
   renderDashboard,
@@ -121,5 +123,79 @@ describe("renderDashboard", () => {
     state.actionError = "move failed";
     const container = renderView(host);
     expect(container.querySelector(".dashboard__toast")?.textContent).toContain("move failed");
+  });
+});
+
+describe("mid-drag tab-switch cancellation", () => {
+  afterEach(() => {
+    window.history.replaceState({}, "", "/");
+  });
+
+  it("cancels an in-flight drag on stopDashboard so a later pointerup is a no-op", () => {
+    // The host IS the render container so gridMetrics/pointer targets resolve.
+    const host = document.createElement("div");
+    document.body.append(host);
+    const request = vi.fn(async () => ({}));
+    const client = {
+      request,
+      addEventListener: vi.fn(() => () => {}),
+    } as unknown as GatewayBrowserClient;
+    const state = getDashboardState(host);
+    state.loaded = true;
+    state.workspace = doc;
+    state.activeSlug = "main";
+    render(renderDashboard({ host, client, connected: true }), host);
+
+    // Grid clientWidth is 0 in jsdom; stub a real width so the drag begins.
+    const grid = host.querySelector<HTMLElement>(".dashboard-grid");
+    expect(grid).not.toBeNull();
+    Object.defineProperty(grid, "clientWidth", { value: 720, configurable: true });
+
+    // Track window pointer listeners added during the drag.
+    const added = new Set<string>();
+    const originalAdd = window.addEventListener.bind(window);
+    const originalRemove = window.removeEventListener.bind(window);
+    const addSpy = vi
+      .spyOn(window, "addEventListener")
+      .mockImplementation((type: string, ...rest: unknown[]) => {
+        if (type === "pointermove" || type === "pointerup") {
+          added.add(type);
+        }
+        return (originalAdd as (t: string, ...r: unknown[]) => void)(type, ...rest);
+      });
+    const removeSpy = vi
+      .spyOn(window, "removeEventListener")
+      .mockImplementation((type: string, ...rest: unknown[]) => {
+        if (type === "pointermove" || type === "pointerup") {
+          added.delete(type);
+        }
+        return (originalRemove as (t: string, ...r: unknown[]) => void)(type, ...rest);
+      });
+
+    try {
+      const bar = host.querySelector<HTMLElement>(".dashboard-widget__bar");
+      expect(bar).not.toBeNull();
+      bar!.dispatchEvent(
+        new PointerEvent("pointerdown", { bubbles: true, button: 0, clientX: 10, clientY: 10 }),
+      );
+      // The drag registered its window listeners.
+      expect(added.has("pointermove")).toBe(true);
+      expect(added.has("pointerup")).toBe(true);
+
+      // Operator switches tabs mid-drag → the bundled view's stop hook fires.
+      stopDashboard(host);
+
+      // Listeners are gone…
+      expect(added.has("pointermove")).toBe(false);
+      expect(added.has("pointerup")).toBe(false);
+
+      // …and a late pointerup does not resolve a move against the stale tab/client.
+      window.dispatchEvent(new PointerEvent("pointerup", { clientX: 400, clientY: 200 }));
+      expect(request.mock.calls.some(([method]) => method === "dashboard.widget.move")).toBe(false);
+    } finally {
+      addSpy.mockRestore();
+      removeSpy.mockRestore();
+      host.remove();
+    }
   });
 });

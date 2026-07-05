@@ -2,12 +2,15 @@ import { describe, expect, it, vi } from "vitest";
 import type { GatewayBrowserClient, GatewayEventListener } from "../../api/gateway.ts";
 import {
   applyPointer,
+  cancelActiveDrag,
+  clearActiveDrag,
   getDashboardState,
   hiddenTabs,
   loadWorkspace,
   moveWidget,
   normalizeWorkspace,
   orderedTabs,
+  registerActiveDrag,
   resolveActiveSlug,
   resolveBinding,
   setWidgetCollapsed,
@@ -167,6 +170,46 @@ describe("optimistic mutations", () => {
     expect(state.actionError).toBe("rejected");
     expect(state.pendingWidgetIds.has("w1")).toBe(false);
   });
+
+  it("does not stomp a fresher concurrent load when the mutation later rejects", async () => {
+    const host = {};
+    const state = getDashboardState(host);
+    state.workspace = normalizeWorkspace(sampleDoc); // version 3
+
+    // The mutation RPC hangs until we reject it, letting a concurrent refetch land.
+    let rejectMutation: ((err: Error) => void) | null = null;
+    const client = mockClient({
+      request: vi.fn(
+        (method: string) =>
+          new Promise((_resolve, reject) => {
+            if (method === "dashboard.widget.move") {
+              rejectMutation = reject;
+            }
+          }),
+      ) as never,
+    });
+
+    const mutation = moveWidget(state, client, {
+      slug: "main",
+      widgetId: "w1",
+      grid: { x: 8, y: 0, w: 4, h: 2 },
+    });
+
+    // A concurrent broadcast refetch lands a FRESHER doc (version 4) mid-flight.
+    const fresher = normalizeWorkspace({ ...sampleDoc, workspaceVersion: 4 });
+    fresher.tabs[0].widgets[0].title = "Revenue (v4)";
+    state.workspace = fresher;
+
+    // Now the in-flight mutation fails.
+    rejectMutation?.(new Error("rejected"));
+    await mutation;
+
+    // The fresher doc must survive — no revert to the stale pre-mutation snapshot.
+    expect(state.workspace).toBe(fresher);
+    expect(state.workspace?.workspaceVersion).toBe(4);
+    expect(state.workspace?.tabs[0].widgets[0].title).toBe("Revenue (v4)");
+    expect(state.actionError).toBe("rejected");
+  });
 });
 
 describe("live-update subscription", () => {
@@ -276,5 +319,39 @@ describe("applyPointer", () => {
   it("decodes escaped pointer segments", () => {
     expect(applyPointer({ "a/b": 5 }, "/a~1b")).toBe(5);
     expect(applyPointer({ "a~b": 6 }, "/a~0b")).toBe(6);
+  });
+});
+
+describe("active drag cancellation", () => {
+  it("cancels a registered drag from stopDashboard", () => {
+    const host = {};
+    const cancel = vi.fn();
+    registerActiveDrag(host, cancel);
+    stopDashboard(host);
+    expect(cancel).toHaveBeenCalledTimes(1);
+    // Idempotent: a second stop does not re-invoke the (already cleared) teardown.
+    stopDashboard(host);
+    expect(cancel).toHaveBeenCalledTimes(1);
+  });
+
+  it("cancels the prior drag when a new one registers on the same host", () => {
+    const host = {};
+    const first = vi.fn();
+    const second = vi.fn();
+    registerActiveDrag(host, first);
+    registerActiveDrag(host, second);
+    expect(first).toHaveBeenCalledTimes(1);
+    expect(second).not.toHaveBeenCalled();
+    cancelActiveDrag(host);
+    expect(second).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not cancel a drag that already settled and cleared itself", () => {
+    const host = {};
+    const cancel = vi.fn();
+    registerActiveDrag(host, cancel);
+    clearActiveDrag(host); // normal pointerup path clears without cancelling
+    stopDashboard(host);
+    expect(cancel).not.toHaveBeenCalled();
   });
 });

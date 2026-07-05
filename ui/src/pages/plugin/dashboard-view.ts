@@ -21,6 +21,7 @@ import {
   type DashboardDragState,
 } from "../../lib/dashboard/grid.ts";
 import {
+  clearActiveDrag,
   findTab,
   getDashboardState,
   hiddenTabs,
@@ -30,6 +31,7 @@ import {
   moveWidgetToTab,
   removeWidgetFromTab,
   resolveActiveSlug,
+  registerActiveDrag,
   resolveBinding,
   setWidgetCollapsed,
   subscribeToDashboardEvents,
@@ -259,13 +261,34 @@ function makeCallbacks(
     if (target.setPointerCapture) {
       target.setPointerCapture(event.pointerId);
     }
+    // Once cancelled (tab-switch/disconnect via stopDashboard), the window
+    // listeners are removed and any late pointerup becomes a no-op so it cannot
+    // fire moveWidget against a stale tab/client.
+    let settled = false;
+    const teardown = () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    };
+    const cancel = () => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      teardown();
+      viewState.drag = null;
+      requestUpdate();
+    };
     const onMove = (moveEvent: PointerEvent) => {
       updateDrag(drag, moveEvent.clientX, moveEvent.clientY);
       requestUpdate();
     };
     const onUp = () => {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
+      if (settled) {
+        return;
+      }
+      settled = true;
+      teardown();
+      clearActiveDrag(props.host);
       const resolved = resolveDrop({
         requested: drag.ghostRect,
         widgets: tab.widgets,
@@ -289,6 +312,7 @@ function makeCallbacks(
     };
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
+    registerActiveDrag(props.host, cancel);
   };
   return {
     onToggleCollapse: (widget) =>
