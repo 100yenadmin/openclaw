@@ -141,7 +141,7 @@ function formatStat(value: unknown, format: unknown): string {
       numeric,
     );
   }
-  return typeof value === "string" ? value : String(value);
+  return typeof value === "string" ? value : JSON.stringify(value);
 }
 
 function renderStatCard(widget: DashboardWidget, value: unknown): TemplateResult {

@@ -292,7 +292,7 @@ export async function loadWorkspace(
     notify(state);
   }
   try {
-    const payload = await client.request<unknown>("dashboard.workspace.get", {});
+    const payload = await client.request("dashboard.workspace.get", {});
     const workspace = normalizeWorkspace(
       isRecord(payload) && "workspace" in payload ? payload.workspace : payload,
     );
@@ -568,11 +568,11 @@ export async function resolveBinding(
       if (!binding.method) {
         return { error: "Binding is missing an rpc method." };
       }
-      const value = await client.request<unknown>(binding.method, binding.params ?? {});
+      const value = await client.request(binding.method, binding.params ?? {});
       return { value: applyPointer(value, binding.pointer) };
     }
     // file
-    const payload = await client.request<unknown>("dashboard.data.read", {
+    const payload = await client.request("dashboard.data.read", {
       path: binding.path,
       ...(binding.pointer ? { pointer: binding.pointer } : {}),
     });
