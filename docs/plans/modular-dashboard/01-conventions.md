@@ -5,6 +5,7 @@ Read this before touching code. It encodes the repo idioms your PR will be revie
 ## Ground rules
 
 1. **Upstream velocity discipline.** This corpus was verified against upstream/main `c730d8f1f1` (2026-07-05). Line numbers WILL drift; file paths are stable-ish. Before relying on any seam: re-verify it exists at your HEAD (one grep). If a seam moved structurally, follow the pattern-by-name, note the delta in your PR description, and update this doc in the same PR.
+   - Agents with GitNexus access: prefer code-graph queries over broad grep for orientation — a local index is registered as `openclaw` (gitnexus registry; verify freshness vs your HEAD with `gitnexus list`, trust d=1 results, confirm deeper hops against source).
 2. **Zero core changes except where a layer spec explicitly lists them** (only L3 touches `ui/`; L1/L2/L5 are `extensions/dashboard/` only — enforce with `git diff --stat`).
 3. **Lean deps.** Do not add npm dependencies to `ui/` or the plugin without a spec saying so (drag/drop is hand-rolled; no gridstack/interact.js/zod).
 4. **One layer = one PR to `feat/modular-dashboard`**, commits grouped logically; i18n regeneration and any sidebar-adjacent edit isolated into their own commits.
