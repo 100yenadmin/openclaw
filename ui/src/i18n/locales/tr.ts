@@ -646,12 +646,22 @@ export const tr: TranslationMap = {
     },
     error: {
       title: "Çalışma alanlarınız yüklenemedi",
+      subtitle: "Something went wrong loading your workspaces. Try reloading.",
+      detailSummary: "Show details",
+    },
+    header: {
+      subtitle: "Arrange widgets and tabs for this workspace.",
+    },
+    onboarding: {
+      title: "Build your first workspace tab",
+      primary: "Ask your agent to build a tab.",
+      secondary: "Or create one from the command line:",
     },
     empty: {
       onboardingTitle: "Henüz çalışma alanı yok",
       onboardingSubtitle:
         "Ajanınızdan bir pano oluşturmasını isteyin veya komut satırından bir tane oluşturun.",
-      onboardingCommand: "openclaw dashboard tabs create …",
+      onboardingCommand: "openclaw dashboard tabs create main --title Main",
       tabTitle: "Bu çalışma alanı boş",
       tabSubtitle: "Ajanınızdan bir widget eklemesini isteyin veya kendiniz ekleyin.",
       noVisibleTabs: "Tüm çalışma alanı sekmeleri gizli. Gizli menüden birini geri yükleyin.",
@@ -664,22 +674,26 @@ export const tr: TranslationMap = {
       menuLabel: "Widget seçenekleri",
       provenanceChip: "Yapay Zeka",
       provenanceTooltip: "{agent} tarafından oluşturuldu",
-      errorTitle: "Bu widget işlenemedi",
-      customPlaceholder:
-        "Özel widget — widget ana bilgisayarı kullanıma sunulduğunda kullanılabilir olacak.",
+      errorTitle: "This widget couldn't load",
+      errorHumane: "This widget ran into a problem while rendering.",
+      errorDetailSummary: "Show details",
+      customPlaceholder: "Custom widget — coming soon.",
       customLoading: "Loading custom widget…",
       approval: {
         title: "Custom widget awaiting approval",
         byAgent: "{agent} tarafından oluşturuldu",
-        byUnknown: "Author unknown",
+        byUnknown: "Built by an unknown agent",
         approve: "Approve",
         reject: "Reject",
-        unavailable: "This custom widget is not available.",
+        unavailable:
+          "This custom widget isn't available. Ask your agent to rebuild it, or remove it.",
       },
       markdownEmpty: "Henüz içerik yok.",
       unknownKind: "Bilinmeyen widget türü: {kind}",
-      editTitlePrompt: "Widget başlığı",
-      moveToTabPrompt: "Hangi çalışma alanı sekmesine taşı? Slug değerini girin.",
+      editTitleTitle: "Edit widget title",
+      editTitleLabel: "Widget title",
+      moveToTabTitle: "Move to tab",
+      moveToTabEmpty: "There are no other tabs to move this widget to.",
       menu: {
         editTitle: "Başlığı düzenle",
         moveToTab: "Sekmeye taşı…",
@@ -707,7 +721,7 @@ export const tr: TranslationMap = {
       },
       instances: {
         empty: "Bağlı örnek yok.",
-        idle: "{duration} boşta",
+        idle: "Idle for {duration}",
       },
       activity: {
         empty: "Son etkinlik yok.",

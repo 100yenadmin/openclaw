@@ -647,12 +647,22 @@ export const fr: TranslationMap = {
     },
     error: {
       title: "Impossible de charger vos espaces de travail",
+      subtitle: "Something went wrong loading your workspaces. Try reloading.",
+      detailSummary: "Show details",
+    },
+    header: {
+      subtitle: "Arrange widgets and tabs for this workspace.",
+    },
+    onboarding: {
+      title: "Build your first workspace tab",
+      primary: "Ask your agent to build a tab.",
+      secondary: "Or create one from the command line:",
     },
     empty: {
       onboardingTitle: "Aucun espace de travail pour le moment",
       onboardingSubtitle:
         "Demandez à votre agent de créer un tableau de bord, ou créez-en un depuis la ligne de commande.",
-      onboardingCommand: "openclaw dashboard tabs create …",
+      onboardingCommand: "openclaw dashboard tabs create main --title Main",
       tabTitle: "Cet espace de travail est vide",
       tabSubtitle: "Demandez à votre agent d'ajouter un widget, ou ajoutez-en un vous-même.",
       noVisibleTabs:
@@ -666,21 +676,26 @@ export const fr: TranslationMap = {
       menuLabel: "Options du widget",
       provenanceChip: "IA",
       provenanceTooltip: "Créé par {agent}",
-      errorTitle: "Le rendu de ce widget a échoué",
-      customPlaceholder: "Widget personnalisé — disponible une fois l'hôte de widgets publié.",
+      errorTitle: "This widget couldn't load",
+      errorHumane: "This widget ran into a problem while rendering.",
+      errorDetailSummary: "Show details",
+      customPlaceholder: "Custom widget — coming soon.",
       customLoading: "Loading custom widget…",
       approval: {
         title: "Custom widget awaiting approval",
         byAgent: "Créé par {agent}",
-        byUnknown: "Author unknown",
+        byUnknown: "Built by an unknown agent",
         approve: "Approve",
         reject: "Reject",
-        unavailable: "This custom widget is not available.",
+        unavailable:
+          "This custom widget isn't available. Ask your agent to rebuild it, or remove it.",
       },
       markdownEmpty: "Aucun contenu pour le moment.",
       unknownKind: "Type de widget inconnu : {kind}",
-      editTitlePrompt: "Titre du widget",
-      moveToTabPrompt: "Déplacer vers quel onglet d'espace de travail ? Entrez son slug.",
+      editTitleTitle: "Edit widget title",
+      editTitleLabel: "Widget title",
+      moveToTabTitle: "Move to tab",
+      moveToTabEmpty: "There are no other tabs to move this widget to.",
       menu: {
         editTitle: "Modifier le titre",
         moveToTab: "Déplacer vers l'onglet…",
@@ -708,7 +723,7 @@ export const fr: TranslationMap = {
       },
       instances: {
         empty: "Aucune instance connectée.",
-        idle: "Inactif depuis {duration}",
+        idle: "Idle for {duration}",
       },
       activity: {
         empty: "Aucune activité récente.",

@@ -647,12 +647,22 @@ export const ja_JP: TranslationMap = {
     },
     error: {
       title: "ワークスペースを読み込めませんでした",
+      subtitle: "Something went wrong loading your workspaces. Try reloading.",
+      detailSummary: "Show details",
+    },
+    header: {
+      subtitle: "Arrange widgets and tabs for this workspace.",
+    },
+    onboarding: {
+      title: "Build your first workspace tab",
+      primary: "Ask your agent to build a tab.",
+      secondary: "Or create one from the command line:",
     },
     empty: {
       onboardingTitle: "まだワークスペースがありません",
       onboardingSubtitle:
         "エージェントにダッシュボードの作成を依頼するか、コマンドラインから作成してください。",
-      onboardingCommand: "openclaw dashboard tabs create …",
+      onboardingCommand: "openclaw dashboard tabs create main --title Main",
       tabTitle: "このワークスペースは空です",
       tabSubtitle: "エージェントにウィジェットの追加を依頼するか、自分で追加してください。",
       noVisibleTabs:
@@ -666,22 +676,26 @@ export const ja_JP: TranslationMap = {
       menuLabel: "ウィジェットオプション",
       provenanceChip: "AI",
       provenanceTooltip: "{agent}による作成",
-      errorTitle: "このウィジェットのレンダリングに失敗しました",
-      customPlaceholder:
-        "カスタムウィジェット — ウィジェットホストの提供開始後に利用可能になります。",
+      errorTitle: "This widget couldn't load",
+      errorHumane: "This widget ran into a problem while rendering.",
+      errorDetailSummary: "Show details",
+      customPlaceholder: "Custom widget — coming soon.",
       customLoading: "Loading custom widget…",
       approval: {
         title: "Custom widget awaiting approval",
         byAgent: "{agent}による作成",
-        byUnknown: "Author unknown",
+        byUnknown: "Built by an unknown agent",
         approve: "Approve",
         reject: "Reject",
-        unavailable: "This custom widget is not available.",
+        unavailable:
+          "This custom widget isn't available. Ask your agent to rebuild it, or remove it.",
       },
       markdownEmpty: "まだコンテンツがありません。",
       unknownKind: "不明なウィジェットタイプ: {kind}",
-      editTitlePrompt: "ウィジェットのタイトル",
-      moveToTabPrompt: "どのワークスペースタブに移動しますか？スラグを入力してください。",
+      editTitleTitle: "Edit widget title",
+      editTitleLabel: "Widget title",
+      moveToTabTitle: "Move to tab",
+      moveToTabEmpty: "There are no other tabs to move this widget to.",
       menu: {
         editTitle: "タイトルを編集",
         moveToTab: "タブに移動…",
@@ -709,7 +723,7 @@ export const ja_JP: TranslationMap = {
       },
       instances: {
         empty: "接続中のインスタンスはありません。",
-        idle: "アイドル {duration}",
+        idle: "Idle for {duration}",
       },
       activity: {
         empty: "最近のアクティビティはありません。",

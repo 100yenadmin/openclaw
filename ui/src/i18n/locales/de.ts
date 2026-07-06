@@ -647,12 +647,22 @@ export const de: TranslationMap = {
     },
     error: {
       title: "Ihre Arbeitsbereiche konnten nicht geladen werden",
+      subtitle: "Something went wrong loading your workspaces. Try reloading.",
+      detailSummary: "Show details",
+    },
+    header: {
+      subtitle: "Arrange widgets and tabs for this workspace.",
+    },
+    onboarding: {
+      title: "Build your first workspace tab",
+      primary: "Ask your agent to build a tab.",
+      secondary: "Or create one from the command line:",
     },
     empty: {
       onboardingTitle: "Noch keine Arbeitsbereiche",
       onboardingSubtitle:
         "Bitten Sie Ihren Agenten, ein Dashboard zu erstellen, oder erstellen Sie eines über die Befehlszeile.",
-      onboardingCommand: "openclaw dashboard tabs create …",
+      onboardingCommand: "openclaw dashboard tabs create main --title Main",
       tabTitle: "Dieser Arbeitsbereich ist leer",
       tabSubtitle:
         "Bitten Sie Ihren Agenten, ein Widget hinzuzufügen, oder fügen Sie selbst eines hinzu.",
@@ -667,22 +677,26 @@ export const de: TranslationMap = {
       menuLabel: "Widget-Optionen",
       provenanceChip: "KI",
       provenanceTooltip: "Erstellt von {agent}",
-      errorTitle: "Dieses Widget konnte nicht gerendert werden",
-      customPlaceholder:
-        "Benutzerdefiniertes Widget – verfügbar, sobald der Widget-Host veröffentlicht wird.",
+      errorTitle: "This widget couldn't load",
+      errorHumane: "This widget ran into a problem while rendering.",
+      errorDetailSummary: "Show details",
+      customPlaceholder: "Custom widget — coming soon.",
       customLoading: "Loading custom widget…",
       approval: {
         title: "Custom widget awaiting approval",
         byAgent: "Erstellt von {agent}",
-        byUnknown: "Author unknown",
+        byUnknown: "Built by an unknown agent",
         approve: "Approve",
         reject: "Reject",
-        unavailable: "This custom widget is not available.",
+        unavailable:
+          "This custom widget isn't available. Ask your agent to rebuild it, or remove it.",
       },
       markdownEmpty: "Noch kein Inhalt.",
       unknownKind: "Unbekannter Widget-Typ: {kind}",
-      editTitlePrompt: "Widget-Titel",
-      moveToTabPrompt: "Zu welchem Arbeitsbereich-Tab verschieben? Slug eingeben.",
+      editTitleTitle: "Edit widget title",
+      editTitleLabel: "Widget title",
+      moveToTabTitle: "Move to tab",
+      moveToTabEmpty: "There are no other tabs to move this widget to.",
       menu: {
         editTitle: "Titel bearbeiten",
         moveToTab: "Auf Tab verschieben…",
@@ -710,7 +724,7 @@ export const de: TranslationMap = {
       },
       instances: {
         empty: "Keine verbundenen Instanzen.",
-        idle: "Inaktiv seit {duration}",
+        idle: "Idle for {duration}",
       },
       activity: {
         empty: "Keine aktuellen Aktivitäten.",

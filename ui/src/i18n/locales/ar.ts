@@ -642,12 +642,22 @@ export const ar: TranslationMap = {
     },
     error: {
       title: "تعذر تحميل مساحات العمل الخاصة بك",
+      subtitle: "Something went wrong loading your workspaces. Try reloading.",
+      detailSummary: "Show details",
+    },
+    header: {
+      subtitle: "Arrange widgets and tabs for this workspace.",
+    },
+    onboarding: {
+      title: "Build your first workspace tab",
+      primary: "Ask your agent to build a tab.",
+      secondary: "Or create one from the command line:",
     },
     empty: {
       onboardingTitle: "لا توجد مساحات عمل حتى الآن",
       onboardingSubtitle:
         "اطلب من الوكيل الخاص بك إنشاء لوحة معلومات، أو قم بإنشاء واحدة من سطر الأوامر.",
-      onboardingCommand: "openclaw dashboard tabs create …",
+      onboardingCommand: "openclaw dashboard tabs create main --title Main",
       tabTitle: "مساحة العمل هذه فارغة",
       tabSubtitle: "اطلب من الوكيل الخاص بك إضافة أداة، أو أضف واحدة بنفسك.",
       noVisibleTabs: "كل علامات تبويب مساحات العمل مخفية. قم باستعادة واحدة من القائمة المخفية.",
@@ -660,21 +670,26 @@ export const ar: TranslationMap = {
       menuLabel: "خيارات الأداة",
       provenanceChip: "AI",
       provenanceTooltip: "تم الإنشاء بواسطة {agent}",
-      errorTitle: "فشلت الأداة في العرض",
-      customPlaceholder: "أداة مخصصة — متاحة بمجرد إصدار مضيف الأداة.",
+      errorTitle: "This widget couldn't load",
+      errorHumane: "This widget ran into a problem while rendering.",
+      errorDetailSummary: "Show details",
+      customPlaceholder: "Custom widget — coming soon.",
       customLoading: "Loading custom widget…",
       approval: {
         title: "Custom widget awaiting approval",
         byAgent: "تم الإنشاء بواسطة {agent}",
-        byUnknown: "Author unknown",
+        byUnknown: "Built by an unknown agent",
         approve: "Approve",
         reject: "Reject",
-        unavailable: "This custom widget is not available.",
+        unavailable:
+          "This custom widget isn't available. Ask your agent to rebuild it, or remove it.",
       },
       markdownEmpty: "لا يوجد محتوى حتى الآن.",
       unknownKind: "نوع أداة غير معروف: {kind}",
-      editTitlePrompt: "عنوان الأداة",
-      moveToTabPrompt: "نقل إلى أي تبويب لمساحة العمل؟ أدخل slug.",
+      editTitleTitle: "Edit widget title",
+      editTitleLabel: "Widget title",
+      moveToTabTitle: "Move to tab",
+      moveToTabEmpty: "There are no other tabs to move this widget to.",
       menu: {
         editTitle: "تعديل العنوان",
         moveToTab: "نقل إلى تبويب…",
@@ -702,7 +717,7 @@ export const ar: TranslationMap = {
       },
       instances: {
         empty: "لا توجد مثيلات متصلة.",
-        idle: "خامل {duration}",
+        idle: "Idle for {duration}",
       },
       activity: {
         empty: "لا يوجد نشاط حديث.",

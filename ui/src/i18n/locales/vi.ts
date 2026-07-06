@@ -644,12 +644,22 @@ export const vi: TranslationMap = {
     },
     error: {
       title: "Không thể tải không gian làm việc của bạn",
+      subtitle: "Something went wrong loading your workspaces. Try reloading.",
+      detailSummary: "Show details",
+    },
+    header: {
+      subtitle: "Arrange widgets and tabs for this workspace.",
+    },
+    onboarding: {
+      title: "Build your first workspace tab",
+      primary: "Ask your agent to build a tab.",
+      secondary: "Or create one from the command line:",
     },
     empty: {
       onboardingTitle: "Chưa có không gian làm việc nào",
       onboardingSubtitle:
         "Yêu cầu tác nhân của bạn xây dựng bảng điều khiển, hoặc tạo một cái từ dòng lệnh.",
-      onboardingCommand: "openclaw dashboard tabs create …",
+      onboardingCommand: "openclaw dashboard tabs create main --title Main",
       tabTitle: "Không gian làm việc này đang trống",
       tabSubtitle: "Yêu cầu tác nhân của bạn thêm tiện ích, hoặc tự thêm vào.",
       noVisibleTabs:
@@ -663,21 +673,26 @@ export const vi: TranslationMap = {
       menuLabel: "Tùy chọn tiện ích",
       provenanceChip: "AI",
       provenanceTooltip: "Được tạo bởi {agent}",
-      errorTitle: "Tiện ích này không thể hiển thị",
-      customPlaceholder: "Tiện ích tùy chỉnh — sẽ có sẵn khi widget host ra mắt.",
+      errorTitle: "This widget couldn't load",
+      errorHumane: "This widget ran into a problem while rendering.",
+      errorDetailSummary: "Show details",
+      customPlaceholder: "Custom widget — coming soon.",
       customLoading: "Loading custom widget…",
       approval: {
         title: "Custom widget awaiting approval",
         byAgent: "Được tạo bởi {agent}",
-        byUnknown: "Author unknown",
+        byUnknown: "Built by an unknown agent",
         approve: "Approve",
         reject: "Reject",
-        unavailable: "This custom widget is not available.",
+        unavailable:
+          "This custom widget isn't available. Ask your agent to rebuild it, or remove it.",
       },
       markdownEmpty: "Chưa có nội dung nào.",
       unknownKind: "Loại tiện ích không xác định: {kind}",
-      editTitlePrompt: "Tiêu đề tiện ích",
-      moveToTabPrompt: "Chuyển đến tab không gian làm việc nào? Nhập slug của nó.",
+      editTitleTitle: "Edit widget title",
+      editTitleLabel: "Widget title",
+      moveToTabTitle: "Move to tab",
+      moveToTabEmpty: "There are no other tabs to move this widget to.",
       menu: {
         editTitle: "Chỉnh sửa tiêu đề",
         moveToTab: "Chuyển đến tab…",
@@ -705,7 +720,7 @@ export const vi: TranslationMap = {
       },
       instances: {
         empty: "Không có thực thể kết nối.",
-        idle: "Rảnh {duration}",
+        idle: "Idle for {duration}",
       },
       activity: {
         empty: "Không có hoạt động gần đây.",

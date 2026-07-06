@@ -647,12 +647,22 @@ export const ru: TranslationMap = {
     },
     error: {
       title: "Не удалось загрузить рабочие области",
+      subtitle: "Something went wrong loading your workspaces. Try reloading.",
+      detailSummary: "Show details",
+    },
+    header: {
+      subtitle: "Arrange widgets and tabs for this workspace.",
+    },
+    onboarding: {
+      title: "Build your first workspace tab",
+      primary: "Ask your agent to build a tab.",
+      secondary: "Or create one from the command line:",
     },
     empty: {
       onboardingTitle: "Рабочих областей пока нет",
       onboardingSubtitle:
         "Попросите своего агента создать панель управления или создайте её из командной строки.",
-      onboardingCommand: "openclaw dashboard tabs create …",
+      onboardingCommand: "openclaw dashboard tabs create main --title Main",
       tabTitle: "Эта рабочая область пуста",
       tabSubtitle: "Попросите агента добавить виджет или добавьте его самостоятельно.",
       noVisibleTabs:
@@ -666,21 +676,26 @@ export const ru: TranslationMap = {
       menuLabel: "Параметры виджета",
       provenanceChip: "ИИ",
       provenanceTooltip: "Создано {agent}",
-      errorTitle: "Не удалось отобразить этот виджет",
-      customPlaceholder: "Пользовательский виджет — будет доступен после выпуска хоста виджетов.",
+      errorTitle: "This widget couldn't load",
+      errorHumane: "This widget ran into a problem while rendering.",
+      errorDetailSummary: "Show details",
+      customPlaceholder: "Custom widget — coming soon.",
       customLoading: "Loading custom widget…",
       approval: {
         title: "Custom widget awaiting approval",
         byAgent: "Создано {agent}",
-        byUnknown: "Author unknown",
+        byUnknown: "Built by an unknown agent",
         approve: "Approve",
         reject: "Reject",
-        unavailable: "This custom widget is not available.",
+        unavailable:
+          "This custom widget isn't available. Ask your agent to rebuild it, or remove it.",
       },
       markdownEmpty: "Контента пока нет.",
       unknownKind: "Неизвестный тип виджета: {kind}",
-      editTitlePrompt: "Название виджета",
-      moveToTabPrompt: "Переместить на какую вкладку рабочего пространства? Введите её slug.",
+      editTitleTitle: "Edit widget title",
+      editTitleLabel: "Widget title",
+      moveToTabTitle: "Move to tab",
+      moveToTabEmpty: "There are no other tabs to move this widget to.",
       menu: {
         editTitle: "Изменить название",
         moveToTab: "Переместить на вкладку…",
@@ -708,7 +723,7 @@ export const ru: TranslationMap = {
       },
       instances: {
         empty: "Нет подключенных экземпляров.",
-        idle: "Простой {duration}",
+        idle: "Idle for {duration}",
       },
       activity: {
         empty: "Недавней активности нет.",
