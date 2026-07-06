@@ -359,7 +359,323 @@ describeControlUiE2e("Control UI Workspaces bundled tab mocked Gateway E2E", () 
       await context.close();
     }
   });
+
+  it("renders every builtin data widget from mocked RPC fixtures", async () => {
+    const context = await browser.newContext({
+      locale: "en-US",
+      serviceWorkers: "block",
+      viewport: { height: 900, width: 1280 },
+    });
+    const page = await context.newPage();
+    trackDiagnostics(page);
+    await installMockGateway(page, {
+      methodResponses: {
+        connect: connectResponseWithDashboardTab(),
+        "dashboard.workspace.get": defaultWorkspaceDoc(),
+        ...DEFAULT_WORKSPACE_RPC_FIXTURES,
+      },
+    });
+    try {
+      await gotoWorkspaces(page, server);
+      await page.locator('[data-test-id="dashboard-grid"]').waitFor({ timeout: 10_000 });
+      // All six default widgets mount.
+      await expect
+        .poll(async () => page.locator('[data-test-id="dashboard-widget"]').count())
+        .toBe(6);
+      // Stat card renders today's cost from usage.cost totals.
+      await expect
+        .poll(async () => page.locator(".dashboard-stat__value").first().textContent())
+        .toContain("$12");
+      // Each data widget's list/feed root renders from its fixture.
+      for (const testId of [
+        "dashboard-sessions",
+        "dashboard-cron",
+        "dashboard-instances",
+        "dashboard-activity",
+      ]) {
+        await page.locator(`[data-test-id="${testId}"]`).first().waitFor({ timeout: 10_000 });
+      }
+      // The sessions widget shows a live-run dot for the active session.
+      await expect
+        .poll(async () => page.locator(".dashboard-dot--live").count())
+        .toBeGreaterThan(0);
+    } finally {
+      await context.close();
+    }
+  });
+
+  it("renders per-widget empty states when RPCs return no rows", async () => {
+    const context = await browser.newContext({
+      locale: "en-US",
+      serviceWorkers: "block",
+      viewport: { height: 900, width: 1280 },
+    });
+    const page = await context.newPage();
+    trackDiagnostics(page);
+    await installMockGateway(page, {
+      methodResponses: {
+        connect: connectResponseWithDashboardTab(),
+        "dashboard.workspace.get": defaultWorkspaceDoc(),
+        "usage.cost": { totals: { totalCost: 0, totalTokens: 0 } },
+        "sessions.list": { sessions: [] },
+        "cron.list": { jobs: [] },
+        "cron.runs": { entries: [] },
+        "system-presence": [],
+      },
+    });
+    try {
+      await gotoWorkspaces(page, server);
+      await page.locator('[data-test-id="dashboard-grid"]').waitFor({ timeout: 10_000 });
+      // Each empty data widget shows a placeholder rather than throwing.
+      await expect
+        .poll(async () => page.locator(".dashboard-widget__placeholder").count())
+        .toBeGreaterThanOrEqual(4);
+      // The shell never breaks: no error card, all six cells mounted.
+      await expect
+        .poll(async () => page.locator('[data-test-id="dashboard-widget-error"]').count())
+        .toBe(0);
+      await expect
+        .poll(async () => page.locator('[data-test-id="dashboard-widget"]').count())
+        .toBe(6);
+    } finally {
+      await context.close();
+    }
+  });
+
+  it("shows a per-cell error card when a data widget's RPC fails, sibling stays live", async () => {
+    const context = await browser.newContext({
+      locale: "en-US",
+      serviceWorkers: "block",
+      viewport: { height: 900, width: 1280 },
+    });
+    const page = await context.newPage();
+    trackDiagnostics(page);
+    // A broken stat-card binds a deferred RPC the mock rejects, surfacing the
+    // per-cell error boundary; the static markdown sibling proves the shell
+    // isolates the failure (mirrors the L3 broken-widget scenario for a data
+    // widget kind).
+    await installMockGateway(page, {
+      methodResponses: {
+        connect: connectResponseWithDashboardTab(),
+        "dashboard.workspace.get": brokenWidgetDoc(),
+      },
+      deferredMethods: ["dashboard.missing"],
+    });
+    try {
+      await gotoWorkspaces(page, server);
+      await page.waitForFunction(() => {
+        const gw = (
+          window as unknown as {
+            openclawControlUiE2eGateway?: { requests: Array<{ method: string }> };
+          }
+        ).openclawControlUiE2eGateway;
+        return Boolean(gw?.requests.some((r) => r.method === "dashboard.missing"));
+      });
+      await rejectBinding(page, "dashboard.missing");
+      // The broken cell shows an error card…
+      await page.locator('[data-test-id="dashboard-widget-error"]').waitFor({ timeout: 10_000 });
+      // …while the sibling markdown widget still renders.
+      await expect
+        .poll(async () => page.locator(".dashboard-markdown").textContent())
+        .toContain("still here");
+    } finally {
+      await context.close();
+    }
+  });
+
+  it("tears down cleanly when the Workspaces tab is left (no orphan RPC on leave)", async () => {
+    // Timer-tick discipline is proven deterministically by the fake-timer unit
+    // test in lib/dashboard/index.test.ts ("data-refresh polling"). Here we prove
+    // the browser-level teardown: leaving the tab fires the bundled view's stop
+    // hook and no further data RPC lands (the interval is cleared, not orphaned).
+    const context = await browser.newContext({
+      locale: "en-US",
+      serviceWorkers: "block",
+      viewport: { height: 900, width: 1280 },
+    });
+    const page = await context.newPage();
+    const diagnostics = trackDiagnostics(page);
+    await installMockGateway(page, {
+      methodResponses: {
+        connect: connectResponseWithDashboardTab(),
+        "dashboard.workspace.get": defaultWorkspaceDoc(),
+        ...DEFAULT_WORKSPACE_RPC_FIXTURES,
+      },
+    });
+    try {
+      await gotoWorkspaces(page, server);
+      await page.locator('[data-test-id="dashboard-cron"]').waitFor({ timeout: 10_000 });
+      const cronCallsWhileMounted = await countRpcCalls(page, "cron.list");
+      expect(cronCallsWhileMounted).toBeGreaterThan(0);
+      // Navigate away → stop hook clears the interval. Give any orphaned timer a
+      // window to (wrongly) fire, then assert the data-RPC count did not grow.
+      await page.goto(`${server.baseUrl}sessions`);
+      const afterLeave = await countRpcCalls(page, "cron.list");
+      await page.waitForTimeout(1500);
+      expect(await countRpcCalls(page, "cron.list")).toBe(afterLeave);
+      expect(diagnostics.pageErrors).toEqual([]);
+    } finally {
+      await context.close();
+    }
+  });
 });
+
+async function countRpcCalls(page: Page, method: string): Promise<number> {
+  return page.evaluate((targetMethod) => {
+    const gw = (
+      window as unknown as {
+        openclawControlUiE2eGateway?: { requests: Array<{ method: string }> };
+      }
+    ).openclawControlUiE2eGateway;
+    return gw?.requests.filter((r) => r.method === targetMethod).length ?? 0;
+  }, method);
+}
+
+/** The default `main` workspace doc with all six builtin widgets (L4). */
+function defaultWorkspaceDoc() {
+  return {
+    workspace: {
+      schemaVersion: 1,
+      workspaceVersion: 1,
+      tabs: [
+        {
+          slug: "main",
+          title: "Overview",
+          hidden: false,
+          createdBy: "system",
+          widgets: [
+            {
+              id: "cost-today",
+              kind: "builtin:stat-card",
+              title: "Cost Today",
+              grid: { x: 0, y: 0, w: 4, h: 2 },
+              collapsed: false,
+              bindings: { value: { source: "rpc", method: "usage.cost" } },
+              props: { metric: "todayCost", format: "usd" },
+            },
+            {
+              id: "tokens-today",
+              kind: "builtin:stat-card",
+              title: "Tokens Today",
+              grid: { x: 4, y: 0, w: 4, h: 2 },
+              collapsed: false,
+              bindings: { value: { source: "rpc", method: "usage.cost" } },
+              props: { metric: "todayTokens", format: "int" },
+            },
+            {
+              id: "instances-health",
+              kind: "builtin:instances",
+              title: "Instances",
+              grid: { x: 8, y: 0, w: 4, h: 2 },
+              collapsed: false,
+              bindings: { presence: { source: "rpc", method: "system-presence" } },
+            },
+            {
+              id: "sessions",
+              kind: "builtin:sessions",
+              title: "Sessions",
+              grid: { x: 0, y: 2, w: 6, h: 5 },
+              collapsed: false,
+              bindings: { sessions: { source: "rpc", method: "sessions.list" } },
+            },
+            {
+              id: "cron",
+              kind: "builtin:cron",
+              title: "Cron",
+              grid: { x: 6, y: 2, w: 6, h: 5 },
+              collapsed: false,
+              bindings: { jobs: { source: "rpc", method: "cron.list" } },
+            },
+            {
+              id: "activity",
+              kind: "builtin:activity",
+              title: "Activity",
+              grid: { x: 0, y: 7, w: 12, h: 8 },
+              collapsed: false,
+              bindings: { runs: { source: "rpc", method: "cron.runs" } },
+            },
+          ],
+        },
+      ],
+      prefs: { tabOrder: ["main"] },
+    },
+  };
+}
+
+/** A doc with a broken stat-card (rejectable binding) beside a healthy cron widget. */
+function brokenWidgetDoc() {
+  return {
+    workspace: {
+      schemaVersion: 1,
+      workspaceVersion: 1,
+      tabs: [
+        {
+          slug: "main",
+          title: "Overview",
+          hidden: false,
+          createdBy: "system",
+          widgets: [
+            {
+              id: "broken",
+              kind: "builtin:stat-card",
+              title: "Broken",
+              grid: { x: 0, y: 0, w: 4, h: 2 },
+              collapsed: false,
+              bindings: { value: { source: "rpc", method: "dashboard.missing" } },
+            },
+            {
+              id: "healthy",
+              kind: "builtin:markdown",
+              title: "Healthy",
+              grid: { x: 4, y: 0, w: 8, h: 2 },
+              collapsed: false,
+              props: { markdown: "still here" },
+            },
+          ],
+        },
+      ],
+      prefs: { tabOrder: ["main"] },
+    },
+  };
+}
+
+/** Mocked RPC responses backing the default-workspace data widgets. */
+const DEFAULT_WORKSPACE_RPC_FIXTURES: Record<string, unknown> = {
+  "usage.cost": { totals: { totalCost: 12.5, totalTokens: 1_234_000 }, days: 1 },
+  "sessions.list": {
+    ts: 1,
+    count: 2,
+    sessions: [
+      {
+        key: "main:1",
+        displayName: "Session One",
+        hasActiveRun: true,
+        updatedAt: 1_700_000_000_000,
+      },
+      { key: "main:2", displayName: "Session Two", status: "idle", updatedAt: 1_700_000_000_000 },
+    ],
+  },
+  "cron.list": {
+    jobs: [
+      {
+        id: "nightly",
+        name: "Nightly report",
+        enabled: true,
+        state: { nextRunAtMs: 1_700_000_900_000, lastRunStatus: "ok" },
+      },
+    ],
+  },
+  "cron.runs": {
+    entries: [
+      { ts: 1_700_000_000_000, jobName: "Nightly report", status: "ok", summary: "delivered" },
+      { ts: 1_699_999_000_000, jobName: "Backup", status: "error", error: "timeout" },
+    ],
+  },
+  "system-presence": [
+    { instanceId: "gateway", mode: "gateway", platform: "darwin", lastInputSeconds: 3 },
+    { host: "worker-1", mode: "node", lastInputSeconds: 400 },
+  ],
+};
 
 async function rejectBinding(page: Page, method: string): Promise<void> {
   await page.evaluate((targetMethod) => {
