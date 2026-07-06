@@ -670,6 +670,15 @@ export const de: TranslationMap = {
       errorTitle: "Dieses Widget konnte nicht gerendert werden",
       customPlaceholder:
         "Benutzerdefiniertes Widget – verfügbar, sobald der Widget-Host veröffentlicht wird.",
+      customLoading: "Loading custom widget…",
+      approval: {
+        title: "Custom widget awaiting approval",
+        byAgent: "Erstellt von {agent}",
+        byUnknown: "Author unknown",
+        approve: "Approve",
+        reject: "Reject",
+        unavailable: "This custom widget is not available.",
+      },
       markdownEmpty: "Noch kein Inhalt.",
       unknownKind: "Unbekannter Widget-Typ: {kind}",
       editTitlePrompt: "Widget-Titel",

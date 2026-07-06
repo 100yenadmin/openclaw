@@ -1,11 +1,18 @@
 {
-  "fallbackKeys": [],
-  "generatedAt": "2026-07-05T22:19:19.309Z",
+  "fallbackKeys": [
+    "dashboard.widget.approval.approve",
+    "dashboard.widget.approval.byUnknown",
+    "dashboard.widget.approval.reject",
+    "dashboard.widget.approval.title",
+    "dashboard.widget.approval.unavailable",
+    "dashboard.widget.customLoading"
+  ],
+  "generatedAt": "2026-07-06T06:46:50.904Z",
   "locale": "de",
   "model": "claude-opus-4-6",
   "provider": "anthropic",
-  "sourceHash": "3ef76591efc8833ee7d2ad72bac71932cb373b55da2d637890c8de7647e2afa1",
-  "totalKeys": 1553,
-  "translatedKeys": 1553,
+  "sourceHash": "918cd74c4bc3ca2106b51d28b50195b39cb9850d0f90be82611e35d4774d2e7b",
+  "totalKeys": 1560,
+  "translatedKeys": 1554,
   "workflow": 1
 }
