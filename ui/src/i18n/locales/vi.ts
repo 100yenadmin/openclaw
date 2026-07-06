@@ -675,6 +675,37 @@ export const vi: TranslationMap = {
         hide: "Ẩn",
         remove: "Xóa",
       },
+      stat: {
+        empty: "—",
+      },
+      table: {
+        empty: "Không có hàng nào để hiển thị.",
+        more: "+{count} thêm",
+      },
+      sessions: {
+        empty: "Chưa có phiên nào.",
+      },
+      usage: {
+        cost: "Chi phí",
+        tokens: "Token",
+      },
+      cron: {
+        empty: "Không có công việc định kỳ.",
+        next: "Tiếp theo {time}",
+        noNext: "Chưa lên lịch",
+      },
+      instances: {
+        empty: "Không có thực thể kết nối.",
+        idle: "Rảnh {duration}",
+      },
+      activity: {
+        empty: "Không có hoạt động gần đây.",
+      },
+      embed: {
+        missing: "Embed này chưa có URL.",
+        blockedExternal: "Các embed bên ngoài bị vô hiệu hóa theo chính sách Gateway của bạn.",
+        blockedScheme: "URL embed này sử dụng giao thức không được hỗ trợ.",
+      },
     },
   },
   workboard: {

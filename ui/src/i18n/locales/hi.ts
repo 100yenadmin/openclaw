@@ -671,6 +671,37 @@ export const hi: TranslationMap = {
         hide: "छिपाएं",
         remove: "हटाएँ",
       },
+      stat: {
+        empty: "—",
+      },
+      table: {
+        empty: "दिखाने के लिए कोई पंक्तियाँ नहीं हैं।",
+        more: "+{count} और",
+      },
+      sessions: {
+        empty: "अभी तक कोई सत्र नहीं है।",
+      },
+      usage: {
+        cost: "लागत",
+        tokens: "टोकन",
+      },
+      cron: {
+        empty: "कोई अनुसूचित कार्य नहीं।",
+        next: "अगला {time}",
+        noNext: "अनुसूचित नहीं",
+      },
+      instances: {
+        empty: "कोई कनेक्टेड इंस्टेंस नहीं है।",
+        idle: "निष्क्रिय {duration}",
+      },
+      activity: {
+        empty: "कोई हालिया गतिविधि नहीं है।",
+      },
+      embed: {
+        missing: "इस एम्बेड में अभी तक कोई URL नहीं है।",
+        blockedExternal: "आपकी Gateway पॉलिसी द्वारा बाहरी एम्बेड अक्षम हैं।",
+        blockedScheme: "यह एम्बेड URL एक असमर्थित स्कीम का उपयोग करता है।",
+      },
     },
   },
   workboard: {

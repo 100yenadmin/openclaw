@@ -40,6 +40,13 @@ type DashboardHost = object;
 const dashboardStates = new WeakMap<DashboardHost, DashboardUiState>();
 const dashboardEventUnsubscribers = new WeakMap<DashboardHost, () => void>();
 const dashboardEventClients = new WeakMap<DashboardHost, GatewayBrowserClient>();
+// Per-host data-refresh polling: a single interval per host that fires the view's
+// tick (re-resolve data-widget bindings) only while the document is visible.
+const dashboardPollTimers = new WeakMap<DashboardHost, ReturnType<typeof setInterval>>();
+const dashboardPollActive = new WeakMap<DashboardHost, boolean>();
+
+/** Default data-refresh interval (ms); the L4 spec's 30–60s window, floored at 10s. */
+export const DASHBOARD_POLL_INTERVAL_MS = 45_000;
 // Per-host teardown for an in-flight hand-rolled drag: the view registers window
 // pointermove/pointerup listeners while dragging, so a tab-switch/disconnect that
 // calls stopDashboard must cancel the drag (remove listeners, neutralize the
@@ -349,10 +356,54 @@ export function stopDashboardEvents(host: DashboardHost): void {
   dashboardEventClients.delete(host);
 }
 
+/**
+ * Start (idempotently) the per-host data-refresh timer. The timer fires `onTick`
+ * every `intervalMs`, but ONLY while the document is visible — a background tab
+ * skips the tick so we don't hammer the gateway when nobody's watching. Passing a
+ * null client stops any running timer (disconnect). A second call with a live
+ * client is a no-op so re-renders don't stack timers.
+ */
+export function startBindingPolling(
+  host: DashboardHost,
+  client: GatewayBrowserClient | null,
+  onTick: () => void,
+  intervalMs: number = DASHBOARD_POLL_INTERVAL_MS,
+): void {
+  if (!client) {
+    stopBindingPolling(host);
+    return;
+  }
+  if (dashboardPollActive.get(host)) {
+    return;
+  }
+  const clamped = Math.max(10_000, intervalMs);
+  const timer = setInterval(() => {
+    // Visibility gate: only refresh when the tab is foreground. On a hidden tab
+    // (or SSR/no-document env) we skip; the next visible render re-resolves.
+    if (typeof document !== "undefined" && document.visibilityState === "hidden") {
+      return;
+    }
+    onTick();
+  }, clamped);
+  dashboardPollTimers.set(host, timer);
+  dashboardPollActive.set(host, true);
+}
+
+/** Stop the per-host data-refresh timer (tab-leave/disconnect). */
+export function stopBindingPolling(host: DashboardHost): void {
+  const timer = dashboardPollTimers.get(host);
+  if (timer !== undefined) {
+    clearInterval(timer);
+    dashboardPollTimers.delete(host);
+  }
+  dashboardPollActive.delete(host);
+}
+
 /** Full lifecycle teardown for the bundled-view `stop` hook. */
 export function stopDashboard(host: DashboardHost): void {
   cancelActiveDrag(host);
   stopDashboardEvents(host);
+  stopBindingPolling(host);
 }
 
 function replaceWidget(

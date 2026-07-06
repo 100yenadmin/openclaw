@@ -668,6 +668,37 @@ export const zh_TW: TranslationMap = {
         hide: "隱藏",
         remove: "移除",
       },
+      stat: {
+        empty: "—",
+      },
+      table: {
+        empty: "沒有可顯示的列。",
+        more: "還有 {count} 項",
+      },
+      sessions: {
+        empty: "尚無工作階段。",
+      },
+      usage: {
+        cost: "費用",
+        tokens: "Tokens",
+      },
+      cron: {
+        empty: "沒有預定的作業。",
+        next: "下一次 {time}",
+        noNext: "未排定",
+      },
+      instances: {
+        empty: "沒有已連線的執行個體。",
+        idle: "閒置 {duration}",
+      },
+      activity: {
+        empty: "沒有近期活動。",
+      },
+      embed: {
+        missing: "此嵌入尚無 URL。",
+        blockedExternal: "外部嵌入已透過您的 Gateway 原則停用。",
+        blockedScheme: "此嵌入 URL 使用不支援的通訊協定。",
+      },
     },
   },
   workboard: {

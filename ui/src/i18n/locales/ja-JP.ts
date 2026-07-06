@@ -679,6 +679,37 @@ export const ja_JP: TranslationMap = {
         hide: "非表示",
         remove: "削除",
       },
+      stat: {
+        empty: "—",
+      },
+      table: {
+        empty: "表示する行がありません。",
+        more: "+{count} 件",
+      },
+      sessions: {
+        empty: "まだセッションがありません。",
+      },
+      usage: {
+        cost: "コスト",
+        tokens: "トークン",
+      },
+      cron: {
+        empty: "スケジュールされたジョブはありません。",
+        next: "次回 {time}",
+        noNext: "スケジュールされていません",
+      },
+      instances: {
+        empty: "接続中のインスタンスはありません。",
+        idle: "アイドル {duration}",
+      },
+      activity: {
+        empty: "最近のアクティビティはありません。",
+      },
+      embed: {
+        missing: "この埋め込みにはまだURLがありません。",
+        blockedExternal: "Gatewayポリシーにより、外部埋め込みは無効になっています。",
+        blockedScheme: "この埋め込みURLは、サポートされていないスキームを使用しています。",
+      },
     },
   },
   workboard: {

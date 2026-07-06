@@ -673,6 +673,37 @@ export const fa: TranslationMap = {
         hide: "مخفی کردن",
         remove: "حذف",
       },
+      stat: {
+        empty: "—",
+      },
+      table: {
+        empty: "ردیفی برای نمایش وجود ندارد.",
+        more: "+{count} مورد دیگر",
+      },
+      sessions: {
+        empty: "هنوز نشستی وجود ندارد.",
+      },
+      usage: {
+        cost: "هزینه",
+        tokens: "توکن‌ها",
+      },
+      cron: {
+        empty: "هیچ کار زمان‌بندی شده‌ای وجود ندارد.",
+        next: "بعدی {time}",
+        noNext: "زمان‌بندی نشده",
+      },
+      instances: {
+        empty: "هیچ نمونه متصلی وجود ندارد.",
+        idle: "بیکار {duration}",
+      },
+      activity: {
+        empty: "فعالیت اخیری وجود ندارد.",
+      },
+      embed: {
+        missing: "این جاسازی هنوز URL ندارد.",
+        blockedExternal: "جاسازی‌های خارجی توسط خط‌مشی Gateway شما غیرفعال شده‌اند.",
+        blockedScheme: "این URL جاسازی از طرحی پشتیبانی نشده استفاده می‌کند.",
+      },
     },
   },
   workboard: {

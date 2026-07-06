@@ -675,6 +675,37 @@ export const pt_BR: TranslationMap = {
         hide: "Ocultar",
         remove: "Remover",
       },
+      stat: {
+        empty: "—",
+      },
+      table: {
+        empty: "Nenhuma linha para exibir.",
+        more: "+{count} mais",
+      },
+      sessions: {
+        empty: "Nenhuma sessão ainda.",
+      },
+      usage: {
+        cost: "Custo",
+        tokens: "Tokens",
+      },
+      cron: {
+        empty: "Nenhuma tarefa agendada.",
+        next: "Próximo {time}",
+        noNext: "Não agendado",
+      },
+      instances: {
+        empty: "Nenhuma instância conectada.",
+        idle: "inativo {duration}",
+      },
+      activity: {
+        empty: "Nenhuma atividade recente.",
+      },
+      embed: {
+        missing: "Este embed ainda não tem URL.",
+        blockedExternal: "Embeds externos estão desabilitados pela política do seu gateway.",
+        blockedScheme: "A URL deste embed usa um esquema não suportado.",
+      },
     },
   },
   workboard: {

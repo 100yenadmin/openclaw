@@ -4,6 +4,7 @@ import {
   applyPointer,
   cancelActiveDrag,
   clearActiveDrag,
+  DASHBOARD_POLL_INTERVAL_MS,
   getDashboardState,
   hiddenTabs,
   loadWorkspace,
@@ -14,6 +15,8 @@ import {
   resolveActiveSlug,
   resolveBinding,
   setWidgetCollapsed,
+  startBindingPolling,
+  stopBindingPolling,
   stopDashboard,
   subscribeToDashboardEvents,
   visibleTabs,
@@ -353,5 +356,103 @@ describe("active drag cancellation", () => {
     clearActiveDrag(host); // normal pointerup path clears without cancelling
     stopDashboard(host);
     expect(cancel).not.toHaveBeenCalled();
+  });
+});
+
+describe("data-refresh polling", () => {
+  it("ticks on the interval while the document is visible", () => {
+    vi.useFakeTimers();
+    try {
+      const host = {};
+      const onTick = vi.fn();
+      startBindingPolling(host, mockClient(), onTick, 10_000);
+      vi.advanceTimersByTime(30_000);
+      expect(onTick).toHaveBeenCalledTimes(3);
+      stopBindingPolling(host);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("stops ticking after stopDashboard — no orphan timer", () => {
+    vi.useFakeTimers();
+    try {
+      const host = {};
+      const onTick = vi.fn();
+      startBindingPolling(host, mockClient(), onTick, 10_000);
+      vi.advanceTimersByTime(10_000);
+      expect(onTick).toHaveBeenCalledTimes(1);
+      stopDashboard(host); // tab-leave / disconnect
+      vi.advanceTimersByTime(60_000);
+      expect(onTick).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("is idempotent — a re-render does not stack timers", () => {
+    vi.useFakeTimers();
+    try {
+      const host = {};
+      const onTick = vi.fn();
+      startBindingPolling(host, mockClient(), onTick, 10_000);
+      startBindingPolling(host, mockClient(), onTick, 10_000);
+      vi.advanceTimersByTime(10_000);
+      expect(onTick).toHaveBeenCalledTimes(1);
+      stopBindingPolling(host);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("skips the tick when the document is hidden", () => {
+    vi.useFakeTimers();
+    const visibility = vi.spyOn(document, "visibilityState", "get").mockReturnValue("hidden");
+    try {
+      const host = {};
+      const onTick = vi.fn();
+      startBindingPolling(host, mockClient(), onTick, 10_000);
+      vi.advanceTimersByTime(30_000);
+      expect(onTick).not.toHaveBeenCalled();
+      stopBindingPolling(host);
+    } finally {
+      visibility.mockRestore();
+      vi.useRealTimers();
+    }
+  });
+
+  it("a null client stops any running timer", () => {
+    vi.useFakeTimers();
+    try {
+      const host = {};
+      const onTick = vi.fn();
+      startBindingPolling(host, mockClient(), onTick, 10_000);
+      startBindingPolling(host, null, onTick, 10_000); // disconnect
+      vi.advanceTimersByTime(30_000);
+      expect(onTick).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("clamps sub-10s intervals up to the 10s floor", () => {
+    vi.useFakeTimers();
+    try {
+      const host = {};
+      const onTick = vi.fn();
+      startBindingPolling(host, mockClient(), onTick, 1_000);
+      vi.advanceTimersByTime(9_000);
+      expect(onTick).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(1_000);
+      expect(onTick).toHaveBeenCalledTimes(1);
+      stopBindingPolling(host);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("exposes a sane default interval within the spec window", () => {
+    expect(DASHBOARD_POLL_INTERVAL_MS).toBeGreaterThanOrEqual(30_000);
+    expect(DASHBOARD_POLL_INTERVAL_MS).toBeLessThanOrEqual(60_000);
   });
 });

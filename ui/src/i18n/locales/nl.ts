@@ -676,6 +676,37 @@ export const nl: TranslationMap = {
         hide: "Verbergen",
         remove: "Verwijderen",
       },
+      stat: {
+        empty: "—",
+      },
+      table: {
+        empty: "Geen rijen om weer te geven.",
+        more: "+{count} meer",
+      },
+      sessions: {
+        empty: "Nog geen sessies.",
+      },
+      usage: {
+        cost: "Kosten",
+        tokens: "Tokens",
+      },
+      cron: {
+        empty: "Geen geplande taken.",
+        next: "Volgende {time}",
+        noNext: "Niet gepland",
+      },
+      instances: {
+        empty: "Geen verbonden instanties.",
+        idle: "inactief {duration}",
+      },
+      activity: {
+        empty: "Geen recente activiteit.",
+      },
+      embed: {
+        missing: "Deze embed heeft nog geen URL.",
+        blockedExternal: "Externe embeds zijn uitgeschakeld door uw gatewaybeleid.",
+        blockedScheme: "Deze embed-URL gebruikt een niet-ondersteund schema.",
+      },
     },
   },
   workboard: {

@@ -673,6 +673,37 @@ export const pl: TranslationMap = {
         hide: "Ukryj",
         remove: "Usuń",
       },
+      stat: {
+        empty: "—",
+      },
+      table: {
+        empty: "Brak wierszy do wyświetlenia.",
+        more: "+{count} więcej",
+      },
+      sessions: {
+        empty: "Brak sesji.",
+      },
+      usage: {
+        cost: "Koszt",
+        tokens: "Tokeny",
+      },
+      cron: {
+        empty: "Brak zaplanowanych zadań.",
+        next: "Następny {time}",
+        noNext: "Nie zaplanowano",
+      },
+      instances: {
+        empty: "Brak połączonych instancji.",
+        idle: "bezczynny {duration}",
+      },
+      activity: {
+        empty: "Brak ostatniej aktywności.",
+      },
+      embed: {
+        missing: "To osadzenie nie ma jeszcze adresu URL.",
+        blockedExternal: "Zewnętrzne osadzenia są wyłączone przez politykę Gateway.",
+        blockedScheme: "Ten URL osadzenia używa nieobsługiwanego schematu.",
+      },
     },
   },
   workboard: {

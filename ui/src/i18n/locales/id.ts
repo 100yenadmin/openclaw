@@ -672,6 +672,37 @@ export const id: TranslationMap = {
         hide: "Sembunyikan",
         remove: "Hapus",
       },
+      stat: {
+        empty: "—",
+      },
+      table: {
+        empty: "Tidak ada baris untuk ditampilkan.",
+        more: "+{count} lainnya",
+      },
+      sessions: {
+        empty: "Belum ada sesi.",
+      },
+      usage: {
+        cost: "Biaya",
+        tokens: "Token",
+      },
+      cron: {
+        empty: "Tidak ada tugas terjadwal.",
+        next: "Berikutnya {time}",
+        noNext: "Tidak dijadwalkan",
+      },
+      instances: {
+        empty: "Tidak ada instance yang terhubung.",
+        idle: "idle {duration}",
+      },
+      activity: {
+        empty: "Tidak ada aktivitas terbaru.",
+      },
+      embed: {
+        missing: "Embed ini belum memiliki URL.",
+        blockedExternal: "Embed eksternal dinonaktifkan oleh kebijakan Gateway Anda.",
+        blockedScheme: "URL embed ini menggunakan skema yang tidak didukung.",
+      },
     },
   },
   workboard: {

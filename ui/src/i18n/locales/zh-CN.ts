@@ -668,6 +668,37 @@ export const zh_CN: TranslationMap = {
         hide: "隐藏",
         remove: "移除",
       },
+      stat: {
+        empty: "—",
+      },
+      table: {
+        empty: "没有可显示的行。",
+        more: "+{count} 项",
+      },
+      sessions: {
+        empty: "暂无会话。",
+      },
+      usage: {
+        cost: "费用",
+        tokens: "Tokens",
+      },
+      cron: {
+        empty: "没有定时任务。",
+        next: "下一次 {time}",
+        noNext: "未计划",
+      },
+      instances: {
+        empty: "没有已连接的实例。",
+        idle: "空闲 {duration}",
+      },
+      activity: {
+        empty: "最近没有活动。",
+      },
+      embed: {
+        missing: "此嵌入尚未设置 URL。",
+        blockedExternal: "您的 Gateway 策略已禁用外部嵌入。",
+        blockedScheme: "此嵌入 URL 使用了不支持的协议。",
+      },
     },
   },
   workboard: {

@@ -672,6 +672,37 @@ export const ar: TranslationMap = {
         hide: "إخفاء",
         remove: "إزالة",
       },
+      stat: {
+        empty: "—",
+      },
+      table: {
+        empty: "لا توجد صفوف لعرضها.",
+        more: "+{count} أخرى",
+      },
+      sessions: {
+        empty: "لا توجد جلسات بعد.",
+      },
+      usage: {
+        cost: "التكلفة",
+        tokens: "الرموز",
+      },
+      cron: {
+        empty: "لا توجد مهام مجدولة.",
+        next: "التالي {time}",
+        noNext: "غير مجدول",
+      },
+      instances: {
+        empty: "لا توجد مثيلات متصلة.",
+        idle: "خامل {duration}",
+      },
+      activity: {
+        empty: "لا يوجد نشاط حديث.",
+      },
+      embed: {
+        missing: "هذا التضمين لا يحتوي على رابط URL بعد.",
+        blockedExternal: "تم تعطيل التضمينات الخارجية بواسطة سياسة الـ Gateway الخاصة بك.",
+        blockedScheme: "يستخدم عنوان URL لهذا التضمين مخططاً غير مدعوم.",
+      },
     },
   },
   workboard: {

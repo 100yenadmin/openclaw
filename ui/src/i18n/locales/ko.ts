@@ -670,6 +670,37 @@ export const ko: TranslationMap = {
         hide: "숨기기",
         remove: "제거",
       },
+      stat: {
+        empty: "—",
+      },
+      table: {
+        empty: "표시할 행이 없습니다.",
+        more: "+{count}개 더보기",
+      },
+      sessions: {
+        empty: "아직 세션이 없습니다.",
+      },
+      usage: {
+        cost: "비용",
+        tokens: "토큰",
+      },
+      cron: {
+        empty: "예약된 작업이 없습니다.",
+        next: "다음 {time}",
+        noNext: "예약되지 않음",
+      },
+      instances: {
+        empty: "연결된 인스턴스가 없습니다.",
+        idle: "유휴 {duration}",
+      },
+      activity: {
+        empty: "최근 활동이 없습니다.",
+      },
+      embed: {
+        missing: "이 임베드에는 아직 URL이 없습니다.",
+        blockedExternal: "외부 임베드는 Gateway 정책에 의해 비활성화되었습니다.",
+        blockedScheme: "이 임베드 URL은 지원되지 않는 스킴을 사용합니다.",
+      },
     },
   },
   workboard: {

@@ -678,6 +678,37 @@ export const fr: TranslationMap = {
         hide: "Masquer",
         remove: "Supprimer",
       },
+      stat: {
+        empty: "—",
+      },
+      table: {
+        empty: "Aucune ligne à afficher.",
+        more: "+{count} de plus",
+      },
+      sessions: {
+        empty: "Aucune session pour le moment.",
+      },
+      usage: {
+        cost: "Coût",
+        tokens: "Jetons",
+      },
+      cron: {
+        empty: "Aucune tâche planifiée.",
+        next: "Prochain {time}",
+        noNext: "Non planifié",
+      },
+      instances: {
+        empty: "Aucune instance connectée.",
+        idle: "Inactif depuis {duration}",
+      },
+      activity: {
+        empty: "Aucune activité récente.",
+      },
+      embed: {
+        missing: "Cet embed n'a pas encore d'URL.",
+        blockedExternal: "Les intégrations externes sont désactivées par votre stratégie Gateway.",
+        blockedScheme: "Cette URL d'embed utilise un schéma non pris en charge.",
+      },
     },
   },
   workboard: {
