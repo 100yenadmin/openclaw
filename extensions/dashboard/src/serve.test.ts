@@ -31,9 +31,9 @@ function fakeResponse(): { res: ServerResponse; captured: CapturedResponse } {
     setHeader(name: string, value: string) {
       captured.headers[name.toLowerCase()] = value;
     },
-    end(chunk?: unknown) {
+    end(chunk?: Buffer | string) {
       if (chunk !== undefined) {
-        captured.body = Buffer.isBuffer(chunk) ? chunk.toString("utf8") : String(chunk);
+        captured.body = Buffer.isBuffer(chunk) ? chunk.toString("utf8") : chunk;
       }
       captured.ended = true;
     },

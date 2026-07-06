@@ -184,3 +184,64 @@ describe("attachWidgetBridge accept filter (identity, not origin)", () => {
     expect(posts).toHaveLength(0);
   });
 });
+
+describe("attachWidgetBridge rpc allowlist re-check", () => {
+  it("denies a non-allowlisted rpc binding at resolve time WITHOUT calling the gateway", async () => {
+    const iframe = document.createElement("iframe");
+    document.body.appendChild(iframe);
+    const posts: unknown[] = [];
+    if (iframe.contentWindow) {
+      iframe.contentWindow.postMessage = ((message: unknown) => posts.push(message)) as never;
+    }
+    // A widget whose declared binding names a method NOT in the allowlist. Even
+    // though the write-time schema should have rejected it, the parent must not
+    // call the gateway on the widget's behalf.
+    const request = vi.fn(async () => ({ leaked: true }));
+    const detach = attachWidgetBridge({
+      iframe,
+      widget: widget({ bindings: { value: { source: "rpc", method: "sessions.delete" } } }),
+      manifest: manifest(),
+      context: host({ client: { request } as never }),
+    });
+    window.dispatchEvent(
+      new MessageEvent("message", {
+        data: { v: 1, type: "dashboard:getData", requestId: "r1", bindingId: "value" },
+        source: iframe.contentWindow,
+      }),
+    );
+    await vi.waitFor(() => expect(posts.length).toBeGreaterThan(0));
+    expect(posts[0]).toMatchObject({
+      type: "dashboard:error",
+      code: "binding_denied",
+      requestId: "r1",
+    });
+    expect(request).not.toHaveBeenCalled();
+    detach();
+  });
+
+  it("allows an allowlisted rpc binding to resolve through the gateway", async () => {
+    const iframe = document.createElement("iframe");
+    document.body.appendChild(iframe);
+    const posts: unknown[] = [];
+    if (iframe.contentWindow) {
+      iframe.contentWindow.postMessage = ((message: unknown) => posts.push(message)) as never;
+    }
+    const request = vi.fn(async () => ({ sessions: [] }));
+    const detach = attachWidgetBridge({
+      iframe,
+      widget: widget({ bindings: { value: { source: "rpc", method: "sessions.list" } } }),
+      manifest: manifest(),
+      context: host({ client: { request } as never }),
+    });
+    window.dispatchEvent(
+      new MessageEvent("message", {
+        data: { v: 1, type: "dashboard:getData", requestId: "r1", bindingId: "value" },
+        source: iframe.contentWindow,
+      }),
+    );
+    await vi.waitFor(() => expect(posts.length).toBeGreaterThan(0));
+    expect(posts[0]).toMatchObject({ type: "dashboard:data", requestId: "r1" });
+    expect(request).toHaveBeenCalledWith("sessions.list", {});
+    detach();
+  });
+});

@@ -18,6 +18,7 @@ import { directive, Directive } from "lit/directive.js";
 import type { GatewayBrowserClient } from "../api/gateway.ts";
 import {
   createWidgetBridge,
+  isRpcMethodAllowed,
   type WidgetBridge,
   type WidgetOutboundMessage,
 } from "../lib/dashboard/bridge.ts";
@@ -151,6 +152,18 @@ export function attachWidgetBridge(params: {
   const bridge: WidgetBridge = createWidgetBridge({
     manifest,
     post,
+    assertBindingAllowed: (bindingId) => {
+      // Resolve-time defense-in-depth: an rpc binding may only name a method in the
+      // read allowlist, re-checked here before the parent ever calls the gateway on
+      // the widget's behalf (the write-time schema gate is the first line). A miss
+      // returns the same binding_denied the bridge uses for undeclared bindings, and
+      // the bridge then skips resolveBinding entirely (no gateway call).
+      const binding = primaryBindingByManifestId(widget, bindingId);
+      if (binding?.source === "rpc" && !isRpcMethodAllowed(binding.method ?? "")) {
+        return "binding_denied";
+      }
+      return null;
+    },
     resolveBinding: async (bindingId) => {
       const binding = primaryBindingByManifestId(widget, bindingId);
       if (!binding) {
