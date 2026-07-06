@@ -239,6 +239,7 @@ describe("renderCustomWidget (L5 dispatch)", () => {
       renderWidgetCell({
         widget: widget({ kind: "custom:chart" }),
         binding: null,
+        builtinContext: BUILTIN_CONTEXT,
         menuOpen: false,
         pending: false,
         dragging: false,

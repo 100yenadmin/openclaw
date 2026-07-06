@@ -179,7 +179,7 @@ describe("sendPrompt capability + confirm + rate limit", () => {
   });
 
   it("rate-limits to at most one in-flight prompt", async () => {
-    let resolveConfirm: ((ok: boolean) => void) | null = null;
+    let resolveConfirm!: (ok: boolean) => void;
     const { bridge, posted } = makeBridge({
       manifest: manifest({ capabilities: ["prompt:send"] }),
       confirmPrompt: () =>
@@ -196,7 +196,7 @@ describe("sendPrompt capability + confirm + rate limit", () => {
       code: "rate_limited",
       requestId: "p2",
     });
-    resolveConfirm?.(false);
+    resolveConfirm(false);
   });
 
   it("rate-limits to 10 sends per minute", async () => {

@@ -14,7 +14,8 @@
 //   data / theme tokens the manifest entitles the widget to.
 
 import { html, type TemplateResult } from "lit";
-import { directive, Directive } from "lit/directive.js";
+import { AsyncDirective } from "lit/async-directive.js";
+import { directive } from "lit/directive.js";
 import type { GatewayBrowserClient } from "../api/gateway.ts";
 import {
   createWidgetBridge,
@@ -215,7 +216,7 @@ export function attachWidgetBridge(params: {
  * frame from being recreated on every parent render, which would drop bridge
  * state and reload the widget.
  */
-class CustomWidgetFrameDirective extends Directive {
+class CustomWidgetFrameDirective extends AsyncDirective {
   private iframe: HTMLIFrameElement | null = null;
   private detach: (() => void) | null = null;
   private key = "";
