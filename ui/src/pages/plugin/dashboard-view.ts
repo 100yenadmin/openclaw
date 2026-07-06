@@ -17,8 +17,10 @@ import { icons } from "../../components/icons.ts";
 import { t } from "../../i18n/index.ts";
 import {
   beginDrag,
+  collides,
   DASHBOARD_GRID_GAP,
   DASHBOARD_ROW_HEIGHT,
+  gridPlacementStyle,
   gridRowCount,
   nudgeRect,
   resolveDrop,
@@ -98,6 +100,80 @@ type DashboardViewState = {
 };
 
 const dashboardViewStates = new WeakMap<object, DashboardViewState>();
+
+// Per-host document dismiss listener for the open kebab menu (#3). Installed while
+// a menu is open so an outside pointerdown or Escape closes it; removed when the
+// menu closes or the view stops. The details-based hidden-tabs menu closes via its
+// own native outside-click/Escape once we drop `open` on the same signals.
+type MenuDismissBinding = {
+  onPointerDown: (event: PointerEvent) => void;
+  onKeyDown: (event: KeyboardEvent) => void;
+};
+const dashboardMenuDismiss = new WeakMap<object, MenuDismissBinding>();
+
+/** Remove the active menu-dismiss document listeners for `host`, if any. */
+function teardownMenuDismiss(host: object): void {
+  const binding = dashboardMenuDismiss.get(host);
+  if (!binding) {
+    return;
+  }
+  document.removeEventListener("pointerdown", binding.onPointerDown, true);
+  document.removeEventListener("keydown", binding.onKeyDown, true);
+  dashboardMenuDismiss.delete(host);
+}
+
+/**
+ * Ensure the document-level dismiss listeners match whether a kebab menu is open.
+ * When open, an outside pointerdown or Escape clears `openMenuWidgetId`; a click
+ * inside the open menu/toggle is ignored so menu items still fire.
+ */
+function syncMenuDismiss(
+  host: object,
+  viewState: DashboardViewState,
+  requestUpdate: () => void,
+): void {
+  const menuOpen = viewState.openMenuWidgetId !== null;
+  const active = dashboardMenuDismiss.has(host);
+  if (menuOpen === active) {
+    return;
+  }
+  if (!menuOpen) {
+    teardownMenuDismiss(host);
+    return;
+  }
+  const close = () => {
+    if (viewState.openMenuWidgetId === null) {
+      return;
+    }
+    viewState.openMenuWidgetId = null;
+    teardownMenuDismiss(host);
+    requestUpdate();
+  };
+  const onPointerDown = (event: PointerEvent) => {
+    const target = event.target;
+    if (
+      target instanceof Element &&
+      target.closest(".dashboard-widget__menu, .dashboard-widget__menu-toggle")
+    ) {
+      return;
+    }
+    close();
+  };
+  const onKeyDown = (event: KeyboardEvent) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      close();
+    }
+  };
+  document.addEventListener("pointerdown", onPointerDown, true);
+  document.addEventListener("keydown", onKeyDown, true);
+  dashboardMenuDismiss.set(host, { onPointerDown, onKeyDown });
+}
+
+/** View-level teardown: drop any menu-dismiss listeners. Called from the controller's stop. */
+export function stopDashboardView(host: object): void {
+  teardownMenuDismiss(host);
+}
 
 function getViewState(host: object): DashboardViewState {
   let state = dashboardViewStates.get(host);
@@ -202,6 +278,49 @@ function gridMetrics(host: object): { width: number } {
   return { width: grid?.clientWidth ?? 0 };
 }
 
+/**
+ * Close the hidden-tabs overflow `<details>` on Escape (#3). Native details close
+ * on summary click but not on Escape, so wire it explicitly.
+ */
+function onHiddenTabsKeydown(event: KeyboardEvent): void {
+  if (event.key !== "Escape") {
+    return;
+  }
+  const details = (event.currentTarget as HTMLElement).closest("details");
+  if (details?.open) {
+    event.preventDefault();
+    details.open = false;
+    (details.querySelector("summary") as HTMLElement | null)?.focus();
+  }
+}
+
+/**
+ * When the hidden-tabs overflow opens, arm a one-shot document pointerdown that
+ * closes it on an outside click (#3); native details never dismiss on outside
+ * click. Self-removing on close so no listener leaks.
+ */
+function onHiddenTabsToggle(event: Event): void {
+  const details = event.currentTarget as HTMLDetailsElement;
+  if (!details.open) {
+    return;
+  }
+  const onOutside = (pointerEvent: PointerEvent) => {
+    if (pointerEvent.target instanceof Node && details.contains(pointerEvent.target)) {
+      return;
+    }
+    details.open = false;
+    document.removeEventListener("pointerdown", onOutside, true);
+  };
+  const onClosed = () => {
+    if (!details.open) {
+      document.removeEventListener("pointerdown", onOutside, true);
+      details.removeEventListener("toggle", onClosed);
+    }
+  };
+  document.addEventListener("pointerdown", onOutside, true);
+  details.addEventListener("toggle", onClosed);
+}
+
 function renderTabStrip(state: DashboardUiState, workspace: DashboardWorkspace): TemplateResult {
   const tabs = visibleTabs(workspace);
   const hidden = hiddenTabs(workspace);
@@ -230,7 +349,11 @@ function renderTabStrip(state: DashboardUiState, workspace: DashboardWorkspace):
       })}
       ${hidden.length > 0
         ? html`
-            <details class="dashboard-tabs__hidden">
+            <details
+              class="dashboard-tabs__hidden"
+              @toggle=${onHiddenTabsToggle}
+              @keydown=${onHiddenTabsKeydown}
+            >
               <summary class="dashboard-tab dashboard-tab--overflow">
                 <span class="dashboard-tab__icon" aria-hidden="true">${icons.eyeOff}</span>
                 <span class="dashboard-tab__label"
@@ -353,7 +476,32 @@ function renderGrid(
           ...(custom ? { custom } : {}),
         });
       })}
+      ${renderDragGhost(viewState, tab)}
     </div>
+  `;
+}
+
+/**
+ * Snapped drop-target ghost for the active move/resize drag (#4). Placed in the
+ * same grid slot the drop would land in so the target is obvious. An overlapping
+ * (reject-bound) target reads distinctly via `--invalid`.
+ */
+function renderDragGhost(
+  viewState: DashboardViewState,
+  tab: DashboardTab,
+): TemplateResult | typeof nothing {
+  const drag = viewState.drag;
+  if (!drag) {
+    return nothing;
+  }
+  const invalid = collides(drag.ghostRect, tab.widgets, drag.widgetId);
+  return html`
+    <div
+      class="dashboard-ghost ${invalid ? "dashboard-ghost--invalid" : ""}"
+      style=${gridPlacementStyle(drag.ghostRect)}
+      aria-hidden="true"
+      data-test-id="dashboard-drag-ghost"
+    ></div>
   `;
 }
 
@@ -510,6 +658,9 @@ export function renderDashboard(props: DashboardProps): TemplateResult {
   const state = getDashboardState(props.host);
   const viewState = getViewState(props.host);
   state.requestUpdate = props.onRequestUpdate ?? null;
+  // Keep the outside-click / Escape dismiss listeners in sync with the open kebab
+  // menu (#3). Cheap no-op when the open state is unchanged.
+  syncMenuDismiss(props.host, viewState, () => props.onRequestUpdate?.());
 
   const requestedSlug = requestedWorkspaceSlug(window.location.search);
   const active = props.connected;
