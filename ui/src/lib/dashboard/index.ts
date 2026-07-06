@@ -14,6 +14,8 @@ import {
   type DashboardGridRect,
   type DashboardTab,
   type DashboardWidget,
+  type DashboardWidgetRegistryEntry,
+  type DashboardWidgetStatus,
   type DashboardWorkspace,
 } from "./types.ts";
 
@@ -189,6 +191,38 @@ function normalizeTab(value: unknown): DashboardTab | null {
   };
 }
 
+const WIDGET_STATUSES = new Set<DashboardWidgetStatus>(["pending", "approved", "rejected"]);
+
+function normalizeRegistryEntry(value: unknown): DashboardWidgetRegistryEntry | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+  const status = value.status;
+  if (typeof status !== "string" || !WIDGET_STATUSES.has(status as DashboardWidgetStatus)) {
+    return null;
+  }
+  return {
+    status: status as DashboardWidgetStatus,
+    ...(typeof value.createdBy === "string" ? { createdBy: value.createdBy } : {}),
+    ...(typeof value.approvedBy === "string" ? { approvedBy: value.approvedBy } : {}),
+    ...(typeof value.approvedAt === "string" ? { approvedAt: value.approvedAt } : {}),
+  };
+}
+
+function normalizeWidgetsRegistry(value: unknown): Record<string, DashboardWidgetRegistryEntry> {
+  if (!isRecord(value)) {
+    return {};
+  }
+  const registry: Record<string, DashboardWidgetRegistryEntry> = {};
+  for (const [name, raw] of Object.entries(value)) {
+    const entry = normalizeRegistryEntry(raw);
+    if (entry) {
+      registry[name] = entry;
+    }
+  }
+  return registry;
+}
+
 export function normalizeWorkspace(payload: unknown): DashboardWorkspace {
   const record = isRecord(payload) ? payload : {};
   const tabs = Array.isArray(record.tabs)
@@ -203,7 +237,25 @@ export function normalizeWorkspace(payload: unknown): DashboardWorkspace {
     workspaceVersion: readNumber(record.workspaceVersion, 0),
     tabs,
     prefs: { tabOrder },
+    widgetsRegistry: normalizeWidgetsRegistry(record.widgetsRegistry),
   };
+}
+
+/** The `custom:<name>` widget name, or null for builtin/unknown kinds. */
+export function customWidgetName(kind: string): string | null {
+  return kind.startsWith("custom:") ? kind.slice("custom:".length) || null : null;
+}
+
+/** Registry status for a custom widget kind, or null when not a tracked custom widget. */
+export function customWidgetStatus(
+  workspace: DashboardWorkspace,
+  kind: string,
+): DashboardWidgetStatus | null {
+  const name = customWidgetName(kind);
+  if (!name) {
+    return null;
+  }
+  return workspace.widgetsRegistry[name]?.status ?? null;
 }
 
 /**
@@ -538,6 +590,33 @@ export function moveWidgetToTab(
       };
     },
   });
+}
+
+/**
+ * Approve or reject a pending custom widget (operator-only) → `dashboard.widget.approve`
+ * (WRITE). The registry is not part of the optimistic widget model, so this fires
+ * the RPC and lets the resulting `plugin.dashboard.changed` broadcast refetch the
+ * new status; a failure surfaces `actionError` for the toast.
+ */
+export async function approveWidget(
+  state: DashboardUiState,
+  client: GatewayBrowserClient | null,
+  params: { name: string; decision: "approved" | "rejected" },
+): Promise<void> {
+  if (!client) {
+    return;
+  }
+  state.actionError = null;
+  notify(state);
+  try {
+    await client.request("dashboard.widget.approve", {
+      name: params.name,
+      decision: params.decision,
+    });
+  } catch (err) {
+    state.actionError = formatError(err);
+    notify(state);
+  }
 }
 
 // --- Minimal builtin binding resolution (spec-30 scope; L4 extends) ----------

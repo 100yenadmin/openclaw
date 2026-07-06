@@ -10,7 +10,12 @@ import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import { t } from "../i18n/index.ts";
 import { gridPlacementStyle } from "../lib/dashboard/grid.ts";
 import { dashboardAgentProvenance, type DashboardBindingResult } from "../lib/dashboard/index.ts";
-import type { DashboardWidget } from "../lib/dashboard/types.ts";
+import type {
+  DashboardWidget,
+  DashboardWidgetStatus,
+  WidgetManifestView,
+} from "../lib/dashboard/types.ts";
+import { renderCustomWidgetHost, type CustomWidgetHostContext } from "./dashboard-custom-widget.ts";
 import { icons } from "./icons.ts";
 import { toSanitizedMarkdownHtml } from "./markdown.ts";
 
@@ -30,6 +35,20 @@ export type DashboardWidgetCellCallbacks = {
   ) => void;
 };
 
+/**
+ * Custom-widget (`custom:<name>`) rendering context (L5). Passed only for custom
+ * widgets; builtin widgets ignore it. Carries the registry approval status (gates
+ * whether an iframe is ever built), the loaded manifest, the sandbox host context,
+ * and the operator-only approve/reject actions for the pending placeholder.
+ */
+export type DashboardCustomWidgetContext = {
+  status: DashboardWidgetStatus | null;
+  manifest: WidgetManifestView | null;
+  host: CustomWidgetHostContext;
+  onApprove: (widget: DashboardWidget) => void;
+  onReject: (widget: DashboardWidget) => void;
+};
+
 export type DashboardWidgetCellProps = {
   widget: DashboardWidget;
   /** Resolved binding value for the primary binding, or an error to surface. */
@@ -39,6 +58,8 @@ export type DashboardWidgetCellProps = {
   /** When set, this cell is the live drag/resize ghost source. */
   dragging: boolean;
   callbacks: DashboardWidgetCellCallbacks;
+  /** Present for `custom:` widgets only (L5); builtin widgets leave this undefined. */
+  custom?: DashboardCustomWidgetContext;
 };
 
 /** Renders the provenance chip when a widget was authored by an agent. */
@@ -117,7 +138,10 @@ export function renderBuiltinWidget(
       return renderMarkdown(widget, value);
     default:
       if (widget.kind.startsWith("custom:")) {
-        // L5 replaces this with the sandboxed iframe host.
+        // Custom widgets are dispatched by renderWidgetBody BEFORE this builtin
+        // path; reaching here means no L5 host context was supplied (e.g. a unit
+        // test rendering the builtin body in isolation). Fall back to a neutral
+        // placeholder rather than attempt to build an iframe without a manifest.
         return html`<div class="dashboard-widget__placeholder">
           ${t("dashboard.widget.customPlaceholder")}
         </div>`;
@@ -177,6 +201,75 @@ function renderMarkdown(widget: DashboardWidget, value: unknown): TemplateResult
 }
 
 /**
+ * Renders a `custom:<name>` widget (L5). The registry status is the render gate,
+ * mirroring the server's approved-only serving gate:
+ * - `approved` → the sandboxed iframe host (only path that ever builds an iframe).
+ * - `pending`  → a placeholder card with operator-only Approve/Reject.
+ * - `rejected` / unknown → a neutral placeholder; NO iframe is constructed.
+ */
+export function renderCustomWidget(
+  widget: DashboardWidget,
+  custom: DashboardCustomWidgetContext,
+): TemplateResult {
+  if (custom.status === "approved") {
+    if (!custom.manifest) {
+      // Approved but the manifest has not loaded yet: hold the cell without an
+      // iframe until the manifest resolves (the parent re-renders on load).
+      return html`<div
+        class="dashboard-widget__placeholder"
+        data-test-id="dashboard-custom-loading"
+      >
+        ${t("dashboard.widget.customLoading")}
+      </div>`;
+    }
+    return renderCustomWidgetHost({
+      widget,
+      manifest: custom.manifest,
+      context: custom.host,
+    });
+  }
+  if (custom.status === "pending") {
+    const author = dashboardAgentProvenance(widget.createdBy);
+    return html`
+      <div
+        class="dashboard-widget__approval"
+        role="group"
+        data-test-id="dashboard-custom-pending"
+        aria-label=${t("dashboard.widget.approval.title")}
+      >
+        <div class="dashboard-widget__approval-title">${t("dashboard.widget.approval.title")}</div>
+        <div class="dashboard-widget__approval-sub">
+          ${author
+            ? t("dashboard.widget.approval.byAgent", { agent: author })
+            : t("dashboard.widget.approval.byUnknown")}
+        </div>
+        <div class="dashboard-widget__approval-actions">
+          <button
+            class="btn btn--small btn--primary"
+            type="button"
+            data-test-id="dashboard-custom-approve"
+            @click=${() => custom.onApprove(widget)}
+          >
+            ${t("dashboard.widget.approval.approve")}
+          </button>
+          <button
+            class="btn btn--small"
+            type="button"
+            data-test-id="dashboard-custom-reject"
+            @click=${() => custom.onReject(widget)}
+          >
+            ${t("dashboard.widget.approval.reject")}
+          </button>
+        </div>
+      </div>
+    `;
+  }
+  return html`<div class="dashboard-widget__placeholder" data-test-id="dashboard-custom-rejected">
+    ${t("dashboard.widget.approval.unavailable")}
+  </div>`;
+}
+
+/**
  * Error boundary around the widget body. Any throw during the builtin render (a
  * broken widget, a bad binding) is caught and rendered as an error card in THIS
  * cell — siblings and the shell keep rendering (spec-30 acceptance criterion).
@@ -185,8 +278,14 @@ export function renderWidgetBody(
   widget: DashboardWidget,
   binding: DashboardBindingResult | null,
   callbacks: DashboardWidgetCellCallbacks,
+  custom?: DashboardCustomWidgetContext,
 ): TemplateResult {
   try {
+    // Custom widgets (L5) dispatch here, inside the same error boundary so a throw
+    // while building the host still isolates to this cell.
+    if (widget.kind.startsWith("custom:") && custom) {
+      return renderCustomWidget(widget, custom);
+    }
     return renderBuiltinWidget(widget, binding);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -262,7 +361,7 @@ export function renderWidgetCell(props: DashboardWidgetCellProps): TemplateResul
         ? nothing
         : html`
             <div class="dashboard-widget__body">
-              ${renderWidgetBody(widget, props.binding, callbacks)}
+              ${renderWidgetBody(widget, props.binding, callbacks, props.custom)}
             </div>
             <span
               class="dashboard-widget__resize"

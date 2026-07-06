@@ -5,7 +5,12 @@
 import { html, nothing, render, type TemplateResult } from "lit";
 import type { GatewayBrowserClient } from "../../api/gateway.ts";
 import {
+  loadWidgetManifestView,
+  type CustomWidgetHostContext,
+} from "../../components/dashboard-custom-widget.ts";
+import {
   renderWidgetCell,
+  type DashboardCustomWidgetContext,
   type DashboardWidgetCellCallbacks,
 } from "../../components/dashboard-widget-cell.ts";
 import { icons } from "../../components/icons.ts";
@@ -21,7 +26,10 @@ import {
   type DashboardDragState,
 } from "../../lib/dashboard/grid.ts";
 import {
+  approveWidget,
   clearActiveDrag,
+  customWidgetName,
+  customWidgetStatus,
   findTab,
   getDashboardState,
   hiddenTabs,
@@ -45,6 +53,7 @@ import type {
   DashboardTab,
   DashboardWidget,
   DashboardWorkspace,
+  WidgetManifestView,
 } from "../../lib/dashboard/types.ts";
 import { pluginTabRefFromSearch } from "./route.ts";
 
@@ -53,6 +62,10 @@ export type DashboardProps = {
   client: GatewayBrowserClient | null;
   connected: boolean;
   onRequestUpdate?: () => void;
+  /** Gateway HTTP base path for custom-widget iframe sources (L5). */
+  basePath?: string;
+  /** Session key for custom-widget prompt dispatch (L5). */
+  sessionKey?: string;
 };
 
 // Per-host transient view state (menu, live drag) kept outside the data model so a
@@ -64,6 +77,9 @@ type DashboardViewState = {
   bindingResults: Map<string, DashboardBindingResult>;
   bindingLoads: Set<string>;
   bindingVersion: number;
+  /** Loaded custom-widget manifests keyed by widget name; survives doc changes. */
+  manifestCache: Map<string, WidgetManifestView>;
+  manifestLoads: Set<string>;
 };
 
 const dashboardViewStates = new WeakMap<object, DashboardViewState>();
@@ -77,6 +93,8 @@ function getViewState(host: object): DashboardViewState {
       bindingResults: new Map(),
       bindingLoads: new Set(),
       bindingVersion: -1,
+      manifestCache: new Map(),
+      manifestLoads: new Set(),
     };
     dashboardViewStates.set(host, state);
   }
@@ -202,6 +220,65 @@ function renderTabStrip(state: DashboardUiState, workspace: DashboardWorkspace):
   `;
 }
 
+/**
+ * Load `widget.json` manifests for the APPROVED custom widgets on the active tab.
+ * Only approved widgets ever build an iframe, so only they need a manifest; a
+ * pending/rejected widget never fetches one. Cached across doc changes by name.
+ */
+function ensureManifests(
+  viewState: DashboardViewState,
+  props: DashboardProps,
+  workspace: DashboardWorkspace,
+  tab: DashboardTab,
+): void {
+  const basePath = props.basePath ?? "";
+  for (const widget of tab.widgets) {
+    const name = customWidgetName(widget.kind);
+    if (
+      !name ||
+      customWidgetStatus(workspace, widget.kind) !== "approved" ||
+      viewState.manifestCache.has(name) ||
+      viewState.manifestLoads.has(name)
+    ) {
+      continue;
+    }
+    viewState.manifestLoads.add(name);
+    void loadWidgetManifestView(basePath, name).then((manifest) => {
+      viewState.manifestLoads.delete(name);
+      if (manifest) {
+        viewState.manifestCache.set(name, manifest);
+        props.onRequestUpdate?.();
+      }
+    });
+  }
+}
+
+/** Builds the L5 custom-widget context for one `custom:<name>` widget, or null. */
+function buildCustomContext(
+  props: DashboardProps,
+  state: DashboardUiState,
+  viewState: DashboardViewState,
+  workspace: DashboardWorkspace,
+  widget: DashboardWidget,
+): DashboardCustomWidgetContext | null {
+  const name = customWidgetName(widget.kind);
+  if (!name) {
+    return null;
+  }
+  const host: CustomWidgetHostContext = {
+    client: props.client,
+    basePath: props.basePath ?? "",
+    sessionKey: props.sessionKey ?? "main",
+  };
+  return {
+    status: customWidgetStatus(workspace, widget.kind),
+    manifest: viewState.manifestCache.get(name) ?? null,
+    host,
+    onApprove: () => void approveWidget(state, props.client, { name, decision: "approved" }),
+    onReject: () => void approveWidget(state, props.client, { name, decision: "rejected" }),
+  };
+}
+
 function renderGrid(
   props: DashboardProps,
   state: DashboardUiState,
@@ -210,6 +287,7 @@ function renderGrid(
   tab: DashboardTab,
 ): TemplateResult {
   ensureBindings(viewState, props.client, workspace, tab, props.onRequestUpdate ?? null);
+  ensureManifests(viewState, props, workspace, tab);
   if (tab.widgets.length === 0) {
     return html`
       <div class="dashboard-empty" data-test-id="dashboard-empty-tab">
@@ -223,16 +301,18 @@ function renderGrid(
   const minHeight = rows * DASHBOARD_ROW_HEIGHT + Math.max(0, rows - 1) * DASHBOARD_GRID_GAP;
   return html`
     <div class="dashboard-grid" style="min-height: ${minHeight}px" data-test-id="dashboard-grid">
-      ${tab.widgets.map((widget) =>
-        renderWidgetCell({
+      ${tab.widgets.map((widget) => {
+        const custom = buildCustomContext(props, state, viewState, workspace, widget);
+        return renderWidgetCell({
           widget,
           binding: viewState.bindingResults.get(widget.id) ?? null,
           menuOpen: viewState.openMenuWidgetId === widget.id,
           pending: state.pendingWidgetIds.has(widget.id),
           dragging: viewState.drag?.widgetId === widget.id,
           callbacks,
-        }),
-      )}
+          ...(custom ? { custom } : {}),
+        });
+      })}
     </div>
   `;
 }

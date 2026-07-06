@@ -59,11 +59,38 @@ export type DashboardPrefs = {
   tabOrder: string[];
 };
 
+/** Custom-widget registry status (00 §6). Only `approved` widgets get an iframe. */
+export type DashboardWidgetStatus = "pending" | "approved" | "rejected";
+
+/** UI read model of one `widgetsRegistry` entry (custom-widget approval state). */
+export type DashboardWidgetRegistryEntry = {
+  status: DashboardWidgetStatus;
+  createdBy?: DashboardCreatedBy;
+  approvedBy?: DashboardCreatedBy;
+  approvedAt?: string;
+};
+
 export type DashboardWorkspace = {
   schemaVersion: number;
   workspaceVersion: number;
   tabs: DashboardTab[];
   prefs: DashboardPrefs;
+  /** Custom-widget install/approval state, keyed by widget name (`custom:<name>`). */
+  widgetsRegistry: Record<string, DashboardWidgetRegistryEntry>;
+};
+
+/** Capability names a custom widget may hold (00 §2). */
+export type DashboardWidgetCapability = "data:read" | "prompt:send";
+
+/**
+ * The subset of a custom widget's `widget.json` manifest the parent bridge needs
+ * to gate child requests: which binding ids are declared and which capabilities
+ * the operator approved. Loaded on demand by the host from the served manifest.
+ */
+export type WidgetManifestView = {
+  name: string;
+  bindingIds: string[];
+  capabilities: DashboardWidgetCapability[];
 };
 
 /** Payload of the `plugin.dashboard.changed` broadcast (01-conventions §Event naming). */

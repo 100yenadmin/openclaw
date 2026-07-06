@@ -19,6 +19,10 @@ type BundledPluginTabView = {
     client: GatewayBrowserClient | null;
     connected: boolean;
     onRequestUpdate?: () => void;
+    // L5: custom widgets need the gateway HTTP base (iframe src) and the session
+    // key (prompt dispatch). Bundled views that don't use them ignore these.
+    basePath?: string;
+    sessionKey?: string;
   }) => unknown;
   stop: (host: object) => void;
 };
@@ -122,6 +126,8 @@ export class PluginPage extends LitElement {
         client: snapshot.client,
         connected: snapshot.connected,
         onRequestUpdate: () => this.requestUpdate(),
+        basePath: context.basePath,
+        sessionKey: snapshot.sessionKey,
       });
     }
     if (info?.path) {
