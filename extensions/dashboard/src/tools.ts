@@ -46,6 +46,8 @@ export type DashboardScaffoldOptions = {
   name: string;
   title?: string;
   stateDir?: string;
+  /** Provenance stamped into the scaffold's "built by" footer. */
+  createdBy?: string;
 };
 
 export type DashboardScaffoldResult = {
@@ -480,13 +482,16 @@ function widgetManifest(name: string, title: string) {
     name,
     title,
     entrypoint: "index.html",
-    bindings: [{ id: "value", source: "static" }],
+    bindings: [{ id: "value", source: "static", value: "Hello from your dashboard widget." }],
     capabilities: ["data:read"],
     preferredSize: { w: 6, h: 4 },
   };
 }
 
-function widgetHtml(title: string): string {
+// Scaffold template (spec-50 §Scaffold): demonstrates the v1 handshake, getData +
+// onData(=push), theme tokens applied to CSS vars, ZERO external requests, and a
+// visible "built by <createdBy>" footer. Framework-free and < 100 lines.
+function widgetHtml(title: string, createdBy: string): string {
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -494,14 +499,18 @@ function widgetHtml(title: string): string {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${escapeHtml(title)}</title>
   <style>
-    :root { color-scheme: light dark; font-family: system-ui, sans-serif; }
-    body { margin: 0; padding: 16px; background: Canvas; color: CanvasText; }
+    :root { color-scheme: light dark; --wg-bg: Canvas; --wg-text: CanvasText; --wg-accent: #ff5c5c; }
+    body { margin: 0; padding: 16px; font-family: var(--font-sans, system-ui, sans-serif);
+      background: var(--wg-bg); color: var(--wg-text); }
+    h1 { margin: 0 0 12px; font-size: 1.1rem; }
     #value { white-space: pre-wrap; overflow-wrap: anywhere; }
+    footer { margin-top: 16px; font-size: 0.75rem; color: var(--wg-accent); }
   </style>
 </head>
 <body>
   <h1>${escapeHtml(title)}</h1>
   <pre id="value">Waiting for dashboard data...</pre>
+  <footer>Built by ${escapeHtml(createdBy)}</footer>
   <script>
     const valueNode = document.getElementById("value");
     function post(type, payload = {}) {
@@ -513,18 +522,22 @@ function widgetHtml(title: string): string {
     function onData(message) {
       render(message.data);
     }
+    function applyTheme(tokens) {
+      const root = document.documentElement.style;
+      if (tokens["--bg"]) root.setProperty("--wg-bg", tokens["--bg"]);
+      if (tokens["--text"]) root.setProperty("--wg-text", tokens["--text"]);
+      if (tokens["--accent"]) root.setProperty("--wg-accent", tokens["--accent"]);
+    }
     window.addEventListener("message", (event) => {
       const message = event.data;
       if (!message || message.v !== 1) return;
-      if (message.type === "dashboard:data" || message.type === "dashboard:push") {
-        onData(message);
-      }
-      if (message.type === "dashboard:error") {
-        render({ error: message.message });
-      }
+      if (message.type === "dashboard:data" || message.type === "dashboard:push") onData(message);
+      else if (message.type === "dashboard:theme") applyTheme(message.tokens || {});
+      else if (message.type === "dashboard:error") render({ error: message.message });
     });
     post("dashboard:ready");
     post("dashboard:getData", { requestId: "initial", bindingId: "value" });
+    post("dashboard:getTheme", { requestId: "theme" });
   </script>
 </body>
 </html>
@@ -589,7 +602,9 @@ export async function scaffoldDashboardWidget(
         mode: 0o600,
       },
     ),
-    fs.writeFile(`${htmlPath}.tmp`, widgetHtml(title), { mode: 0o600 }),
+    fs.writeFile(`${htmlPath}.tmp`, widgetHtml(title, options.createdBy ?? "an agent"), {
+      mode: 0o600,
+    }),
     fs.writeFile(`${readmePath}.tmp`, widgetReadme(name), { mode: 0o600 }),
   ]);
   await Promise.all([
@@ -975,6 +990,7 @@ export function createDashboardTools(params: DashboardToolParams): AnyAgentTool[
           name: readRequiredString(record, "name", "name"),
           title: readOptionalString(record, "title"),
           stateDir: store.stateDir,
+          createdBy: actor,
         });
         const result = await store.mutate(
           (draft) => {
