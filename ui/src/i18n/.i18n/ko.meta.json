@@ -1,27 +1,11 @@
 {
-  "fallbackKeys": [
-    "dashboard.widget.activity.empty",
-    "dashboard.widget.cron.empty",
-    "dashboard.widget.cron.next",
-    "dashboard.widget.cron.noNext",
-    "dashboard.widget.embed.blockedExternal",
-    "dashboard.widget.embed.blockedScheme",
-    "dashboard.widget.embed.missing",
-    "dashboard.widget.instances.empty",
-    "dashboard.widget.instances.idle",
-    "dashboard.widget.sessions.empty",
-    "dashboard.widget.stat.empty",
-    "dashboard.widget.table.empty",
-    "dashboard.widget.table.more",
-    "dashboard.widget.usage.cost",
-    "dashboard.widget.usage.tokens"
-  ],
-  "generatedAt": "2026-07-06T06:54:34.373Z",
+  "fallbackKeys": [],
+  "generatedAt": "2026-07-06T07:30:47.606Z",
   "locale": "ko",
   "model": "claude-opus-4-6",
   "provider": "anthropic",
   "sourceHash": "25f307e9bfbbd6660bd0ca9aa40ee255b58abd3ede953cff3ce9c9b410c73c54",
   "totalKeys": 1568,
-  "translatedKeys": 1553,
+  "translatedKeys": 1568,
   "workflow": 1
 }

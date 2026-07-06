@@ -682,32 +682,32 @@ export const ru: TranslationMap = {
         empty: "—",
       },
       table: {
-        empty: "No rows to show.",
+        empty: "Нет строк для отображения.",
         more: "+{count} ещё",
       },
       sessions: {
-        empty: "No sessions yet.",
+        empty: "Сессий пока нет.",
       },
       usage: {
         cost: "Стоимость",
         tokens: "Токены",
       },
       cron: {
-        empty: "No scheduled jobs.",
-        next: "Next {time}",
-        noNext: "Not scheduled",
+        empty: "Нет запланированных задач.",
+        next: "След. {time}",
+        noNext: "Не запланировано",
       },
       instances: {
-        empty: "No connected instances.",
-        idle: "idle {duration}",
+        empty: "Нет подключенных экземпляров.",
+        idle: "Простой {duration}",
       },
       activity: {
-        empty: "No recent activity.",
+        empty: "Недавней активности нет.",
       },
       embed: {
-        missing: "This embed has no URL yet.",
-        blockedExternal: "External embeds are disabled by your gateway policy.",
-        blockedScheme: "This embed URL uses an unsupported scheme.",
+        missing: "У этого встраивания пока нет URL.",
+        blockedExternal: "Внешние встраивания отключены политикой вашего Gateway.",
+        blockedScheme: "URL этого встраивания использует неподдерживаемую схему.",
       },
     },
   },
