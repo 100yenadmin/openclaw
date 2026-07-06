@@ -671,6 +671,37 @@ export const hi: TranslationMap = {
         hide: "छिपाएं",
         remove: "हटाएँ",
       },
+      stat: {
+        empty: "—",
+      },
+      table: {
+        empty: "No rows to show.",
+        more: "+{count} और",
+      },
+      sessions: {
+        empty: "No sessions yet.",
+      },
+      usage: {
+        cost: "लागत",
+        tokens: "टोकन",
+      },
+      cron: {
+        empty: "No scheduled jobs.",
+        next: "Next {time}",
+        noNext: "Not scheduled",
+      },
+      instances: {
+        empty: "No connected instances.",
+        idle: "idle {duration}",
+      },
+      activity: {
+        empty: "No recent activity.",
+      },
+      embed: {
+        missing: "This embed has no URL yet.",
+        blockedExternal: "External embeds are disabled by your gateway policy.",
+        blockedScheme: "This embed URL uses an unsupported scheme.",
+      },
     },
   },
   workboard: {

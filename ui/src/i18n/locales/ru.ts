@@ -678,6 +678,37 @@ export const ru: TranslationMap = {
         hide: "Скрыть",
         remove: "Удалить",
       },
+      stat: {
+        empty: "—",
+      },
+      table: {
+        empty: "No rows to show.",
+        more: "+{count} ещё",
+      },
+      sessions: {
+        empty: "No sessions yet.",
+      },
+      usage: {
+        cost: "Стоимость",
+        tokens: "Токены",
+      },
+      cron: {
+        empty: "No scheduled jobs.",
+        next: "Next {time}",
+        noNext: "Not scheduled",
+      },
+      instances: {
+        empty: "No connected instances.",
+        idle: "idle {duration}",
+      },
+      activity: {
+        empty: "No recent activity.",
+      },
+      embed: {
+        missing: "This embed has no URL yet.",
+        blockedExternal: "External embeds are disabled by your gateway policy.",
+        blockedScheme: "This embed URL uses an unsupported scheme.",
+      },
     },
   },
   workboard: {
