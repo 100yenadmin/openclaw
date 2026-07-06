@@ -645,12 +645,23 @@ export const uk: TranslationMap = {
     },
     error: {
       title: "Не вдалося завантажити робочі простори",
+      subtitle:
+        "Щось пішло не так під час завантаження робочих просторів. Спробуйте перезавантажити.",
+      detailSummary: "Показати деталі",
+    },
+    header: {
+      subtitle: "Упорядкуйте віджети та вкладки для цього робочого простору.",
+    },
+    onboarding: {
+      title: "Створіть свою першу вкладку робочого простору",
+      primary: "Попросіть свого агента створити вкладку.",
+      secondary: "Або створіть її з командного рядка:",
     },
     empty: {
       onboardingTitle: "Ще немає робочих просторів",
       onboardingSubtitle:
         "Попросіть свого агента створити панель керування або створіть її з командного рядка.",
-      onboardingCommand: "openclaw dashboard tabs create …",
+      onboardingCommand: "openclaw dashboard tabs create main --title Main",
       tabTitle: "Цей робочий простір порожній",
       tabSubtitle: "Попросіть агента додати віджет або додайте його самостійно.",
       noVisibleTabs:
@@ -664,21 +675,26 @@ export const uk: TranslationMap = {
       menuLabel: "Параметри віджета",
       provenanceChip: "ШІ",
       provenanceTooltip: "Створено {agent}",
-      errorTitle: "Не вдалося відобразити цей віджет",
-      customPlaceholder: "Користувацький віджет — стане доступним після випуску хоста віджетів.",
-      customLoading: "Loading custom widget…",
+      errorTitle: "Не вдалося завантажити цей віджет",
+      errorHumane: "Під час відображення цього віджета виникла проблема.",
+      errorDetailSummary: "Показати деталі",
+      customPlaceholder: "Користувацький віджет — незабаром.",
+      customLoading: "Завантаження користувацького віджета…",
       approval: {
-        title: "Custom widget awaiting approval",
+        title: "Користувацький віджет очікує на схвалення",
         byAgent: "Створено {agent}",
-        byUnknown: "Author unknown",
-        approve: "Approve",
-        reject: "Reject",
-        unavailable: "This custom widget is not available.",
+        byUnknown: "Створено невідомим агентом",
+        approve: "Схвалити",
+        reject: "Відхилити",
+        unavailable:
+          "Цей користувацький віджет недоступний. Попросіть агента перебудувати його або видаліть його.",
       },
       markdownEmpty: "Ще немає вмісту.",
       unknownKind: "Невідомий тип віджета: {kind}",
-      editTitlePrompt: "Заголовок віджета",
-      moveToTabPrompt: "Перемістити на яку вкладку робочого простору? Введіть її slug.",
+      editTitleTitle: "Редагувати назву віджета",
+      editTitleLabel: "Назва віджета",
+      moveToTabTitle: "Перемістити на вкладку",
+      moveToTabEmpty: "Немає інших вкладок, куди можна перемістити цей віджет.",
       menu: {
         editTitle: "Редагувати заголовок",
         moveToTab: "Перемістити на вкладку…",
@@ -706,7 +722,7 @@ export const uk: TranslationMap = {
       },
       instances: {
         empty: "Немає підключених екземплярів.",
-        idle: "неактивний {duration}",
+        idle: "Неактивний {duration}",
       },
       activity: {
         empty: "Немає недавньої активності.",

@@ -18,6 +18,13 @@
   margin: 0;
 }
 
+/* #7: page-header treatment for the Workspaces view (title = active tab). */
+.dashboard-page-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 /* --- Tab strip ----------------------------------------------------------- */
 
 .dashboard-tabs {
@@ -94,7 +101,9 @@
 
 .dashboard-tabs__hidden-menu {
   position: absolute;
-  inset-inline-end: 0;
+  /* #18: keep a small gap from the viewport edge so the chip menu never kisses
+     the right border of the scroll container. */
+  inset-inline-end: 4px;
   margin-top: 4px;
   min-width: 160px;
   display: flex;
@@ -144,13 +153,36 @@
   position: relative;
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
-  overflow: hidden;
+  /* #14: match .card's larger corner radius. Note the kebab menu and resize
+     dog-ear are portaled/absolute layers OUTSIDE this box, so keeping the card
+     itself clip-free is what lets the menu extend past the card (#1). */
+  border-radius: var(--radius-lg);
+}
+
+/* #16: a collapsed cell shrinks to its header height instead of reserving its
+   full grid slot — the body/resize handle are unmounted, so span a single row. */
+.dashboard-widget--collapsed {
+  grid-row: auto !important;
 }
 
 .dashboard-widget--pending {
   opacity: 0.7;
+}
+
+/* #4: snapped drop-target ghost rendered in the grid during a move/resize drag.
+   Accent-tinted outline marks a valid target; --invalid reads distinctly (muted
+   red) for an overlap-rejected drop. */
+.dashboard-ghost {
+  pointer-events: none;
+  border-radius: var(--radius-lg);
+  border: 2px dashed color-mix(in srgb, var(--accent) 70%, transparent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  z-index: 5;
+}
+
+.dashboard-ghost--invalid {
+  border-color: color-mix(in srgb, var(--danger) 70%, transparent);
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
 }
 
 .dashboard-widget--dragging {
@@ -165,6 +197,8 @@
   gap: 6px;
   padding: 4px 6px 4px 4px;
   border-bottom: 1px solid var(--border);
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
   cursor: grab;
   touch-action: none;
   user-select: none;
@@ -195,6 +229,12 @@
   color: var(--text);
 }
 
+/* #17: pressed/active cue while the kebab menu is open (aria-expanded=true). */
+.dashboard-widget__menu-toggle[aria-expanded="true"] {
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--text);
+}
+
 .dashboard-widget__collapse svg,
 .dashboard-widget__menu-toggle svg {
   width: 15px;
@@ -207,8 +247,11 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  /* #9: align to the app's .card-title token (15px / 600 / -0.02em). */
+  font-size: 15px;
   font-weight: 600;
-  font-size: 0.9em;
+  letter-spacing: -0.02em;
+  color: var(--text-strong, var(--text));
 }
 
 .dashboard-widget__provenance {
@@ -275,8 +318,33 @@
 .dashboard-widget__body {
   flex: 1;
   min-height: 0;
-  padding: 10px 12px;
+  /* #14: roomier body padding to match the .card idiom. */
+  padding: 14px 16px;
   overflow: auto;
+  /* Clip body content to the card's rounded bottom corners now that the cell
+     itself no longer sets overflow:hidden (that would clip the kebab menu, #1). */
+  border-bottom-left-radius: var(--radius-lg);
+  border-bottom-right-radius: var(--radius-lg);
+  /* #10: ease the body in on expand instead of an instant unmount/mount. The
+     collapse direction is carried by the grid-row shrink (#16). */
+  animation: dashboard-widget-expand 160ms var(--ease-out) both;
+}
+
+@keyframes dashboard-widget-expand {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-widget__body {
+    animation: none;
+  }
 }
 
 .dashboard-widget__resize {
@@ -292,6 +360,22 @@
     transparent 50%,
     color-mix(in srgb, var(--border-strong) 80%, transparent) 50%
   );
+  /* #2: reveal the resize dog-ear only on cell hover/focus-within (or while a
+     resize drag is active, see --dragging below). */
+  opacity: 0;
+  transition: opacity 120ms var(--ease-out);
+}
+
+.dashboard-widget:hover .dashboard-widget__resize,
+.dashboard-widget:focus-within .dashboard-widget__resize,
+.dashboard-widget--dragging .dashboard-widget__resize {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-widget__resize {
+    transition: none;
+  }
 }
 
 .dashboard-widget__placeholder {
@@ -315,9 +399,32 @@
   color: var(--danger);
 }
 
+.dashboard-widget__error-humane {
+  font-size: 0.9em;
+  color: var(--text-muted, var(--text));
+}
+
+.dashboard-widget__error-detail,
+.dashboard-error-detail {
+  font-size: 0.82em;
+  color: var(--text-muted, var(--text));
+}
+
+.dashboard-widget__error-detail summary,
+.dashboard-error-detail summary {
+  cursor: pointer;
+  color: var(--text-muted, var(--text));
+}
+
 .dashboard-widget__error-message {
+  margin-top: 4px;
   font-size: 0.85em;
   color: var(--text-muted, var(--text));
+  overflow-wrap: anywhere;
+}
+
+.dashboard-error-detail__text {
+  margin-top: 4px;
   overflow-wrap: anywhere;
 }
 
@@ -370,15 +477,21 @@
   gap: 4px;
 }
 
+/* #9: align to the app's .stat-value / .stat-label tokens (components.css). */
 .dashboard-stat__value {
-  font-size: 1.6em;
+  font-size: 24px;
   font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
   color: var(--text);
 }
 
 .dashboard-stat__label {
-  font-size: 0.8em;
-  color: var(--text-muted, var(--text));
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted, var(--muted, var(--text)));
 }
 
 .dashboard-markdown {
@@ -629,4 +742,170 @@
   background: var(--bg-muted);
   font-family: var(--mono, monospace);
   font-size: 0.85em;
+}
+
+/* #15: give the empty-tab state a dashed placeholder card with an icon so it
+   reads as an intentional drop zone, not a rendering gap. */
+.dashboard-empty--tab {
+  gap: 10px;
+  border: 1px dashed var(--border-strong, var(--border));
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--card) 60%, transparent);
+}
+
+.dashboard-empty__icon {
+  color: var(--text-dim, var(--text-muted, var(--text)));
+}
+
+.dashboard-empty__icon svg {
+  width: 28px;
+  height: 28px;
+}
+
+/* #5: first-visit onboarding banner teaching the two ways to add a tab. Matches
+   the app's card/callout banner idiom (dismissible, localStorage-backed). */
+.dashboard-onboarding {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--border));
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--accent) 8%, var(--card));
+}
+
+.dashboard-onboarding__icon {
+  flex: none;
+  color: var(--accent);
+  margin-top: 1px;
+}
+
+.dashboard-onboarding__icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.dashboard-onboarding__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dashboard-onboarding__title {
+  font-weight: 600;
+  color: var(--text-strong, var(--text));
+}
+
+.dashboard-onboarding__sub {
+  font-size: 0.9em;
+  color: var(--text-muted, var(--muted, var(--text)));
+}
+
+.dashboard-onboarding__cmd {
+  margin-top: 2px;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-muted);
+  font-family: var(--mono, monospace);
+  font-size: 0.82em;
+}
+
+.dashboard-onboarding__dismiss {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted, var(--text));
+  cursor: pointer;
+}
+
+.dashboard-onboarding__dismiss:hover {
+  background: var(--bg-hover);
+  color: var(--text);
+}
+
+.dashboard-onboarding__dismiss svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* #12: themed edit-title / move-to-tab dialog inputs (mirrors the .field idiom). */
+.dashboard-dialog__input {
+  border: 1px solid var(--input, var(--border));
+  background: var(--card);
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  color: var(--text);
+  outline: none;
+  box-shadow: inset 0 1px 0 var(--card-highlight, transparent);
+  transition:
+    border-color var(--duration-fast, 120ms) ease,
+    box-shadow var(--duration-fast, 120ms) ease;
+}
+
+.dashboard-dialog__input:focus-visible {
+  border-color: var(--ring, var(--accent));
+  box-shadow: var(--focus-ring, 0 0 0 2px color-mix(in srgb, var(--accent) 40%, transparent));
+}
+
+select.dashboard-dialog__input {
+  appearance: none;
+  cursor: pointer;
+}
+
+/* #19: skeleton loading cards instead of a bare "Loading…" line. */
+.dashboard-skeleton {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: var(--dashboard-grid-gap);
+  flex: 1;
+  align-content: start;
+}
+
+.dashboard-skeleton__card {
+  grid-column: span 4;
+  min-height: 120px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(
+    100deg,
+    var(--card) 30%,
+    color-mix(in srgb, var(--text) 6%, var(--card)) 50%,
+    var(--card) 70%
+  );
+  background-size: 200% 100%;
+  animation: dashboard-skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes dashboard-skeleton-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (max-width: 900px) {
+  .dashboard-skeleton {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dashboard-skeleton__card {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-skeleton__card {
+    animation: none;
+  }
 }

@@ -128,6 +128,46 @@ describe("renderDashboard", () => {
   });
 });
 
+describe("drag ghost (#4)", () => {
+  afterEach(() => {
+    window.history.replaceState({}, "", "/");
+  });
+
+  it("renders a snapped drop-target ghost while a drag is in flight", () => {
+    const host = document.createElement("div");
+    document.body.append(host);
+    const client = {
+      request: vi.fn(async () => ({})),
+      addEventListener: vi.fn(() => () => {}),
+    } as unknown as GatewayBrowserClient;
+    const state = getDashboardState(host);
+    state.loaded = true;
+    state.workspace = doc;
+    state.activeSlug = "main";
+    try {
+      render(renderDashboard({ host, client, connected: true }), host);
+      const grid = host.querySelector<HTMLElement>(".dashboard-grid");
+      Object.defineProperty(grid, "clientWidth", { value: 720, configurable: true });
+      // No ghost before a drag begins.
+      expect(host.querySelector('[data-test-id="dashboard-drag-ghost"]')).toBeNull();
+      const bar = host.querySelector<HTMLElement>(".dashboard-widget__bar");
+      bar!.dispatchEvent(
+        new PointerEvent("pointerdown", { bubbles: true, button: 0, clientX: 10, clientY: 10 }),
+      );
+      render(renderDashboard({ host, client, connected: true }), host);
+      // The ghost is present during the drag.
+      expect(host.querySelector('[data-test-id="dashboard-drag-ghost"]')).not.toBeNull();
+      window.dispatchEvent(new PointerEvent("pointerup", { clientX: 10, clientY: 10 }));
+      render(renderDashboard({ host, client, connected: true }), host);
+      // Ghost gone once the drag settles.
+      expect(host.querySelector('[data-test-id="dashboard-drag-ghost"]')).toBeNull();
+    } finally {
+      stopDashboard(host);
+      host.remove();
+    }
+  });
+});
+
 describe("mid-drag tab-switch cancellation", () => {
   afterEach(() => {
     window.history.replaceState({}, "", "/");

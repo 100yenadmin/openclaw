@@ -645,12 +645,22 @@ export const es: TranslationMap = {
     },
     error: {
       title: "No se pudieron cargar tus espacios de trabajo",
+      subtitle: "Algo salió mal al cargar tus espacios de trabajo. Intenta volver a cargar.",
+      detailSummary: "Mostrar detalles",
+    },
+    header: {
+      subtitle: "Organiza los widgets y pestañas de este espacio de trabajo.",
+    },
+    onboarding: {
+      title: "Crea tu primera pestaña de espacio de trabajo",
+      primary: "Pide a tu agente que cree una pestaña.",
+      secondary: "O crea una desde la línea de comandos:",
     },
     empty: {
       onboardingTitle: "Aún no hay espacios de trabajo",
       onboardingSubtitle:
         "Pide a tu agente que cree un panel, o crea uno desde la línea de comandos.",
-      onboardingCommand: "openclaw dashboard tabs create …",
+      onboardingCommand: "openclaw dashboard tabs create main --title Main",
       tabTitle: "Este espacio de trabajo está vacío",
       tabSubtitle: "Pide a tu agente que agregue un widget, o agrégalo tú mismo.",
       noVisibleTabs:
@@ -664,21 +674,26 @@ export const es: TranslationMap = {
       menuLabel: "Opciones del widget",
       provenanceChip: "IA",
       provenanceTooltip: "Creado por {agent}",
-      errorTitle: "Este widget falló al renderizar",
-      customPlaceholder: "Widget personalizado — disponible una vez que se lance el widget host.",
-      customLoading: "Loading custom widget…",
+      errorTitle: "Este widget no pudo cargarse",
+      errorHumane: "Este widget encontró un problema mientras se renderizaba.",
+      errorDetailSummary: "Mostrar detalles",
+      customPlaceholder: "Widget personalizado: próximamente.",
+      customLoading: "Cargando widget personalizado…",
       approval: {
-        title: "Custom widget awaiting approval",
+        title: "Widget personalizado esperando aprobación",
         byAgent: "Creado por {agent}",
-        byUnknown: "Author unknown",
-        approve: "Approve",
-        reject: "Reject",
-        unavailable: "This custom widget is not available.",
+        byUnknown: "Creado por un agente desconocido",
+        approve: "Aprobar",
+        reject: "Rechazar",
+        unavailable:
+          "Este widget personalizado no está disponible. Pide a tu agente que lo reconstruya o elimínalo.",
       },
       markdownEmpty: "Aún no hay contenido.",
       unknownKind: "Tipo de widget desconocido: {kind}",
-      editTitlePrompt: "Título del widget",
-      moveToTabPrompt: "¿Mover a qué pestaña del espacio de trabajo? Introduce su slug.",
+      editTitleTitle: "Editar título del widget",
+      editTitleLabel: "Título del widget",
+      moveToTabTitle: "Mover a pestaña",
+      moveToTabEmpty: "No hay otras pestañas a las que mover este widget.",
       menu: {
         editTitle: "Editar título",
         moveToTab: "Mover a pestaña…",
@@ -706,7 +721,7 @@ export const es: TranslationMap = {
       },
       instances: {
         empty: "No hay instancias conectadas.",
-        idle: "inactiva {duration}",
+        idle: "Inactivo durante {duration}",
       },
       activity: {
         empty: "Sin actividad reciente.",

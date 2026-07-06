@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { DashboardWidget, WidgetManifestView } from "../lib/dashboard/types.ts";
 import type { BuiltinWidgetContext } from "../lib/dashboard/widgets/index.ts";
 import {
+  displayWidgetTitle,
   renderCustomWidget,
   renderWidgetBody,
   renderWidgetCell,
@@ -63,6 +64,31 @@ describe("dashboard widget cell", () => {
     expect(container.querySelector(".dashboard-widget__menu-toggle")).not.toBeNull();
     // Not collapsed → body + resize handle present.
     expect(container.querySelector(".dashboard-widget__resize")).not.toBeNull();
+  });
+
+  it("strips a trailing (custom) suffix from the visible title but keeps the full title attr (#8)", () => {
+    const container = renderToContainer(
+      renderWidgetCell({
+        widget: widget({ title: "Revenue (custom)" }),
+        binding: { value: 1 },
+        menuOpen: false,
+        pending: false,
+        dragging: false,
+        builtinContext: BUILTIN_CONTEXT,
+        callbacks: noopCallbacks(),
+      }),
+    );
+    const title = container.querySelector(".dashboard-widget__title");
+    expect(title?.textContent?.trim()).toBe("Revenue");
+    expect(title?.getAttribute("title")).toBe("Revenue (custom)");
+  });
+
+  it("displayWidgetTitle drops only a trailing (custom) suffix (#8)", () => {
+    expect(displayWidgetTitle("Notes (custom)")).toBe("Notes");
+    expect(displayWidgetTitle("Notes")).toBe("Notes");
+    expect(displayWidgetTitle("My (custom) widget")).toBe("My (custom) widget");
+    // Degenerate: a bare suffix falls back to the original rather than an empty title.
+    expect(displayWidgetTitle("(custom)")).toBe("(custom)");
   });
 
   it("renders a provenance chip for agent-authored widgets", () => {

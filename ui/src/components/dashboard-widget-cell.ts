@@ -63,6 +63,15 @@ export type DashboardWidgetCellProps = {
   custom?: DashboardCustomWidgetContext;
 };
 
+/**
+ * Visible widget title with a trailing " (custom)" provenance suffix stripped
+ * (#8). The suffix is redundant with the AI/provenance chip and only causes
+ * truncation; the full title is still exposed via the `title=` attribute.
+ */
+export function displayWidgetTitle(title: string): string {
+  return title.replace(/\s*\(custom\)\s*$/iu, "").trim() || title;
+}
+
 /** Renders the provenance chip when a widget was authored by an agent. */
 function renderProvenanceChip(widget: DashboardWidget): TemplateResult | typeof nothing {
   const agentId = dashboardAgentProvenance(widget.createdBy);
@@ -245,7 +254,11 @@ export function renderWidgetBody(
     return html`
       <div class="dashboard-widget__error" role="alert" data-test-id="dashboard-widget-error">
         <div class="dashboard-widget__error-title">${t("dashboard.widget.errorTitle")}</div>
-        <div class="dashboard-widget__error-message">${message}</div>
+        <div class="dashboard-widget__error-humane">${t("dashboard.widget.errorHumane")}</div>
+        <details class="dashboard-widget__error-detail">
+          <summary>${t("dashboard.widget.errorDetailSummary")}</summary>
+          <div class="dashboard-widget__error-message">${message}</div>
+        </details>
         <button class="btn btn--small" type="button" @click=${() => callbacks.onRemove(widget)}>
           ${t("dashboard.widget.menu.remove")}
         </button>
@@ -287,7 +300,9 @@ export function renderWidgetCell(props: DashboardWidgetCellProps): TemplateResul
         >
           ${widget.collapsed ? icons.chevronRight : icons.chevronDown}
         </button>
-        <span class="dashboard-widget__title" title=${widget.title}>${widget.title}</span>
+        <span class="dashboard-widget__title" title=${widget.title}
+          >${displayWidgetTitle(widget.title)}</span
+        >
         ${renderProvenanceChip(widget)}
         <span
           class="dashboard-widget__handle"

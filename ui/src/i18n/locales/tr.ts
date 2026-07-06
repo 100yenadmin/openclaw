@@ -646,12 +646,22 @@ export const tr: TranslationMap = {
     },
     error: {
       title: "Çalışma alanlarınız yüklenemedi",
+      subtitle: "Çalışma alanlarınız yüklenirken bir sorun oluştu. Yeniden yüklemeyi deneyin.",
+      detailSummary: "Detayları göster",
+    },
+    header: {
+      subtitle: "Bu çalışma alanı için widget'ları ve sekmeleri düzenleyin.",
+    },
+    onboarding: {
+      title: "İlk çalışma alanı sekmenizi oluşturun",
+      primary: "Ajanınıza bir sekme oluşturmasını isteyin.",
+      secondary: "Veya komut satırından bir tane oluşturun:",
     },
     empty: {
       onboardingTitle: "Henüz çalışma alanı yok",
       onboardingSubtitle:
         "Ajanınızdan bir pano oluşturmasını isteyin veya komut satırından bir tane oluşturun.",
-      onboardingCommand: "openclaw dashboard tabs create …",
+      onboardingCommand: "openclaw dashboard tabs create main --title Main",
       tabTitle: "Bu çalışma alanı boş",
       tabSubtitle: "Ajanınızdan bir widget eklemesini isteyin veya kendiniz ekleyin.",
       noVisibleTabs: "Tüm çalışma alanı sekmeleri gizli. Gizli menüden birini geri yükleyin.",
@@ -664,22 +674,26 @@ export const tr: TranslationMap = {
       menuLabel: "Widget seçenekleri",
       provenanceChip: "Yapay Zeka",
       provenanceTooltip: "{agent} tarafından oluşturuldu",
-      errorTitle: "Bu widget işlenemedi",
-      customPlaceholder:
-        "Özel widget — widget ana bilgisayarı kullanıma sunulduğunda kullanılabilir olacak.",
-      customLoading: "Loading custom widget…",
+      errorTitle: "Bu widget yüklenemedi",
+      errorHumane: "Bu widget, işlenirken bir sorunla karşılaştı.",
+      errorDetailSummary: "Detayları göster",
+      customPlaceholder: "Özel widget — yakında.",
+      customLoading: "Özel widget yükleniyor…",
       approval: {
-        title: "Custom widget awaiting approval",
+        title: "Onay bekleyen özel widget",
         byAgent: "{agent} tarafından oluşturuldu",
-        byUnknown: "Author unknown",
-        approve: "Approve",
-        reject: "Reject",
-        unavailable: "This custom widget is not available.",
+        byUnknown: "Bilinmeyen bir ajan tarafından oluşturuldu",
+        approve: "Onayla",
+        reject: "Reddet",
+        unavailable:
+          "Bu özel widget kullanılamıyor. Ajanınıza yeniden oluşturmasını söyleyin veya kaldırın.",
       },
       markdownEmpty: "Henüz içerik yok.",
       unknownKind: "Bilinmeyen widget türü: {kind}",
-      editTitlePrompt: "Widget başlığı",
-      moveToTabPrompt: "Hangi çalışma alanı sekmesine taşı? Slug değerini girin.",
+      editTitleTitle: "Widget başlığını düzenle",
+      editTitleLabel: "Widget başlığı",
+      moveToTabTitle: "Sekmeye taşı",
+      moveToTabEmpty: "Bu widget'ı taşıyacak başka bir sekme yok.",
       menu: {
         editTitle: "Başlığı düzenle",
         moveToTab: "Sekmeye taşı…",
@@ -707,7 +721,7 @@ export const tr: TranslationMap = {
       },
       instances: {
         empty: "Bağlı örnek yok.",
-        idle: "{duration} boşta",
+        idle: "{duration} süredir boşta.",
       },
       activity: {
         empty: "Son etkinlik yok.",

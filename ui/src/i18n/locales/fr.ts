@@ -647,12 +647,23 @@ export const fr: TranslationMap = {
     },
     error: {
       title: "Impossible de charger vos espaces de travail",
+      subtitle:
+        "Une erreur s'est produite lors du chargement de vos espaces de travail. Essayez de recharger.",
+      detailSummary: "Afficher les détails",
+    },
+    header: {
+      subtitle: "Organisez les widgets et les onglets de cet espace de travail.",
+    },
+    onboarding: {
+      title: "Créez votre premier onglet d'espace de travail",
+      primary: "Demandez à votre agent de créer un onglet.",
+      secondary: "Ou créez-en un depuis la ligne de commande :",
     },
     empty: {
       onboardingTitle: "Aucun espace de travail pour le moment",
       onboardingSubtitle:
         "Demandez à votre agent de créer un tableau de bord, ou créez-en un depuis la ligne de commande.",
-      onboardingCommand: "openclaw dashboard tabs create …",
+      onboardingCommand: "openclaw dashboard tabs create main --title Main",
       tabTitle: "Cet espace de travail est vide",
       tabSubtitle: "Demandez à votre agent d'ajouter un widget, ou ajoutez-en un vous-même.",
       noVisibleTabs:
@@ -666,21 +677,26 @@ export const fr: TranslationMap = {
       menuLabel: "Options du widget",
       provenanceChip: "IA",
       provenanceTooltip: "Créé par {agent}",
-      errorTitle: "Le rendu de ce widget a échoué",
-      customPlaceholder: "Widget personnalisé — disponible une fois l'hôte de widgets publié.",
-      customLoading: "Loading custom widget…",
+      errorTitle: "Ce widget n'a pas pu charger",
+      errorHumane: "Ce widget a rencontré un problème lors de son rendu.",
+      errorDetailSummary: "Afficher les détails",
+      customPlaceholder: "Widget personnalisé — bientôt disponible.",
+      customLoading: "Chargement du widget personnalisé…",
       approval: {
-        title: "Custom widget awaiting approval",
+        title: "Widget personnalisé en attente d'approbation",
         byAgent: "Créé par {agent}",
-        byUnknown: "Author unknown",
-        approve: "Approve",
-        reject: "Reject",
-        unavailable: "This custom widget is not available.",
+        byUnknown: "Créé par un agent inconnu",
+        approve: "Approuver",
+        reject: "Refuser",
+        unavailable:
+          "Ce widget personnalisé n'est pas disponible. Demandez à votre agent de le reconstruire ou supprimez-le.",
       },
       markdownEmpty: "Aucun contenu pour le moment.",
       unknownKind: "Type de widget inconnu : {kind}",
-      editTitlePrompt: "Titre du widget",
-      moveToTabPrompt: "Déplacer vers quel onglet d'espace de travail ? Entrez son slug.",
+      editTitleTitle: "Modifier le titre du widget",
+      editTitleLabel: "Titre du widget",
+      moveToTabTitle: "Déplacer vers l'onglet",
+      moveToTabEmpty: "Il n'y a pas d'autres onglets où déplacer ce widget.",
       menu: {
         editTitle: "Modifier le titre",
         moveToTab: "Déplacer vers l'onglet…",

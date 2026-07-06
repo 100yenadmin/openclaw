@@ -645,12 +645,22 @@ export const nl: TranslationMap = {
     },
     error: {
       title: "Je werkruimtes konden niet worden geladen",
+      subtitle: "Er is iets misgegaan bij het laden van je werkruimtes. Probeer opnieuw te laden.",
+      detailSummary: "Details weergeven",
+    },
+    header: {
+      subtitle: "Orden widgets en tabbladen voor deze werkruimte.",
+    },
+    onboarding: {
+      title: "Bouw je eerste werkruimtetabblad",
+      primary: "Vraag je agent om een tabblad te bouwen.",
+      secondary: "Of maak er een aan via de opdrachtregel:",
     },
     empty: {
       onboardingTitle: "Nog geen werkruimtes",
       onboardingSubtitle:
         "Vraag je agent om een dashboard te bouwen, of maak er een aan via de opdrachtregel.",
-      onboardingCommand: "openclaw dashboard tabs create …",
+      onboardingCommand: "openclaw dashboard tabs create main --title Main",
       tabTitle: "Deze werkruimte is leeg",
       tabSubtitle: "Vraag je agent om een widget toe te voegen, of voeg er zelf een toe.",
       noVisibleTabs:
@@ -664,21 +674,26 @@ export const nl: TranslationMap = {
       menuLabel: "Widget-opties",
       provenanceChip: "AI",
       provenanceTooltip: "Gebouwd door {agent}",
-      errorTitle: "Deze widget kon niet worden weergegeven",
-      customPlaceholder: "Aangepaste widget — beschikbaar zodra de widget-host wordt uitgebracht.",
-      customLoading: "Loading custom widget…",
+      errorTitle: "Deze widget kon niet worden geladen",
+      errorHumane: "Er is een probleem opgetreden bij het weergeven van deze widget.",
+      errorDetailSummary: "Details weergeven",
+      customPlaceholder: "Aangepaste widget — binnenkort beschikbaar.",
+      customLoading: "Aangepaste widget laden…",
       approval: {
-        title: "Custom widget awaiting approval",
+        title: "Aangepaste widget wacht op goedkeuring",
         byAgent: "Gebouwd door {agent}",
-        byUnknown: "Author unknown",
-        approve: "Approve",
-        reject: "Reject",
-        unavailable: "This custom widget is not available.",
+        byUnknown: "Gemaakt door een onbekende agent",
+        approve: "Goedkeuren",
+        reject: "Afwijzen",
+        unavailable:
+          "Deze aangepaste widget is niet beschikbaar. Vraag je agent om hem opnieuw te bouwen, of verwijder hem.",
       },
       markdownEmpty: "Nog geen inhoud.",
       unknownKind: "Onbekend widgettype: {kind}",
-      editTitlePrompt: "Widget-titel",
-      moveToTabPrompt: "Naar welk tabblad van de werkruimte verplaatsen? Voer de slug in.",
+      editTitleTitle: "Widgettitel bewerken",
+      editTitleLabel: "Widgettitel",
+      moveToTabTitle: "Verplaatsen naar tabblad",
+      moveToTabEmpty: "Er zijn geen andere tabbladen om dit widget naar te verplaatsen.",
       menu: {
         editTitle: "Titel bewerken",
         moveToTab: "Verplaatsen naar tabblad…",
@@ -706,7 +721,7 @@ export const nl: TranslationMap = {
       },
       instances: {
         empty: "Geen verbonden instanties.",
-        idle: "inactief {duration}",
+        idle: "Inactief voor {duration}",
       },
       activity: {
         empty: "Geen recente activiteit.",

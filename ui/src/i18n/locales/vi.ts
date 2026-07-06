@@ -644,12 +644,22 @@ export const vi: TranslationMap = {
     },
     error: {
       title: "Không thể tải không gian làm việc của bạn",
+      subtitle: "Đã xảy ra lỗi khi tải không gian làm việc của bạn. Hãy thử tải lại.",
+      detailSummary: "Hiển thị chi tiết",
+    },
+    header: {
+      subtitle: "Sắp xếp các tiện ích và thẻ cho không gian làm việc này.",
+    },
+    onboarding: {
+      title: "Xây dựng thẻ không gian làm việc đầu tiên của bạn",
+      primary: "Yêu cầu tác nhân của bạn xây dựng một thẻ.",
+      secondary: "Hoặc tạo từ dòng lệnh:",
     },
     empty: {
       onboardingTitle: "Chưa có không gian làm việc nào",
       onboardingSubtitle:
         "Yêu cầu tác nhân của bạn xây dựng bảng điều khiển, hoặc tạo một cái từ dòng lệnh.",
-      onboardingCommand: "openclaw dashboard tabs create …",
+      onboardingCommand: "openclaw dashboard tabs create main --title Main",
       tabTitle: "Không gian làm việc này đang trống",
       tabSubtitle: "Yêu cầu tác nhân của bạn thêm tiện ích, hoặc tự thêm vào.",
       noVisibleTabs:
@@ -663,21 +673,26 @@ export const vi: TranslationMap = {
       menuLabel: "Tùy chọn tiện ích",
       provenanceChip: "AI",
       provenanceTooltip: "Được tạo bởi {agent}",
-      errorTitle: "Tiện ích này không thể hiển thị",
-      customPlaceholder: "Tiện ích tùy chỉnh — sẽ có sẵn khi widget host ra mắt.",
-      customLoading: "Loading custom widget…",
+      errorTitle: "Tiện ích này không thể tải",
+      errorHumane: "Tiện ích này gặp sự cố trong khi hiển thị.",
+      errorDetailSummary: "Hiển thị chi tiết",
+      customPlaceholder: "Tiện ích tùy chỉnh — sắp ra mắt.",
+      customLoading: "Đang tải tiện ích tùy chỉnh…",
       approval: {
-        title: "Custom widget awaiting approval",
+        title: "Tiện ích tùy chỉnh đang chờ phê duyệt",
         byAgent: "Được tạo bởi {agent}",
-        byUnknown: "Author unknown",
-        approve: "Approve",
-        reject: "Reject",
-        unavailable: "This custom widget is not available.",
+        byUnknown: "Được tạo bởi một tác nhân không xác định",
+        approve: "Phê duyệt",
+        reject: "Từ chối",
+        unavailable:
+          "Tiện ích tùy chỉnh này không khả dụng. Yêu cầu tác nhân của bạn xây dựng lại hoặc xóa nó.",
       },
       markdownEmpty: "Chưa có nội dung nào.",
       unknownKind: "Loại tiện ích không xác định: {kind}",
-      editTitlePrompt: "Tiêu đề tiện ích",
-      moveToTabPrompt: "Chuyển đến tab không gian làm việc nào? Nhập slug của nó.",
+      editTitleTitle: "Chỉnh sửa tiêu đề tiện ích",
+      editTitleLabel: "Tiêu đề tiện ích",
+      moveToTabTitle: "Di chuyển đến thẻ",
+      moveToTabEmpty: "Không có thẻ nào khác để chuyển widget này đến.",
       menu: {
         editTitle: "Chỉnh sửa tiêu đề",
         moveToTab: "Chuyển đến tab…",
@@ -705,7 +720,7 @@ export const vi: TranslationMap = {
       },
       instances: {
         empty: "Không có thực thể kết nối.",
-        idle: "Rảnh {duration}",
+        idle: "Không hoạt động trong {duration}",
       },
       activity: {
         empty: "Không có hoạt động gần đây.",

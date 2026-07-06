@@ -647,12 +647,22 @@ export const ja_JP: TranslationMap = {
     },
     error: {
       title: "ワークスペースを読み込めませんでした",
+      subtitle: "ワークスペースの読み込み中に問題が発生しました。再読み込みしてください。",
+      detailSummary: "詳細を表示",
+    },
+    header: {
+      subtitle: "このワークスペースのウィジェットとタブを配置します。",
+    },
+    onboarding: {
+      title: "最初のワークスペースタブを作成する",
+      primary: "エージェントにタブの作成を依頼する",
+      secondary: "または、コマンドラインから作成します：",
     },
     empty: {
       onboardingTitle: "まだワークスペースがありません",
       onboardingSubtitle:
         "エージェントにダッシュボードの作成を依頼するか、コマンドラインから作成してください。",
-      onboardingCommand: "openclaw dashboard tabs create …",
+      onboardingCommand: "openclaw dashboard tabs create main --title Main",
       tabTitle: "このワークスペースは空です",
       tabSubtitle: "エージェントにウィジェットの追加を依頼するか、自分で追加してください。",
       noVisibleTabs:
@@ -666,22 +676,26 @@ export const ja_JP: TranslationMap = {
       menuLabel: "ウィジェットオプション",
       provenanceChip: "AI",
       provenanceTooltip: "{agent}による作成",
-      errorTitle: "このウィジェットのレンダリングに失敗しました",
-      customPlaceholder:
-        "カスタムウィジェット — ウィジェットホストの提供開始後に利用可能になります。",
-      customLoading: "Loading custom widget…",
+      errorTitle: "このウィジェットを読み込めませんでした",
+      errorHumane: "このウィジェットのレンダリング中に問題が発生しました。",
+      errorDetailSummary: "詳細を表示",
+      customPlaceholder: "カスタムウィジェット — 近日公開。",
+      customLoading: "カスタムウィジェットを読み込み中…",
       approval: {
-        title: "Custom widget awaiting approval",
+        title: "承認待ちのカスタムウィジェット",
         byAgent: "{agent}による作成",
-        byUnknown: "Author unknown",
-        approve: "Approve",
-        reject: "Reject",
-        unavailable: "This custom widget is not available.",
+        byUnknown: "不明なエージェントによって作成されました",
+        approve: "承認する",
+        reject: "拒否する",
+        unavailable:
+          "このカスタムウィジェットは利用できません。エージェントに再構築を依頼するか、削除してください。",
       },
       markdownEmpty: "まだコンテンツがありません。",
       unknownKind: "不明なウィジェットタイプ: {kind}",
-      editTitlePrompt: "ウィジェットのタイトル",
-      moveToTabPrompt: "どのワークスペースタブに移動しますか？スラグを入力してください。",
+      editTitleTitle: "ウィジェットのタイトルを編集",
+      editTitleLabel: "ウィジェットのタイトル",
+      moveToTabTitle: "タブに移動",
+      moveToTabEmpty: "移動先のタブがありません。",
       menu: {
         editTitle: "タイトルを編集",
         moveToTab: "タブに移動…",
@@ -709,7 +723,7 @@ export const ja_JP: TranslationMap = {
       },
       instances: {
         empty: "接続中のインスタンスはありません。",
-        idle: "アイドル {duration}",
+        idle: "{duration}間アイドル状態です",
       },
       activity: {
         empty: "最近のアクティビティはありません。",
