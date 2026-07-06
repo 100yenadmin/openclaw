@@ -178,14 +178,12 @@ export async function serveWidgetAsset(
   // Serving gate: only `status === "approved"` widgets are served AT ALL. This is
   // belt-and-braces with the UI render gate (the UI never builds an iframe for a
   // pending/rejected widget, and the server refuses its assets regardless).
-  let approved = false;
   try {
     const doc = await deps.store.read();
-    approved = doc.widgetsRegistry[parsed.name]?.status === "approved";
+    if (doc.widgetsRegistry[parsed.name]?.status !== "approved") {
+      return notFound(res);
+    }
   } catch {
-    return notFound(res);
-  }
-  if (!approved) {
     return notFound(res);
   }
 

@@ -30,6 +30,7 @@ export const BRIDGE_ENVELOPE_VERSION = 1;
  */
 export const RPC_METHOD_ALLOWLIST: readonly string[] = [
   "health",
+  "system-presence",
   "usage.status",
   "usage.cost",
   "agents.list",
@@ -41,7 +42,6 @@ export const RPC_METHOD_ALLOWLIST: readonly string[] = [
   "sessions.usage.logs",
   "node.list",
   "node.describe",
-  "system-presence",
   "cron.get",
   "cron.list",
   "cron.status",
