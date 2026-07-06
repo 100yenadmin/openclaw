@@ -41,6 +41,7 @@ export const RPC_METHOD_ALLOWLIST: readonly string[] = [
   "sessions.usage.logs",
   "node.list",
   "node.describe",
+  "system-presence",
   "cron.get",
   "cron.list",
   "cron.status",

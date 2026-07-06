@@ -685,6 +685,37 @@ export const es: TranslationMap = {
         hide: "Ocultar",
         remove: "Eliminar",
       },
+      stat: {
+        empty: "—",
+      },
+      table: {
+        empty: "No hay filas que mostrar.",
+        more: "+{count} más",
+      },
+      sessions: {
+        empty: "Aún no hay sesiones.",
+      },
+      usage: {
+        cost: "Costo",
+        tokens: "Tokens",
+      },
+      cron: {
+        empty: "No hay trabajos programados.",
+        next: "Próximo {time}",
+        noNext: "No programado",
+      },
+      instances: {
+        empty: "No hay instancias conectadas.",
+        idle: "inactiva {duration}",
+      },
+      activity: {
+        empty: "Sin actividad reciente.",
+      },
+      embed: {
+        missing: "Este embed aún no tiene URL.",
+        blockedExternal: "Los embeds externos están deshabilitados por la política de Gateway.",
+        blockedScheme: "La URL de este embed utiliza un esquema no admitido.",
+      },
     },
   },
   workboard: {

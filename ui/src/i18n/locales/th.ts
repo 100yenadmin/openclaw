@@ -678,6 +678,37 @@ export const th: TranslationMap = {
         hide: "ซ่อน",
         remove: "ลบ",
       },
+      stat: {
+        empty: "—",
+      },
+      table: {
+        empty: "ไม่มีข้อมูล",
+        more: "+{count} รายการถัดไป",
+      },
+      sessions: {
+        empty: "ยังไม่มีเซสชัน",
+      },
+      usage: {
+        cost: "ค่าใช้จ่าย",
+        tokens: "โทเคน",
+      },
+      cron: {
+        empty: "ไม่มีงานที่กำหนดเวลาไว้",
+        next: "ถัดไป {time}",
+        noNext: "ไม่ได้กำหนดเวลาไว้",
+      },
+      instances: {
+        empty: "ไม่มีอินสแตนซ์ที่เชื่อมต่อ",
+        idle: "ไม่ได้ใช้งาน {duration}",
+      },
+      activity: {
+        empty: "ไม่มีกิจกรรมล่าสุด",
+      },
+      embed: {
+        missing: "Embed นี้ยังไม่มี URL",
+        blockedExternal: "Embed ภายนอกถูกปิดใช้งานโดยนโยบาย Gateway ของคุณ",
+        blockedScheme: "URL ของ Embed นี้ใช้ scheme ที่ไม่รองรับ",
+      },
     },
   },
   workboard: {

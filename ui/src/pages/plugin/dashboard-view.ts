@@ -42,6 +42,7 @@ import {
   registerActiveDrag,
   resolveBinding,
   setWidgetCollapsed,
+  startBindingPolling,
   subscribeToDashboardEvents,
   updateWidgetTitle,
   visibleTabs,
@@ -55,17 +56,25 @@ import type {
   DashboardWorkspace,
   WidgetManifestView,
 } from "../../lib/dashboard/types.ts";
+import type { BuiltinWidgetContext } from "../../lib/dashboard/widgets/index.ts";
 import { pluginTabRefFromSearch } from "./route.ts";
 
 export type DashboardProps = {
   host: object;
   client: GatewayBrowserClient | null;
   connected: boolean;
+  /** Control UI embed policy for the iframe-embed builtin (defaults to strict). */
+  embed?: BuiltinWidgetContext["embed"];
   onRequestUpdate?: () => void;
   /** Gateway HTTP base path for custom-widget iframe sources (L5). */
   basePath?: string;
   /** Session key for custom-widget prompt dispatch (L5). */
   sessionKey?: string;
+};
+
+const DEFAULT_EMBED_CONTEXT: BuiltinWidgetContext["embed"] = {
+  embedSandboxMode: "strict",
+  allowExternalEmbedUrls: false,
 };
 
 // Per-host transient view state (menu, live drag) kept outside the data model so a
@@ -80,6 +89,12 @@ type DashboardViewState = {
   /** Loaded custom-widget manifests keyed by widget name; survives doc changes. */
   manifestCache: Map<string, WidgetManifestView>;
   manifestLoads: Set<string>;
+  /**
+   * Monotonic data-refresh counter bumped by the per-widget polling timer.
+   * Folded into the binding cache key so a poll tick re-resolves data-widget
+   * bindings without a workspace-version change.
+   */
+  dataVersion: number;
 };
 
 const dashboardViewStates = new WeakMap<object, DashboardViewState>();
@@ -95,10 +110,21 @@ function getViewState(host: object): DashboardViewState {
       bindingVersion: -1,
       manifestCache: new Map(),
       manifestLoads: new Set(),
+      dataVersion: 0,
     };
     dashboardViewStates.set(host, state);
   }
   return state;
+}
+
+/** Read the current data-refresh counter for a host (used by the poll timer). */
+export function dashboardDataVersion(host: object): number {
+  return getViewState(host).dataVersion;
+}
+
+/** Advance the data-refresh counter so the next render re-resolves bindings. */
+export function bumpDashboardDataVersion(host: object): void {
+  getViewState(host).dataVersion += 1;
 }
 
 /** The workspace tab slug requested via the `?ws=` deep-link query param. */
@@ -129,6 +155,15 @@ function primaryBinding(widget: DashboardWidget): DashboardBinding | null {
   return first ?? null;
 }
 
+/**
+ * Cache key mixing the workspace version with the data-refresh counter: a doc
+ * change OR a poll tick both invalidate resolved bindings. Overflow-safe: only
+ * equality is compared.
+ */
+function bindingCacheKey(workspace: DashboardWorkspace, viewState: DashboardViewState): number {
+  return workspace.workspaceVersion * 1_000_003 + viewState.dataVersion;
+}
+
 /** Kick off binding resolution for widgets on the active tab; cache per version. */
 function ensureBindings(
   viewState: DashboardViewState,
@@ -137,10 +172,11 @@ function ensureBindings(
   tab: DashboardTab,
   requestUpdate: (() => void) | null,
 ): void {
-  if (viewState.bindingVersion !== workspace.workspaceVersion) {
+  const key = bindingCacheKey(workspace, viewState);
+  if (viewState.bindingVersion !== key) {
     viewState.bindingResults.clear();
     viewState.bindingLoads.clear();
-    viewState.bindingVersion = workspace.workspaceVersion;
+    viewState.bindingVersion = key;
   }
   for (const widget of tab.widgets) {
     const binding = primaryBinding(widget);
@@ -196,8 +232,10 @@ function renderTabStrip(state: DashboardUiState, workspace: DashboardWorkspace):
         ? html`
             <details class="dashboard-tabs__hidden">
               <summary class="dashboard-tab dashboard-tab--overflow">
-                ${icons.eyeOff}
-                <span>${t("dashboard.tabs.hidden", { count: String(hidden.length) })}</span>
+                <span class="dashboard-tab__icon" aria-hidden="true">${icons.eyeOff}</span>
+                <span class="dashboard-tab__label"
+                  >${t("dashboard.tabs.hidden", { count: String(hidden.length) })}</span
+                >
               </summary>
               <div class="dashboard-tabs__hidden-menu" role="menu">
                 ${hidden.map(
@@ -297,6 +335,7 @@ function renderGrid(
     `;
   }
   const callbacks = makeCallbacks(props, state, viewState, tab);
+  const builtinContext: BuiltinWidgetContext = { embed: props.embed ?? DEFAULT_EMBED_CONTEXT };
   const rows = gridRowCount(tab.widgets);
   const minHeight = rows * DASHBOARD_ROW_HEIGHT + Math.max(0, rows - 1) * DASHBOARD_GRID_GAP;
   return html`
@@ -309,6 +348,7 @@ function renderGrid(
           menuOpen: viewState.openMenuWidgetId === widget.id,
           pending: state.pendingWidgetIds.has(widget.id),
           dragging: viewState.drag?.widgetId === widget.id,
+          builtinContext,
           callbacks,
           ...(custom ? { custom } : {}),
         });
@@ -474,6 +514,13 @@ export function renderDashboard(props: DashboardProps): TemplateResult {
   const requestedSlug = requestedWorkspaceSlug(window.location.search);
   const active = props.connected;
   subscribeToDashboardEvents(props.host, state, active ? props.client : null);
+  // Per-widget data refresh: a visibility-gated timer bumps the data version so
+  // the next render re-resolves data-widget bindings. stopDashboard clears it on
+  // tab-leave/disconnect (logbook's stop discipline — no orphan timers).
+  startBindingPolling(props.host, active ? props.client : null, () => {
+    bumpDashboardDataVersion(props.host);
+    props.onRequestUpdate?.();
+  });
   if (active && !state.loaded && !state.loading && !state.error) {
     void loadWorkspace(state, props.client, { requestedSlug });
   }

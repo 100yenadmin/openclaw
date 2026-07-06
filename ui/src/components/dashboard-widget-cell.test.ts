@@ -1,6 +1,7 @@
 import { render } from "lit";
 import { describe, expect, it, vi } from "vitest";
 import type { DashboardWidget, WidgetManifestView } from "../lib/dashboard/types.ts";
+import type { BuiltinWidgetContext } from "../lib/dashboard/widgets/index.ts";
 import {
   renderCustomWidget,
   renderWidgetBody,
@@ -8,6 +9,10 @@ import {
   type DashboardCustomWidgetContext,
   type DashboardWidgetCellCallbacks,
 } from "./dashboard-widget-cell.ts";
+
+const BUILTIN_CONTEXT: BuiltinWidgetContext = {
+  embed: { embedSandboxMode: "strict", allowExternalEmbedUrls: false },
+};
 
 function noopCallbacks(): DashboardWidgetCellCallbacks {
   return {
@@ -49,6 +54,7 @@ describe("dashboard widget cell", () => {
         menuOpen: false,
         pending: false,
         dragging: false,
+        builtinContext: BUILTIN_CONTEXT,
         callbacks: noopCallbacks(),
       }),
     );
@@ -67,6 +73,7 @@ describe("dashboard widget cell", () => {
         menuOpen: false,
         pending: false,
         dragging: false,
+        builtinContext: BUILTIN_CONTEXT,
         callbacks: noopCallbacks(),
       }),
     );
@@ -83,6 +90,7 @@ describe("dashboard widget cell", () => {
         menuOpen: false,
         pending: false,
         dragging: false,
+        builtinContext: BUILTIN_CONTEXT,
         callbacks: noopCallbacks(),
       }),
     );
@@ -97,6 +105,7 @@ describe("dashboard widget cell", () => {
         menuOpen: false,
         pending: false,
         dragging: false,
+        builtinContext: BUILTIN_CONTEXT,
         callbacks: noopCallbacks(),
       }),
     );
@@ -112,6 +121,7 @@ describe("dashboard widget cell", () => {
         menuOpen: true,
         pending: false,
         dragging: false,
+        builtinContext: BUILTIN_CONTEXT,
         callbacks: noopCallbacks(),
       }),
     );
@@ -124,6 +134,7 @@ describe("dashboard widget cell", () => {
       renderWidgetBody(
         widget({ props: { format: "usd", label: "Q3 Revenue" } }),
         { value: 1234 },
+        BUILTIN_CONTEXT,
         noopCallbacks(),
       ),
     );
@@ -133,7 +144,12 @@ describe("dashboard widget cell", () => {
 
   it("renders markdown widget content", () => {
     const container = renderToContainer(
-      renderWidgetBody(widget({ kind: "builtin:markdown" }), { value: "# Hello" }, noopCallbacks()),
+      renderWidgetBody(
+        widget({ kind: "builtin:markdown" }),
+        { value: "# Hello" },
+        BUILTIN_CONTEXT,
+        noopCallbacks(),
+      ),
     );
     expect(container.querySelector(".dashboard-markdown h1")?.textContent).toContain("Hello");
   });
@@ -141,7 +157,7 @@ describe("dashboard widget cell", () => {
   it("catches a widget render throw with a per-cell error card", () => {
     // A binding error triggers the error boundary; the card stays mounted.
     const container = renderToContainer(
-      renderWidgetBody(widget(), { error: "binding failed" }, noopCallbacks()),
+      renderWidgetBody(widget(), { error: "binding failed" }, BUILTIN_CONTEXT, noopCallbacks()),
     );
     const errorCard = container.querySelector('[data-test-id="dashboard-widget-error"]');
     expect(errorCard).not.toBeNull();
@@ -150,7 +166,7 @@ describe("dashboard widget cell", () => {
 
   it("renders a placeholder for custom widgets in L3", () => {
     const container = renderToContainer(
-      renderWidgetBody(widget({ kind: "custom:chart" }), null, noopCallbacks()),
+      renderWidgetBody(widget({ kind: "custom:chart" }), null, BUILTIN_CONTEXT, noopCallbacks()),
     );
     expect(container.querySelector(".dashboard-widget__placeholder")).not.toBeNull();
   });

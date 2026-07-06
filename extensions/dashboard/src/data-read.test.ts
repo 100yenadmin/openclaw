@@ -28,6 +28,21 @@ describe("dashboard data binding resolver", () => {
     });
   });
 
+  it("allowlists the read methods the L4 builtin data widgets bind", () => {
+    // Frozen so a builtin can never reference a method the write-time schema
+    // would reject. system-presence backs builtin:instances; cron.runs backs
+    // builtin:activity; usage.cost backs the stat-cards + usage widget.
+    for (const method of [
+      "usage.cost",
+      "sessions.list",
+      "cron.list",
+      "cron.runs",
+      "system-presence",
+    ]) {
+      expect(DATA_READ_RPC_ALLOWLIST).toContain(method);
+    }
+  });
+
   it("reads JSON pointers and raw markdown from the dashboard data jail", async () => {
     await withTempStateDir(async (stateDir) => {
       await fs.mkdir(path.join(stateDir, "dashboard", "data", "metrics"), { recursive: true });

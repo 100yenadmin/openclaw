@@ -687,6 +687,37 @@ export const ru: TranslationMap = {
         hide: "Скрыть",
         remove: "Удалить",
       },
+      stat: {
+        empty: "—",
+      },
+      table: {
+        empty: "Нет строк для отображения.",
+        more: "+{count} ещё",
+      },
+      sessions: {
+        empty: "Сессий пока нет.",
+      },
+      usage: {
+        cost: "Стоимость",
+        tokens: "Токены",
+      },
+      cron: {
+        empty: "Нет запланированных задач.",
+        next: "След. {time}",
+        noNext: "Не запланировано",
+      },
+      instances: {
+        empty: "Нет подключенных экземпляров.",
+        idle: "Простой {duration}",
+      },
+      activity: {
+        empty: "Недавней активности нет.",
+      },
+      embed: {
+        missing: "У этого встраивания пока нет URL.",
+        blockedExternal: "Внешние встраивания отключены политикой вашего Gateway.",
+        blockedScheme: "URL этого встраивания использует неподдерживаемую схему.",
+      },
     },
   },
   workboard: {

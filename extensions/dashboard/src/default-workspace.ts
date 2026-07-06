@@ -31,9 +31,12 @@ export const DEFAULT_DASHBOARD_WORKSPACE: WorkspaceDoc = {
           collapsed: false,
           hidden: false,
           bindings: {
-            value: { source: "rpc", method: "usage.status" },
+            // usage.cost carries the day-scoped totals; the stat-card selects the
+            // token total via props.metric. (usage.status is provider rate-limit
+            // windows — not token counts.)
+            value: { source: "rpc", method: "usage.cost" },
           },
-          props: { metric: "todayTokens", format: "integer" },
+          props: { metric: "todayTokens", format: "int" },
         },
         {
           id: "instances-health",
@@ -43,8 +46,9 @@ export const DEFAULT_DASHBOARD_WORKSPACE: WorkspaceDoc = {
           collapsed: false,
           hidden: false,
           bindings: {
-            nodes: { source: "rpc", method: "node.list" },
-            health: { source: "rpc", method: "health" },
+            // system-presence is the live connected-instances + health feed the
+            // instances page consumes (PresenceEntry[]).
+            presence: { source: "rpc", method: "system-presence" },
           },
         },
         {
@@ -67,7 +71,6 @@ export const DEFAULT_DASHBOARD_WORKSPACE: WorkspaceDoc = {
           hidden: false,
           bindings: {
             jobs: { source: "rpc", method: "cron.list" },
-            status: { source: "rpc", method: "cron.status" },
           },
         },
         {
@@ -78,7 +81,9 @@ export const DEFAULT_DASHBOARD_WORKSPACE: WorkspaceDoc = {
           collapsed: false,
           hidden: false,
           bindings: {
-            sessions: { source: "rpc", method: "sessions.usage.logs" },
+            // cron.runs (scope defaults to "all" without a jobId) is the global
+            // recent-run feed. sessions.usage.logs is per-session (needs a key).
+            runs: { source: "rpc", method: "cron.runs" },
           },
         },
       ],

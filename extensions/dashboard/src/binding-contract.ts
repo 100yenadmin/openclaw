@@ -4,6 +4,7 @@ import path from "node:path";
 
 export const DATA_READ_RPC_ALLOWLIST = [
   "health",
+  "system-presence",
   "usage.status",
   "usage.cost",
   "agents.list",

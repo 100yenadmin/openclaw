@@ -685,6 +685,37 @@ export const uk: TranslationMap = {
         hide: "Приховати",
         remove: "Видалити",
       },
+      stat: {
+        empty: "—",
+      },
+      table: {
+        empty: "Немає рядків для відображення.",
+        more: "+{count} більше",
+      },
+      sessions: {
+        empty: "Сесій ще не було.",
+      },
+      usage: {
+        cost: "Вартість",
+        tokens: "Токени",
+      },
+      cron: {
+        empty: "Немає запланованих завдань.",
+        next: "Наступний: {time}",
+        noNext: "Не заплановано",
+      },
+      instances: {
+        empty: "Немає підключених екземплярів.",
+        idle: "неактивний {duration}",
+      },
+      activity: {
+        empty: "Немає недавньої активності.",
+      },
+      embed: {
+        missing: "Це вбудовування ще не має URL.",
+        blockedExternal: "Зовнішні вбудовування вимкнено політикою вашого Gateway.",
+        blockedScheme: "URL цього вбудовування використовує непідтримувану схему.",
+      },
     },
   },
   workboard: {

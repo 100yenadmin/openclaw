@@ -6,7 +6,6 @@
 // this cell only, so the shell and sibling widgets are unaffected (spec-30).
 
 import { html, nothing, type TemplateResult } from "lit";
-import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import { t } from "../i18n/index.ts";
 import { gridPlacementStyle } from "../lib/dashboard/grid.ts";
 import { dashboardAgentProvenance, type DashboardBindingResult } from "../lib/dashboard/index.ts";
@@ -15,9 +14,9 @@ import type {
   DashboardWidgetStatus,
   WidgetManifestView,
 } from "../lib/dashboard/types.ts";
+import { getBuiltinRenderer, type BuiltinWidgetContext } from "../lib/dashboard/widgets/index.ts";
 import { renderCustomWidgetHost, type CustomWidgetHostContext } from "./dashboard-custom-widget.ts";
 import { icons } from "./icons.ts";
-import { toSanitizedMarkdownHtml } from "./markdown.ts";
 
 export type DashboardWidgetCellCallbacks = {
   onToggleCollapse: (widget: DashboardWidget) => void;
@@ -57,6 +56,8 @@ export type DashboardWidgetCellProps = {
   pending: boolean;
   /** When set, this cell is the live drag/resize ghost source. */
   dragging: boolean;
+  /** Ambient context builtins may need (embed policy for iframe-embed). */
+  builtinContext: BuiltinWidgetContext;
   callbacks: DashboardWidgetCellCallbacks;
   /** Present for `custom:` widgets only (L5); builtin widgets leave this undefined. */
   custom?: DashboardCustomWidgetContext;
@@ -117,86 +118,37 @@ function renderMenu(
   `;
 }
 
-/** Renders the minimal builtin widget bodies (spec-30 scope: stat-card, markdown). */
+/**
+ * Renders a builtin widget body via the L4 registry. A binding error is
+ * re-thrown so the cell error boundary shows it inline; unknown/custom kinds
+ * render a placeholder (L5 replaces custom with the sandboxed iframe host).
+ */
 export function renderBuiltinWidget(
   widget: DashboardWidget,
   binding: DashboardBindingResult | null,
+  ctx: BuiltinWidgetContext,
 ): TemplateResult {
-  const kind = widget.kind.startsWith("builtin:")
-    ? widget.kind.slice("builtin:".length)
-    : widget.kind;
   if (binding && "error" in binding) {
     // A binding failure is data-level, not a render throw: show it inline so the
     // widget stays mounted and refetches on the next broadcast.
     throw new Error(binding.error);
   }
   const value = binding && "value" in binding ? binding.value : undefined;
-  switch (kind) {
-    case "stat-card":
-      return renderStatCard(widget, value);
-    case "markdown":
-      return renderMarkdown(widget, value);
-    default:
-      if (widget.kind.startsWith("custom:")) {
-        // Custom widgets are dispatched by renderWidgetBody BEFORE this builtin
-        // path; reaching here means no L5 host context was supplied (e.g. a unit
-        // test rendering the builtin body in isolation). Fall back to a neutral
-        // placeholder rather than attempt to build an iframe without a manifest.
-        return html`<div class="dashboard-widget__placeholder">
-          ${t("dashboard.widget.customPlaceholder")}
-        </div>`;
-      }
-      return html`<div class="dashboard-widget__placeholder">
-        ${t("dashboard.widget.unknownKind", { kind: widget.kind })}
-      </div>`;
+  const renderer = getBuiltinRenderer(widget.kind);
+  if (renderer) {
+    return renderer(widget, value, ctx);
   }
-}
-
-function formatStat(value: unknown, format: unknown): string {
-  if (value === undefined || value === null) {
-    return "—";
-  }
-  const numeric = typeof value === "number" ? value : Number(value);
-  if (format === "usd" && Number.isFinite(numeric)) {
-    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(numeric);
-  }
-  if (format === "percent" && Number.isFinite(numeric)) {
-    return new Intl.NumberFormat("en-US", { style: "percent", maximumFractionDigits: 1 }).format(
-      numeric,
-    );
-  }
-  return typeof value === "string" ? value : JSON.stringify(value);
-}
-
-function renderStatCard(widget: DashboardWidget, value: unknown): TemplateResult {
-  const props = widget.props ?? {};
-  const label = typeof props.label === "string" ? props.label : widget.title;
-  const resolved = value !== undefined ? value : props.value;
-  return html`
-    <div class="dashboard-stat">
-      <div class="dashboard-stat__value">${formatStat(resolved, props.format)}</div>
-      <div class="dashboard-stat__label">${label}</div>
-    </div>
-  `;
-}
-
-function renderMarkdown(widget: DashboardWidget, value: unknown): TemplateResult {
-  const props = widget.props ?? {};
-  const source =
-    typeof value === "string"
-      ? value
-      : typeof props.markdown === "string"
-        ? props.markdown
-        : typeof props.text === "string"
-          ? props.text
-          : "";
-  if (!source.trim()) {
+  if (widget.kind.startsWith("custom:")) {
+    // Custom widgets are dispatched by renderWidgetBody BEFORE this builtin path;
+    // reaching here means no L5 host context was supplied (e.g. a unit test
+    // rendering the builtin body in isolation). Neutral placeholder — never an
+    // iframe without a manifest.
     return html`<div class="dashboard-widget__placeholder">
-      ${t("dashboard.widget.markdownEmpty")}
+      ${t("dashboard.widget.customPlaceholder")}
     </div>`;
   }
-  return html`<div class="dashboard-markdown markdown-body">
-    ${unsafeHTML(toSanitizedMarkdownHtml(source))}
+  return html`<div class="dashboard-widget__placeholder">
+    ${t("dashboard.widget.unknownKind", { kind: widget.kind })}
   </div>`;
 }
 
@@ -277,6 +229,7 @@ export function renderCustomWidget(
 export function renderWidgetBody(
   widget: DashboardWidget,
   binding: DashboardBindingResult | null,
+  ctx: BuiltinWidgetContext,
   callbacks: DashboardWidgetCellCallbacks,
   custom?: DashboardCustomWidgetContext,
 ): TemplateResult {
@@ -286,7 +239,7 @@ export function renderWidgetBody(
     if (widget.kind.startsWith("custom:") && custom) {
       return renderCustomWidget(widget, custom);
     }
-    return renderBuiltinWidget(widget, binding);
+    return renderBuiltinWidget(widget, binding, ctx);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return html`
@@ -361,7 +314,13 @@ export function renderWidgetCell(props: DashboardWidgetCellProps): TemplateResul
         ? nothing
         : html`
             <div class="dashboard-widget__body">
-              ${renderWidgetBody(widget, props.binding, callbacks, props.custom)}
+              ${renderWidgetBody(
+                widget,
+                props.binding,
+                props.builtinContext,
+                callbacks,
+                props.custom,
+              )}
             </div>
             <span
               class="dashboard-widget__resize"

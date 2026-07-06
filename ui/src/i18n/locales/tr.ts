@@ -686,6 +686,37 @@ export const tr: TranslationMap = {
         hide: "Gizle",
         remove: "Kaldır",
       },
+      stat: {
+        empty: "—",
+      },
+      table: {
+        empty: "Gösterilecek satır yok.",
+        more: "+{count} daha fazla",
+      },
+      sessions: {
+        empty: "Henüz oturum yok.",
+      },
+      usage: {
+        cost: "Maliyet",
+        tokens: "Tokenlar",
+      },
+      cron: {
+        empty: "Zamanlanmış iş yok.",
+        next: "Sonraki {time}",
+        noNext: "Zamanlanmadı",
+      },
+      instances: {
+        empty: "Bağlı örnek yok.",
+        idle: "{duration} boşta",
+      },
+      activity: {
+        empty: "Son etkinlik yok.",
+      },
+      embed: {
+        missing: "Bu gömülü içeriğin henüz URL'si yok.",
+        blockedExternal: "Harici gömülü içerikler gateway ilkeniz tarafından devre dışı bırakıldı.",
+        blockedScheme: "Bu gömülü URL desteklenmeyen bir şema kullanıyor.",
+      },
     },
   },
   workboard: {
