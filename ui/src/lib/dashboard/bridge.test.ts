@@ -1,11 +1,19 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createWidgetBridge,
+  isRpcMethodAllowed,
   isWellFormedInbound,
+  resetPromptRateStatesForTest,
   type WidgetBridgeDeps,
+  type WidgetErrorCode,
   type WidgetOutboundMessage,
 } from "./bridge.ts";
 import type { WidgetManifestView } from "./types.ts";
+
+beforeEach(() => {
+  // Rate-limit state is module-level (keyed by widget name); reset between tests.
+  resetPromptRateStatesForTest();
+});
 
 function manifest(overrides?: Partial<WidgetManifestView>): WidgetManifestView {
   return {
@@ -236,5 +244,137 @@ describe("dispose", () => {
     const { bridge } = makeBridge();
     bridge.dispose();
     expect(bridge.handleMessage({ v: 1, type: "dashboard:ready" })).toBe(false);
+  });
+});
+
+describe("rate-limit state persists across bridge re-instantiation (remount)", () => {
+  // Exhaust the per-minute budget on one bridge, then dispose + recreate a fresh
+  // bridge for the SAME widget name (simulating an iframe remount) and assert the
+  // budget did NOT reset — the next send is still rate_limited within the window.
+  it("keeps the budget for the same widget name after dispose + recreate", async () => {
+    const clock = 1_000_000;
+    let sent = 0;
+    const makeNamed = () => {
+      const posted: WidgetOutboundMessage[] = [];
+      const bridge = createWidgetBridge({
+        manifest: manifest({ name: "remount-widget", capabilities: ["prompt:send"] }),
+        resolveBinding: async () => null,
+        resolveTheme: () => ({}),
+        confirmPrompt: async () => true,
+        sendPrompt: async () => {
+          sent += 1;
+        },
+        post: (message) => posted.push(message),
+        now: () => clock,
+      });
+      return { bridge, posted };
+    };
+
+    const first = makeNamed();
+    for (let i = 0; i < 10; i += 1) {
+      first.bridge.handleMessage({
+        v: 1,
+        type: "dashboard:sendPrompt",
+        requestId: `a${i}`,
+        text: "x",
+      });
+      await vi.waitFor(() => expect(sent).toBe(i + 1));
+    }
+    // Remount: dispose the exhausted bridge and build a fresh one for the same name.
+    first.bridge.dispose();
+    const second = makeNamed();
+    second.bridge.handleMessage({ v: 1, type: "dashboard:sendPrompt", requestId: "b0", text: "x" });
+    await vi.waitFor(() => expect(second.posted).toHaveLength(1));
+    // Budget survived the remount → still rate_limited, no extra send.
+    expect(second.posted[0]).toMatchObject({ type: "dashboard:error", code: "rate_limited" });
+    expect(sent).toBe(10);
+  });
+
+  it("gives a DIFFERENT widget name its own independent budget", async () => {
+    const clock = 2_000_000;
+    let sentA = 0;
+    let sentB = 0;
+    const bridgeA = createWidgetBridge({
+      manifest: manifest({ name: "widget-a", capabilities: ["prompt:send"] }),
+      resolveBinding: async () => null,
+      resolveTheme: () => ({}),
+      confirmPrompt: async () => true,
+      sendPrompt: async () => {
+        sentA += 1;
+      },
+      post: () => {},
+      now: () => clock,
+    });
+    const postedB: WidgetOutboundMessage[] = [];
+    const bridgeB = createWidgetBridge({
+      manifest: manifest({ name: "widget-b", capabilities: ["prompt:send"] }),
+      resolveBinding: async () => null,
+      resolveTheme: () => ({}),
+      confirmPrompt: async () => true,
+      sendPrompt: async () => {
+        sentB += 1;
+      },
+      post: (message) => postedB.push(message),
+      now: () => clock,
+    });
+    // Exhaust widget-a's budget.
+    for (let i = 0; i < 10; i += 1) {
+      bridgeA.handleMessage({ v: 1, type: "dashboard:sendPrompt", requestId: `a${i}`, text: "x" });
+      await vi.waitFor(() => expect(sentA).toBe(i + 1));
+    }
+    // widget-b is unaffected — its first send succeeds.
+    bridgeB.handleMessage({ v: 1, type: "dashboard:sendPrompt", requestId: "b0", text: "x" });
+    await vi.waitFor(() => expect(sentB).toBe(1));
+    expect(postedB).toHaveLength(0);
+  });
+});
+
+describe("resolve-time rpc allowlist re-check (defense-in-depth)", () => {
+  // The mirror-vs-server keep-in-sync guard lives in the node-rooted extension
+  // suite (extensions/dashboard/src/rpc-allowlist-sync.test.ts), which can import
+  // both the browser mirror and the node-side binding-contract; the browser-rooted
+  // UI vitest cannot resolve imports outside ui/.
+  it("isRpcMethodAllowed accepts allowlisted and rejects non-allowlisted methods", () => {
+    expect(isRpcMethodAllowed("sessions.list")).toBe(true);
+    expect(isRpcMethodAllowed("sessions.delete")).toBe(false);
+    expect(isRpcMethodAllowed("")).toBe(false);
+  });
+
+  it("denies a getData whose gate returns a code and NEVER calls resolveBinding", async () => {
+    const resolveBinding = vi.fn(async () => ({ ok: true }));
+    const assertBindingAllowed = (bindingId: string): WidgetErrorCode | null =>
+      bindingId === "value" ? "binding_denied" : null;
+    const { bridge, posted } = makeBridge({ resolveBinding, assertBindingAllowed });
+    bridge.handleMessage({ v: 1, type: "dashboard:getData", requestId: "r1", bindingId: "value" });
+    await vi.waitFor(() => expect(posted).toHaveLength(1));
+    expect(posted[0]).toMatchObject({
+      type: "dashboard:error",
+      code: "binding_denied",
+      requestId: "r1",
+    });
+    expect(resolveBinding).not.toHaveBeenCalled();
+  });
+
+  it("does not push a binding the gate denies (never calls resolveBinding)", async () => {
+    const resolveBinding = vi.fn(async () => 1);
+    const { bridge, posted } = makeBridge({
+      resolveBinding,
+      assertBindingAllowed: () => "binding_denied",
+    });
+    await bridge.push("value");
+    expect(posted).toHaveLength(0);
+    expect(resolveBinding).not.toHaveBeenCalled();
+  });
+
+  it("allows a getData when the gate returns null", async () => {
+    const resolveBinding = vi.fn(async () => 42);
+    const { bridge, posted } = makeBridge({
+      resolveBinding,
+      assertBindingAllowed: () => null,
+    });
+    bridge.handleMessage({ v: 1, type: "dashboard:getData", requestId: "r1", bindingId: "value" });
+    await vi.waitFor(() => expect(posted).toHaveLength(1));
+    expect(posted[0]).toMatchObject({ type: "dashboard:data", data: 42 });
+    expect(resolveBinding).toHaveBeenCalledOnce();
   });
 });

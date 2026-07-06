@@ -20,6 +20,40 @@ import type { WidgetManifestView } from "./types.ts";
 
 export const BRIDGE_ENVELOPE_VERSION = 1;
 
+/**
+ * Browser-safe mirror of the plugin's write-time rpc allowlist
+ * (`extensions/dashboard/src/binding-contract.ts` `DATA_READ_RPC_ALLOWLIST`).
+ * KEEP IN SYNC — a `bridge.test.ts` guard asserts this equals the server const so
+ * drift is caught in CI. Mirrored (not imported) because the server module pulls in
+ * `node:path`, which must never enter the browser bundle. This enables the
+ * resolve-time re-check below (defense-in-depth over the write-time gate).
+ */
+export const RPC_METHOD_ALLOWLIST: readonly string[] = [
+  "health",
+  "usage.status",
+  "usage.cost",
+  "agents.list",
+  "sessions.list",
+  "sessions.resolve",
+  "sessions.get",
+  "sessions.usage",
+  "sessions.usage.timeseries",
+  "sessions.usage.logs",
+  "node.list",
+  "node.describe",
+  "cron.get",
+  "cron.list",
+  "cron.status",
+  "cron.runs",
+];
+
+const RPC_METHOD_ALLOWLIST_SET = new Set(RPC_METHOD_ALLOWLIST);
+
+/** True when an rpc binding method is in the allowlist (resolve-time re-check). */
+export function isRpcMethodAllowed(method: string): boolean {
+  return RPC_METHOD_ALLOWLIST_SET.has(method);
+}
+
 /** child→parent message types. */
 export type WidgetInboundType =
   | "dashboard:ready"
@@ -54,6 +88,13 @@ export type WidgetBridgeDeps = {
   manifest: WidgetManifestView;
   /** Resolve a manifest-declared binding by id (file/static via data.read, rpc via gateway). */
   resolveBinding: (bindingId: string) => Promise<unknown>;
+  /**
+   * Resolve-time gate run BEFORE `resolveBinding` (defense-in-depth). Return a
+   * WidgetErrorCode to deny WITHOUT touching the gateway (e.g. an rpc binding whose
+   * method is not allowlisted → "binding_denied"), or null to allow. Optional; when
+   * omitted, every declared binding is allowed to resolve.
+   */
+  assertBindingAllowed?: (bindingId: string) => WidgetErrorCode | null;
   /** Current theme tokens (CSS custom-property values from the document root). */
   resolveTheme: () => Record<string, string>;
   /** Operator confirm dialog quoting the exact prompt text; resolves true to send. */
@@ -81,6 +122,32 @@ export type WidgetBridge = {
 const DEFAULT_GET_DATA_TIMEOUT_MS = 10_000;
 const PROMPT_RATE_WINDOW_MS = 60_000;
 const PROMPT_RATE_MAX = 10;
+
+/**
+ * sendPrompt rate-limit state, keyed by STABLE widget identity (the custom widget
+ * name), NOT the iframe/bridge instance. The lit host recreates the iframe (and a
+ * fresh bridge) on layout drag / tab switch / widget re-add, so per-closure state
+ * would let a widget reset its "10/min + 1 in-flight" cap simply by triggering a
+ * remount. Persisting this at module scope keyed by name closes that hole: the
+ * rolling window survives bridge re-instantiation. Each distinct widget name has
+ * its own independent budget.
+ */
+type PromptRateState = { timestamps: number[]; inFlight: boolean };
+const promptRateStates = new Map<string, PromptRateState>();
+
+function getPromptRateState(widgetName: string): PromptRateState {
+  let state = promptRateStates.get(widgetName);
+  if (!state) {
+    state = { timestamps: [], inFlight: false };
+    promptRateStates.set(widgetName, state);
+  }
+  return state;
+}
+
+/** Test-only: reset all persisted rate-limit budgets. */
+export function resetPromptRateStatesForTest(): void {
+  promptRateStates.clear();
+}
 
 const INBOUND_TYPES = new Set<WidgetInboundType>([
   "dashboard:ready",
@@ -117,8 +184,9 @@ export function createWidgetBridge(deps: WidgetBridgeDeps): WidgetBridge {
   const capabilities = new Set(deps.manifest.capabilities);
   let dropped = 0;
   let disposed = false;
-  let promptInFlight = false;
-  let promptTimestamps: number[] = [];
+  // Rate-limit state is keyed by the widget NAME (stable identity), so it persists
+  // across bridge re-instantiation when the iframe is recreated.
+  const rateState = getPromptRateState(deps.manifest.name);
   const pendingTimers = new Set<ReturnType<typeof setTimeout>>();
 
   function error(code: WidgetErrorCode, message: string, requestId?: string): void {
@@ -135,6 +203,14 @@ export function createWidgetBridge(deps: WidgetBridgeDeps): WidgetBridge {
     if (!declaredBindingIds.has(bindingId)) {
       // A widget cannot request a binding the operator did not approve.
       error("binding_denied", `binding not declared in manifest: ${bindingId}`, requestId);
+      return;
+    }
+    // Resolve-time gate (defense-in-depth): e.g. an rpc binding whose method is not
+    // allowlisted is denied here WITHOUT touching the gateway, even though the
+    // write-time schema should already have rejected it.
+    const denied = deps.assertBindingAllowed?.(bindingId);
+    if (denied) {
+      error(denied, `binding not allowed: ${bindingId}`, requestId);
       return;
     }
     let settled = false;
@@ -177,14 +253,15 @@ export function createWidgetBridge(deps: WidgetBridgeDeps): WidgetBridge {
       error("capability_denied", "widget lacks the prompt:send capability", requestId);
       return;
     }
-    // Rate limit: at most one in-flight prompt and 10 per rolling minute.
+    // Rate limit: at most one in-flight prompt and 10 per rolling minute, keyed by
+    // widget name so a remount cannot reset the budget.
     const cutoff = now() - PROMPT_RATE_WINDOW_MS;
-    promptTimestamps = promptTimestamps.filter((ts) => ts > cutoff);
-    if (promptInFlight || promptTimestamps.length >= PROMPT_RATE_MAX) {
+    rateState.timestamps = rateState.timestamps.filter((ts) => ts > cutoff);
+    if (rateState.inFlight || rateState.timestamps.length >= PROMPT_RATE_MAX) {
       error("rate_limited", "prompt send rate limit exceeded", requestId);
       return;
     }
-    promptInFlight = true;
+    rateState.inFlight = true;
     try {
       const confirmed = await deps.confirmPrompt(text);
       if (disposed) {
@@ -195,14 +272,14 @@ export function createWidgetBridge(deps: WidgetBridgeDeps): WidgetBridge {
         error("prompt_declined", "operator declined the prompt", requestId);
         return;
       }
-      promptTimestamps.push(now());
+      rateState.timestamps.push(now());
       await deps.sendPrompt(text);
     } catch (err) {
       if (!disposed) {
         error("resolve_failed", err instanceof Error ? err.message : String(err), requestId);
       }
     } finally {
-      promptInFlight = false;
+      rateState.inFlight = false;
     }
   }
 
@@ -253,7 +330,8 @@ export function createWidgetBridge(deps: WidgetBridgeDeps): WidgetBridge {
   }
 
   async function push(bindingId: string): Promise<void> {
-    if (disposed || !declaredBindingIds.has(bindingId)) {
+    if (disposed || !declaredBindingIds.has(bindingId) || deps.assertBindingAllowed?.(bindingId)) {
+      // A disallowed binding is never pushed (same gate as getData; silent for push).
       return;
     }
     try {
@@ -278,6 +356,10 @@ export function createWidgetBridge(deps: WidgetBridgeDeps): WidgetBridge {
         clearTimeout(timer);
       }
       pendingTimers.clear();
+      // Release the in-flight lock so a remount can send again, but PRESERVE the
+      // rolling-window timestamps — clearing them would reopen the very reset hole
+      // this state exists to close.
+      rateState.inFlight = false;
     },
   };
 }
