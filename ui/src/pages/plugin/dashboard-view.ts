@@ -4,6 +4,7 @@
 
 import { html, nothing, render, type TemplateResult } from "lit";
 import type { GatewayBrowserClient } from "../../api/gateway.ts";
+import "../../components/modal-dialog.ts";
 import {
   loadWidgetManifestView,
   type CustomWidgetHostContext,
@@ -39,6 +40,7 @@ import {
   loadWorkspace,
   moveWidget,
   moveWidgetToTab,
+  orderedTabs,
   removeWidgetFromTab,
   resolveActiveSlug,
   registerActiveDrag,
@@ -59,6 +61,7 @@ import type {
   WidgetManifestView,
 } from "../../lib/dashboard/types.ts";
 import type { BuiltinWidgetContext } from "../../lib/dashboard/widgets/index.ts";
+import { getSafeLocalStorage } from "../../local-storage.ts";
 import { pluginTabRefFromSearch } from "./route.ts";
 
 export type DashboardProps = {
@@ -97,7 +100,35 @@ type DashboardViewState = {
    * bindings without a workspace-version change.
    */
   dataVersion: number;
+  /** Active themed dialog (#12) for edit-title / move-to-tab, or null. */
+  dialog: DashboardDialogState | null;
+  /** First-visit onboarding banner dismissed this session (#5); mirrors localStorage. */
+  onboardingDismissed: boolean;
 };
+
+/** localStorage flag so the first-visit onboarding banner (#5) stays dismissed across reloads. */
+const ONBOARDING_DISMISS_KEY = "openclaw:control-ui:dashboard-onboarding-dismissed:v1";
+
+function isOnboardingDismissed(): boolean {
+  try {
+    return getSafeLocalStorage()?.getItem(ONBOARDING_DISMISS_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function persistOnboardingDismissed(): void {
+  try {
+    getSafeLocalStorage()?.setItem(ONBOARDING_DISMISS_KEY, "1");
+  } catch {
+    // Best effort — dismissing the hint is not a product failure.
+  }
+}
+
+/** Themed-dialog state replacing the old window.prompt() flows (#12). */
+type DashboardDialogState =
+  | { kind: "editTitle"; slug: string; widgetId: string; title: string }
+  | { kind: "moveToTab"; slug: string; widgetId: string };
 
 const dashboardViewStates = new WeakMap<object, DashboardViewState>();
 
@@ -187,6 +218,8 @@ function getViewState(host: object): DashboardViewState {
       manifestCache: new Map(),
       manifestLoads: new Set(),
       dataVersion: 0,
+      dialog: null,
+      onboardingDismissed: isOnboardingDismissed(),
     };
     dashboardViewStates.set(host, state);
   }
@@ -321,6 +354,47 @@ function onHiddenTabsToggle(event: Event): void {
   details.addEventListener("toggle", onClosed);
 }
 
+/**
+ * First-visit onboarding banner (#5) teaching the two ways to add a tab: ask the
+ * agent (primary) or the CLI command (secondary). Dismissible; the flag persists
+ * in localStorage. The zero-tabs onboarding card is kept separately.
+ */
+function renderOnboardingBanner(
+  viewState: DashboardViewState,
+  requestUpdate: () => void,
+): TemplateResult | typeof nothing {
+  if (viewState.onboardingDismissed) {
+    return nothing;
+  }
+  const dismiss = () => {
+    viewState.onboardingDismissed = true;
+    persistOnboardingDismissed();
+    requestUpdate();
+  };
+  return html`
+    <div class="dashboard-onboarding" role="note" data-test-id="dashboard-onboarding">
+      <span class="dashboard-onboarding__icon" aria-hidden="true">${icons.spark}</span>
+      <div class="dashboard-onboarding__body">
+        <div class="dashboard-onboarding__title">${t("dashboard.onboarding.title")}</div>
+        <div class="dashboard-onboarding__sub">${t("dashboard.onboarding.primary")}</div>
+        <div class="dashboard-onboarding__sub">
+          ${t("dashboard.onboarding.secondary")}
+          <code class="dashboard-onboarding__cmd">${t("dashboard.empty.onboardingCommand")}</code>
+        </div>
+      </div>
+      <button
+        class="dashboard-onboarding__dismiss"
+        type="button"
+        data-test-id="dashboard-onboarding-dismiss"
+        aria-label=${t("common.dismiss")}
+        @click=${dismiss}
+      >
+        ${icons.x}
+      </button>
+    </div>
+  `;
+}
+
 function renderTabStrip(state: DashboardUiState, workspace: DashboardWorkspace): TemplateResult {
   const tabs = visibleTabs(workspace);
   const hidden = hiddenTabs(workspace);
@@ -450,8 +524,11 @@ function renderGrid(
   ensureBindings(viewState, props.client, workspace, tab, props.onRequestUpdate ?? null);
   ensureManifests(viewState, props, workspace, tab);
   if (tab.widgets.length === 0) {
+    // #15: dashed placeholder card with an icon so an empty tab reads as an
+    // intentional drop zone.
     return html`
-      <div class="dashboard-empty" data-test-id="dashboard-empty-tab">
+      <div class="dashboard-empty dashboard-empty--tab" data-test-id="dashboard-empty-tab">
+        <span class="dashboard-empty__icon" aria-hidden="true">${icons.plus}</span>
         <div class="dashboard-empty__title">${t("dashboard.empty.tabTitle")}</div>
         <div class="dashboard-empty__sub">${t("dashboard.empty.tabSubtitle")}</div>
       </div>
@@ -605,25 +682,21 @@ function makeCallbacks(
     },
     onEditTitle: (widget) => {
       viewState.openMenuWidgetId = null;
-      const next = window.prompt(t("dashboard.widget.editTitlePrompt"), widget.title);
-      if (next !== null && next.trim() && next !== widget.title) {
-        void updateWidgetTitle(state, props.client, {
-          slug: tab.slug,
-          widgetId: widget.id,
-          title: next.trim(),
-        });
-      }
+      // #12: open the themed edit-title dialog instead of window.prompt().
+      viewState.dialog = {
+        kind: "editTitle",
+        slug: tab.slug,
+        widgetId: widget.id,
+        title: widget.title,
+      };
+      requestUpdate();
     },
     onMoveToTab: (widget) => {
       viewState.openMenuWidgetId = null;
-      const targetSlug = window.prompt(t("dashboard.widget.moveToTabPrompt"));
-      if (targetSlug !== null && targetSlug.trim() && targetSlug.trim() !== tab.slug) {
-        void moveWidgetToTab(state, props.client, {
-          fromSlug: tab.slug,
-          toSlug: targetSlug.trim(),
-          widgetId: widget.id,
-        });
-      }
+      // #12: open the themed move-to-tab dialog (a select of existing tabs, not a
+      // free-text slug entry).
+      viewState.dialog = { kind: "moveToTab", slug: tab.slug, widgetId: widget.id };
+      requestUpdate();
     },
     onMovePointerDown: (widget, event) => {
       if (event.button !== 0) {
@@ -652,6 +725,118 @@ function makeCallbacks(
       }
     },
   };
+}
+
+/**
+ * Themed edit-title / move-to-tab dialog (#12), replacing window.prompt(). Reuses
+ * the app's openclaw-modal-dialog (Escape/backdrop cancel, focus trap) and the
+ * exec-approval card idiom. Move-to-tab offers a select of existing tabs.
+ */
+function renderDialog(
+  props: DashboardProps,
+  state: DashboardUiState,
+  viewState: DashboardViewState,
+): TemplateResult | typeof nothing {
+  const dialog = viewState.dialog;
+  if (!dialog) {
+    return nothing;
+  }
+  const requestUpdate = () => props.onRequestUpdate?.();
+  const close = () => {
+    viewState.dialog = null;
+    requestUpdate();
+  };
+
+  if (dialog.kind === "editTitle") {
+    const title = t("dashboard.widget.editTitleTitle");
+    const submit = (event: Event) => {
+      event.preventDefault();
+      const input = (event.currentTarget as HTMLElement).querySelector<HTMLInputElement>(
+        "input[name='dashboard-widget-title']",
+      );
+      const next = input?.value.trim() ?? "";
+      if (next && next !== dialog.title) {
+        void updateWidgetTitle(state, props.client, {
+          slug: dialog.slug,
+          widgetId: dialog.widgetId,
+          title: next,
+        });
+      }
+      close();
+    };
+    return html`
+      <openclaw-modal-dialog label=${title} @modal-cancel=${close}>
+        <form class="exec-approval-card" @submit=${submit}>
+          <div class="exec-approval-header">
+            <div class="exec-approval-title">${title}</div>
+          </div>
+          <input
+            class="dashboard-dialog__input"
+            type="text"
+            name="dashboard-widget-title"
+            data-test-id="dashboard-edit-title-input"
+            .value=${dialog.title}
+            aria-label=${t("dashboard.widget.editTitleLabel")}
+            style="margin-top: 12px; width: 100%;"
+          />
+          <div class="exec-approval-actions">
+            <button class="btn btn--primary" type="submit">${t("common.save")}</button>
+            <button class="btn" type="button" @click=${close}>${t("common.cancel")}</button>
+          </div>
+        </form>
+      </openclaw-modal-dialog>
+    `;
+  }
+
+  const title = t("dashboard.widget.moveToTabTitle");
+  const targets = state.workspace
+    ? orderedTabs(state.workspace).filter((candidate) => candidate.slug !== dialog.slug)
+    : [];
+  const submit = (event: Event) => {
+    event.preventDefault();
+    const select = (event.currentTarget as HTMLElement).querySelector<HTMLSelectElement>(
+      "select[name='dashboard-move-target']",
+    );
+    const toSlug = select?.value ?? "";
+    if (toSlug && toSlug !== dialog.slug) {
+      void moveWidgetToTab(state, props.client, {
+        fromSlug: dialog.slug,
+        toSlug,
+        widgetId: dialog.widgetId,
+      });
+    }
+    close();
+  };
+  return html`
+    <openclaw-modal-dialog label=${title} @modal-cancel=${close}>
+      <form class="exec-approval-card" @submit=${submit}>
+        <div class="exec-approval-header">
+          <div class="exec-approval-title">${title}</div>
+        </div>
+        ${targets.length === 0
+          ? html`<div class="exec-approval-sub" style="margin-top: 12px;">
+              ${t("dashboard.widget.moveToTabEmpty")}
+            </div>`
+          : html`<select
+              class="dashboard-dialog__input"
+              name="dashboard-move-target"
+              data-test-id="dashboard-move-target"
+              aria-label=${title}
+              style="margin-top: 12px; width: 100%;"
+            >
+              ${targets.map(
+                (candidate) => html`<option value=${candidate.slug}>${candidate.title}</option>`,
+              )}
+            </select>`}
+        <div class="exec-approval-actions">
+          <button class="btn btn--primary" type="submit" ?disabled=${targets.length === 0}>
+            ${t("dashboard.widget.menu.moveToTab")}
+          </button>
+          <button class="btn" type="button" @click=${close}>${t("common.cancel")}</button>
+        </div>
+      </form>
+    </openclaw-modal-dialog>
+  `;
 }
 
 export function renderDashboard(props: DashboardProps): TemplateResult {
@@ -686,7 +871,7 @@ export function renderDashboard(props: DashboardProps): TemplateResult {
       ${state.actionError
         ? html`<div class="callout danger dashboard__toast" role="alert">${state.actionError}</div>`
         : nothing}
-      ${renderBody(props, state, viewState)}
+      ${renderBody(props, state, viewState)} ${renderDialog(props, state, viewState)}
     </section>
   `;
 }
@@ -700,7 +885,11 @@ function renderBody(
     return html`
       <div class="card lazy-view-state" role="alert">
         <div class="card-title">${t("dashboard.error.title")}</div>
-        <div class="card-sub">${state.error}</div>
+        <div class="card-sub">${t("dashboard.error.subtitle")}</div>
+        <details class="dashboard-error-detail">
+          <summary>${t("dashboard.error.detailSummary")}</summary>
+          <div class="dashboard-error-detail__text">${state.error}</div>
+        </details>
         <button
           class="btn btn--small"
           type="button"
@@ -713,9 +902,12 @@ function renderBody(
   }
   const workspace = state.workspace;
   if (!workspace) {
-    return html`<div class="card lazy-view-state" role="status">
-      <div class="card-sub">${t("common.loading")}</div>
-    </div>`;
+    // #19: skeleton cards instead of a bare "Loading…" line.
+    return html`
+      <div class="dashboard-skeleton" role="status" aria-label=${t("common.loading")}>
+        ${[0, 1, 2, 3, 4, 5].map(() => html`<div class="dashboard-skeleton__card"></div>`)}
+      </div>
+    `;
   }
   if (workspace.tabs.length === 0) {
     return html`
@@ -733,7 +925,23 @@ function renderBody(
     </div>`;
   }
   return html`
+    ${renderWorkspacesHeader(tab)}
+    ${renderOnboardingBanner(viewState, () => props.onRequestUpdate?.())}
     ${renderTabStrip(state, workspace)} ${renderGrid(props, state, viewState, workspace, tab)}
+  `;
+}
+
+/**
+ * Page-header treatment for the Workspaces view (#7): the active workspace tab as
+ * the title with a subtitle line, matching the app's .page-title / .page-sub
+ * idiom used by the other top-level pages.
+ */
+function renderWorkspacesHeader(tab: DashboardTab): TemplateResult {
+  return html`
+    <div class="dashboard-page-header" data-test-id="dashboard-page-header">
+      <div class="page-title">${tab.title}</div>
+      <div class="page-sub">${t("dashboard.header.subtitle")}</div>
+    </div>
   `;
 }
 

@@ -254,7 +254,11 @@ export function renderWidgetBody(
     return html`
       <div class="dashboard-widget__error" role="alert" data-test-id="dashboard-widget-error">
         <div class="dashboard-widget__error-title">${t("dashboard.widget.errorTitle")}</div>
-        <div class="dashboard-widget__error-message">${message}</div>
+        <div class="dashboard-widget__error-humane">${t("dashboard.widget.errorHumane")}</div>
+        <details class="dashboard-widget__error-detail">
+          <summary>${t("dashboard.widget.errorDetailSummary")}</summary>
+          <div class="dashboard-widget__error-message">${message}</div>
+        </details>
         <button class="btn btn--small" type="button" @click=${() => callbacks.onRemove(widget)}>
           ${t("dashboard.widget.menu.remove")}
         </button>
