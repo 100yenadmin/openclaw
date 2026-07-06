@@ -40,6 +40,7 @@ const doc = {
     { slug: "hidden-one", title: "Hidden", hidden: true, widgets: [] },
     { slug: "empty", title: "Empty", hidden: false, widgets: [] },
   ],
+  widgetsRegistry: {},
   prefs: { tabOrder: ["main", "empty", "hidden-one"] },
 };
 
@@ -84,6 +85,7 @@ describe("renderDashboard", () => {
       schemaVersion: 1,
       workspaceVersion: 1,
       tabs: [],
+      widgetsRegistry: {},
       prefs: { tabOrder: [] },
     };
     const container = renderView(host);

@@ -669,6 +669,15 @@ export const ja_JP: TranslationMap = {
       errorTitle: "このウィジェットのレンダリングに失敗しました",
       customPlaceholder:
         "カスタムウィジェット — ウィジェットホストの提供開始後に利用可能になります。",
+      customLoading: "Loading custom widget…",
+      approval: {
+        title: "Custom widget awaiting approval",
+        byAgent: "{agent}による作成",
+        byUnknown: "Author unknown",
+        approve: "Approve",
+        reject: "Reject",
+        unavailable: "This custom widget is not available.",
+      },
       markdownEmpty: "まだコンテンツがありません。",
       unknownKind: "不明なウィジェットタイプ: {kind}",
       editTitlePrompt: "ウィジェットのタイトル",

@@ -667,6 +667,15 @@ export const tr: TranslationMap = {
       errorTitle: "Bu widget işlenemedi",
       customPlaceholder:
         "Özel widget — widget ana bilgisayarı kullanıma sunulduğunda kullanılabilir olacak.",
+      customLoading: "Loading custom widget…",
+      approval: {
+        title: "Custom widget awaiting approval",
+        byAgent: "{agent} tarafından oluşturuldu",
+        byUnknown: "Author unknown",
+        approve: "Approve",
+        reject: "Reject",
+        unavailable: "This custom widget is not available.",
+      },
       markdownEmpty: "Henüz içerik yok.",
       unknownKind: "Bilinmeyen widget türü: {kind}",
       editTitlePrompt: "Widget başlığı",
