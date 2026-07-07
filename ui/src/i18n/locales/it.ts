@@ -792,6 +792,10 @@ export const it: TranslationMap = {
       activity: {
         empty: "Nessuna attività recente.",
       },
+      notes: {
+        placeholder: "Write a note…",
+        readonlyHint: "Connect to the gateway to edit and save notes.",
+      },
       embed: {
         missing: "Questo embed non ha ancora un URL.",
         blockedExternal: "Gli embed esterni sono disabilitati dalla politica del gateway.",

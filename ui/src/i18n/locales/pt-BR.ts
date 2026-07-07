@@ -788,6 +788,10 @@ export const pt_BR: TranslationMap = {
       activity: {
         empty: "Nenhuma atividade recente.",
       },
+      notes: {
+        placeholder: "Write a note…",
+        readonlyHint: "Connect to the gateway to edit and save notes.",
+      },
       embed: {
         missing: "Este embed ainda não tem URL.",
         blockedExternal: "Embeds externos estão desabilitados pela política do seu gateway.",

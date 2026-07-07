@@ -791,6 +791,10 @@ export const uk: TranslationMap = {
       activity: {
         empty: "Немає недавньої активності.",
       },
+      notes: {
+        placeholder: "Write a note…",
+        readonlyHint: "Connect to the gateway to edit and save notes.",
+      },
       embed: {
         missing: "Це вбудовування ще не має URL.",
         blockedExternal: "Зовнішні вбудовування вимкнено політикою вашого Gateway.",

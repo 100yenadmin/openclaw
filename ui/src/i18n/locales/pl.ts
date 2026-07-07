@@ -787,6 +787,10 @@ export const pl: TranslationMap = {
       activity: {
         empty: "Brak ostatniej aktywności.",
       },
+      notes: {
+        placeholder: "Write a note…",
+        readonlyHint: "Connect to the gateway to edit and save notes.",
+      },
       embed: {
         missing: "To osadzenie nie ma jeszcze adresu URL.",
         blockedExternal: "Zewnętrzne osadzenia są wyłączone przez politykę Gateway.",

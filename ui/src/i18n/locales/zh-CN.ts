@@ -781,6 +781,10 @@ export const zh_CN: TranslationMap = {
       activity: {
         empty: "最近没有活动。",
       },
+      notes: {
+        placeholder: "Write a note…",
+        readonlyHint: "Connect to the gateway to edit and save notes.",
+      },
       embed: {
         missing: "此嵌入尚未设置 URL。",
         blockedExternal: "您的 Gateway 策略已禁用外部嵌入。",

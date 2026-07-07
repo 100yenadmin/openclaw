@@ -793,6 +793,10 @@ export const ja_JP: TranslationMap = {
       activity: {
         empty: "最近のアクティビティはありません。",
       },
+      notes: {
+        placeholder: "Write a note…",
+        readonlyHint: "Connect to the gateway to edit and save notes.",
+      },
       embed: {
         missing: "この埋め込みにはまだURLがありません。",
         blockedExternal: "Gatewayポリシーにより、外部埋め込みは無効になっています。",

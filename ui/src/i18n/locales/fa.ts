@@ -787,6 +787,10 @@ export const fa: TranslationMap = {
       activity: {
         empty: "فعالیت اخیری وجود ندارد.",
       },
+      notes: {
+        placeholder: "Write a note…",
+        readonlyHint: "Connect to the gateway to edit and save notes.",
+      },
       embed: {
         missing: "این جاسازی هنوز URL ندارد.",
         blockedExternal: "جاسازی‌های خارجی توسط خط‌مشی Gateway شما غیرفعال شده‌اند.",

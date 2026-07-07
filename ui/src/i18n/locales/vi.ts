@@ -789,6 +789,10 @@ export const vi: TranslationMap = {
       activity: {
         empty: "Không có hoạt động gần đây.",
       },
+      notes: {
+        placeholder: "Write a note…",
+        readonlyHint: "Connect to the gateway to edit and save notes.",
+      },
       embed: {
         missing: "Embed này chưa có URL.",
         blockedExternal: "Các embed bên ngoài bị vô hiệu hóa theo chính sách Gateway của bạn.",

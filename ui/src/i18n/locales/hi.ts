@@ -784,6 +784,10 @@ export const hi: TranslationMap = {
       activity: {
         empty: "कोई हालिया गतिविधि नहीं है।",
       },
+      notes: {
+        placeholder: "Write a note…",
+        readonlyHint: "Connect to the gateway to edit and save notes.",
+      },
       embed: {
         missing: "इस एम्बेड में अभी तक कोई URL नहीं है।",
         blockedExternal: "आपकी Gateway पॉलिसी द्वारा बाहरी एम्बेड अक्षम हैं।",

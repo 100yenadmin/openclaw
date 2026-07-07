@@ -785,6 +785,10 @@ export const ar: TranslationMap = {
       activity: {
         empty: "لا يوجد نشاط حديث.",
       },
+      notes: {
+        placeholder: "Write a note…",
+        readonlyHint: "Connect to the gateway to edit and save notes.",
+      },
       embed: {
         missing: "هذا التضمين لا يحتوي على رابط URL بعد.",
         blockedExternal: "تم تعطيل التضمينات الخارجية بواسطة سياسة الـ Gateway الخاصة بك.",

@@ -792,6 +792,10 @@ export const ru: TranslationMap = {
       activity: {
         empty: "Недавней активности нет.",
       },
+      notes: {
+        placeholder: "Write a note…",
+        readonlyHint: "Connect to the gateway to edit and save notes.",
+      },
       embed: {
         missing: "У этого встраивания пока нет URL.",
         blockedExternal: "Внешние встраивания отключены политикой вашего Gateway.",

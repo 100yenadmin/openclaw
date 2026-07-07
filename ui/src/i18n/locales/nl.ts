@@ -790,6 +790,10 @@ export const nl: TranslationMap = {
       activity: {
         empty: "Geen recente activiteit.",
       },
+      notes: {
+        placeholder: "Write a note…",
+        readonlyHint: "Connect to the gateway to edit and save notes.",
+      },
       embed: {
         missing: "Deze embed heeft nog geen URL.",
         blockedExternal: "Externe embeds zijn uitgeschakeld door uw gatewaybeleid.",

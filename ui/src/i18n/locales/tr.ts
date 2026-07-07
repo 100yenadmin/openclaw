@@ -791,6 +791,10 @@ export const tr: TranslationMap = {
       activity: {
         empty: "Son etkinlik yok.",
       },
+      notes: {
+        placeholder: "Write a note…",
+        readonlyHint: "Connect to the gateway to edit and save notes.",
+      },
       embed: {
         missing: "Bu gömülü içeriğin henüz URL'si yok.",
         blockedExternal: "Harici gömülü içerikler gateway ilkeniz tarafından devre dışı bırakıldı.",

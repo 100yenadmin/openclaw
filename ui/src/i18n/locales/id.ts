@@ -786,6 +786,10 @@ export const id: TranslationMap = {
       activity: {
         empty: "Tidak ada aktivitas terbaru.",
       },
+      notes: {
+        placeholder: "Write a note…",
+        readonlyHint: "Connect to the gateway to edit and save notes.",
+      },
       embed: {
         missing: "Embed ini belum memiliki URL.",
         blockedExternal: "Embed eksternal dinonaktifkan oleh kebijakan Gateway Anda.",
