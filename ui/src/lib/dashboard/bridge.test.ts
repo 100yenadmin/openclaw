@@ -256,7 +256,10 @@ describe("dispatchRateLimitedPrompt (shared confirm + rate gate)", () => {
     const first = dispatchRateLimitedPrompt({
       widgetKey: "af-1",
       text: "one",
-      confirmPrompt: () => new Promise<boolean>((resolve) => (resolveConfirm = resolve)),
+      confirmPrompt: () =>
+        new Promise<boolean>((resolve) => {
+          resolveConfirm = resolve;
+        }),
       sendPrompt: async () => undefined,
     });
     const second = await dispatchRateLimitedPrompt({

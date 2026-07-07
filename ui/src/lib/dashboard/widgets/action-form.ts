@@ -41,7 +41,7 @@ export const ACTION_FORM_DEFAULT_MAX_LENGTH = 200;
 
 // Same alphabet as the write-time slot check (extensions/dashboard schema) — keep in sync.
 const SLOT_PATTERN = /\{([A-Za-z0-9_]+)\}/g;
-const FIELD_TYPES: readonly ActionFormFieldType[] = ["text", "number", "select"];
+const FIELD_TYPES = new Set<ActionFormFieldType>(["text", "number", "select"]);
 
 /** Defensively parse one field descriptor from untyped props, or null when malformed. */
 function mapField(value: unknown): ActionFormField | null {
@@ -52,7 +52,7 @@ function mapField(value: unknown): ActionFormField | null {
   if (typeof name !== "string" || !name || typeof label !== "string" || !label) {
     return null;
   }
-  if (typeof type !== "string" || !FIELD_TYPES.includes(type as ActionFormFieldType)) {
+  if (typeof type !== "string" || !FIELD_TYPES.has(type as ActionFormFieldType)) {
     return null;
   }
   const options =
@@ -156,8 +156,7 @@ export function renderActionForm(
     const values: Record<string, string> = {};
     for (const field of model.fields) {
       const control = form.elements.namedItem(field.name);
-      values[field.name] =
-        control && "value" in control ? String((control as HTMLInputElement).value) : "";
+      values[field.name] = control && "value" in control ? (control as HTMLInputElement).value : "";
     }
     const text = buildActionFormPrompt(model, values);
     if (!text.trim() || !ctx.dispatchPrompt) {

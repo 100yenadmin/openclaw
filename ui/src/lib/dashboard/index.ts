@@ -610,7 +610,7 @@ export function pinWidget(
   return optimisticMutation(state, client, {
     widgetId: params.widgetId,
     method: "dashboard.widget.update",
-    rpcParams: { slug: params.slug, widgetId: params.widgetId, ephemeral: null },
+    rpcParams: { tab: params.slug, id: params.widgetId, patch: { ephemeral: null } },
     optimistic: (workspace) =>
       replaceWidget(workspace, params.slug, params.widgetId, (widget) => {
         const { ephemeral: _ephemeral, ...rest } = widget;
