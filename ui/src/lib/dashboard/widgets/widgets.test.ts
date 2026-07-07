@@ -3,17 +3,20 @@
 // separately (empty/populated) to lock the empty/loading/error affordances.
 
 import { render } from "lit";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import type { GatewayBrowserClient } from "../../../api/gateway.ts";
+import { buildBuiltinContext, type DashboardProps } from "../../../pages/plugin/dashboard-view.ts";
 import type { DashboardWidget } from "../types.ts";
 import { mapActivity, renderActivity } from "./activity.ts";
 import { mapCron, renderCron } from "./cron.ts";
 import { evaluateEmbedUrl, renderIframeEmbed } from "./iframe-embed.ts";
 import { mapInstances, renderInstances } from "./instances.ts";
 import { mapMarkdownSource, renderMarkdown } from "./markdown.ts";
+import { NOTES_PERSIST_DEBOUNCE_MS, renderNotes } from "./notes.ts";
 import { mapSessions, renderSessions } from "./sessions.ts";
 import { mapStatCard, renderStatCard } from "./stat-card.ts";
 import { mapTable, renderTable } from "./table.ts";
-import type { BuiltinWidgetContext } from "./types.ts";
+import type { BuiltinWidgetContext, BuiltinWidgetState } from "./types.ts";
 import { mapUsage, renderUsage } from "./usage.ts";
 
 function widget(overrides: Partial<DashboardWidget> = {}): DashboardWidget {
@@ -302,5 +305,111 @@ describe("iframe-embed render × sandbox mode", () => {
     );
     expect(container.querySelector('[data-test-id="dashboard-embed-blocked"]')).not.toBeNull();
     expect(container.querySelector('[data-test-id="dashboard-embed-frame"]')).toBeNull();
+  });
+});
+
+/** Lets pending state-accessor promises (get/set) resolve inside a test. */
+async function flushMicrotasks(): Promise<void> {
+  await Promise.resolve();
+  await Promise.resolve();
+}
+
+/** A mock gateway client that records requests and answers the two state RPCs. */
+function mockStateClient(getState: unknown): {
+  client: GatewayBrowserClient;
+  requests: Array<{ method: string; params: unknown }>;
+} {
+  const requests: Array<{ method: string; params: unknown }> = [];
+  const client = {
+    request: (method: string, params: unknown) => {
+      requests.push({ method, params });
+      if (method === "dashboard.widget.state.get") {
+        return Promise.resolve({ state: getState, version: 1 });
+      }
+      return Promise.resolve({ version: 2 });
+    },
+  } as unknown as GatewayBrowserClient;
+  return { client, requests };
+}
+
+function notesProps(client: GatewayBrowserClient | null): DashboardProps {
+  return { host: {}, client, connected: client !== null } as DashboardProps;
+}
+
+describe("notes builtin", () => {
+  it("renders an editable pad when a state accessor is present", () => {
+    const state: BuiltinWidgetState = {
+      get: () => Promise.resolve({ state: null }),
+      set: () => Promise.resolve({ version: 1 }),
+    };
+    const container = renderToContainer(
+      renderNotes(widget({ kind: "builtin:notes" }), null, { ...STRICT_EMBED, state }),
+    );
+    const pad = container.querySelector<HTMLTextAreaElement>(
+      '[data-test-id="dashboard-notes-pad"]',
+    );
+    expect(pad).not.toBeNull();
+    expect(pad?.hasAttribute("readonly")).toBe(false);
+    expect(container.querySelector('[data-test-id="dashboard-notes-hint"]')).toBeNull();
+  });
+
+  it("hydrates the pad from ctx.state.get on mount", async () => {
+    const state: BuiltinWidgetState = {
+      get: () => Promise.resolve({ state: "loaded note", version: 3 }),
+      set: () => Promise.resolve({ version: 4 }),
+    };
+    const container = renderToContainer(
+      renderNotes(widget({ kind: "builtin:notes" }), null, { ...STRICT_EMBED, state }),
+    );
+    const pad = container.querySelector<HTMLTextAreaElement>(
+      '[data-test-id="dashboard-notes-pad"]',
+    );
+    expect(pad?.value).toBe("");
+    await flushMicrotasks();
+    expect(pad?.value).toBe("loaded note");
+  });
+
+  it("persists a debounced edit through the host-bound widget id", async () => {
+    vi.useFakeTimers();
+    try {
+      const { client, requests } = mockStateClient(null);
+      const w = widget({ id: "notes-42", kind: "builtin:notes" });
+      // The host builds the context and binds the state RPCs to THIS widget's id.
+      const ctx = buildBuiltinContext(notesProps(client), w);
+      const container = renderToContainer(renderNotes(w, null, ctx));
+      const pad = container.querySelector<HTMLTextAreaElement>(
+        '[data-test-id="dashboard-notes-pad"]',
+      );
+      await flushMicrotasks();
+
+      pad!.value = "hello world";
+      pad!.dispatchEvent(new Event("input"));
+      // Nothing persisted until the debounce elapses.
+      expect(requests.some((r) => r.method === "dashboard.widget.state.set")).toBe(false);
+
+      vi.advanceTimersByTime(NOTES_PERSIST_DEBOUNCE_MS);
+      await flushMicrotasks();
+
+      const setCall = requests.find((r) => r.method === "dashboard.widget.state.set");
+      expect(setCall?.params).toEqual({ widgetId: "notes-42", state: "hello world" });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("degrades to a read-only pad without ctx.state", () => {
+    const container = renderToContainer(
+      renderNotes(
+        widget({ kind: "builtin:notes", props: { text: "seed note" } }),
+        null,
+        STRICT_EMBED,
+      ),
+    );
+    const pad = container.querySelector<HTMLTextAreaElement>(
+      '[data-test-id="dashboard-notes-pad"]',
+    );
+    expect(pad?.hasAttribute("readonly")).toBe(true);
+    expect(pad?.value).toBe("seed note");
+    expect(container.querySelector('[data-test-id="dashboard-notes-hint"]')).not.toBeNull();
   });
 });
