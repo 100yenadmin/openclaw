@@ -258,10 +258,11 @@ describe("optimistic mutations", () => {
     const client = mockClient({ request: request as never });
     await pinWidget(state, client, { slug: "main", widgetId: "w1" });
     expect(state.workspace?.tabs[0].widgets[0].ephemeral).toBeUndefined();
+    // Wire contract: pin clears ephemeral via the gateway's { tab, id, patch } shape.
     expect(request).toHaveBeenCalledWith("dashboard.widget.update", {
-      slug: "main",
-      widgetId: "w1",
-      ephemeral: null,
+      tab: "main",
+      id: "w1",
+      patch: { ephemeral: null },
     });
   });
 
