@@ -792,6 +792,10 @@ export const ru: TranslationMap = {
       activity: {
         empty: "Недавней активности нет.",
       },
+      chart: {
+        empty: "No data to chart.",
+        label: "Chart",
+      },
       embed: {
         missing: "У этого встраивания пока нет URL.",
         blockedExternal: "Внешние встраивания отключены политикой вашего Gateway.",

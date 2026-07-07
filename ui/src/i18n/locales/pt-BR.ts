@@ -788,6 +788,10 @@ export const pt_BR: TranslationMap = {
       activity: {
         empty: "Nenhuma atividade recente.",
       },
+      chart: {
+        empty: "No data to chart.",
+        label: "Chart",
+      },
       embed: {
         missing: "Este embed ainda não tem URL.",
         blockedExternal: "Embeds externos estão desabilitados pela política do seu gateway.",

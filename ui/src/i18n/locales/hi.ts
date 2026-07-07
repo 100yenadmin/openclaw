@@ -784,6 +784,10 @@ export const hi: TranslationMap = {
       activity: {
         empty: "कोई हालिया गतिविधि नहीं है।",
       },
+      chart: {
+        empty: "No data to chart.",
+        label: "Chart",
+      },
       embed: {
         missing: "इस एम्बेड में अभी तक कोई URL नहीं है।",
         blockedExternal: "आपकी Gateway पॉलिसी द्वारा बाहरी एम्बेड अक्षम हैं।",

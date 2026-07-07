@@ -782,6 +782,10 @@ export const th: TranslationMap = {
       activity: {
         empty: "ไม่มีกิจกรรมล่าสุด",
       },
+      chart: {
+        empty: "No data to chart.",
+        label: "Chart",
+      },
       embed: {
         missing: "Embed นี้ยังไม่มี URL",
         blockedExternal: "Embed ภายนอกถูกปิดใช้งานโดยนโยบาย Gateway ของคุณ",

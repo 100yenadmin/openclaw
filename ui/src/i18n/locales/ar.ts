@@ -785,6 +785,10 @@ export const ar: TranslationMap = {
       activity: {
         empty: "لا يوجد نشاط حديث.",
       },
+      chart: {
+        empty: "No data to chart.",
+        label: "Chart",
+      },
       embed: {
         missing: "هذا التضمين لا يحتوي على رابط URL بعد.",
         blockedExternal: "تم تعطيل التضمينات الخارجية بواسطة سياسة الـ Gateway الخاصة بك.",

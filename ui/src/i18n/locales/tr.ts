@@ -791,6 +791,10 @@ export const tr: TranslationMap = {
       activity: {
         empty: "Son etkinlik yok.",
       },
+      chart: {
+        empty: "No data to chart.",
+        label: "Chart",
+      },
       embed: {
         missing: "Bu gömülü içeriğin henüz URL'si yok.",
         blockedExternal: "Harici gömülü içerikler gateway ilkeniz tarafından devre dışı bırakıldı.",

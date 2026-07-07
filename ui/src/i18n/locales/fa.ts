@@ -787,6 +787,10 @@ export const fa: TranslationMap = {
       activity: {
         empty: "فعالیت اخیری وجود ندارد.",
       },
+      chart: {
+        empty: "No data to chart.",
+        label: "Chart",
+      },
       embed: {
         missing: "این جاسازی هنوز URL ندارد.",
         blockedExternal: "جاسازی‌های خارجی توسط خط‌مشی Gateway شما غیرفعال شده‌اند.",

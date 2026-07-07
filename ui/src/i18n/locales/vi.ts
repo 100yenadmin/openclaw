@@ -789,6 +789,10 @@ export const vi: TranslationMap = {
       activity: {
         empty: "Không có hoạt động gần đây.",
       },
+      chart: {
+        empty: "No data to chart.",
+        label: "Chart",
+      },
       embed: {
         missing: "Embed này chưa có URL.",
         blockedExternal: "Các embed bên ngoài bị vô hiệu hóa theo chính sách Gateway của bạn.",

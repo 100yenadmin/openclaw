@@ -787,6 +787,10 @@ export const pl: TranslationMap = {
       activity: {
         empty: "Brak ostatniej aktywności.",
       },
+      chart: {
+        empty: "No data to chart.",
+        label: "Chart",
+      },
       embed: {
         missing: "To osadzenie nie ma jeszcze adresu URL.",
         blockedExternal: "Zewnętrzne osadzenia są wyłączone przez politykę Gateway.",

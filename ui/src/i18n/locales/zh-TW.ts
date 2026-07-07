@@ -781,6 +781,10 @@ export const zh_TW: TranslationMap = {
       activity: {
         empty: "沒有近期活動。",
       },
+      chart: {
+        empty: "No data to chart.",
+        label: "Chart",
+      },
       embed: {
         missing: "此嵌入尚無 URL。",
         blockedExternal: "外部嵌入已透過您的 Gateway 原則停用。",

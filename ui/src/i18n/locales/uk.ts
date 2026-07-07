@@ -791,6 +791,10 @@ export const uk: TranslationMap = {
       activity: {
         empty: "Немає недавньої активності.",
       },
+      chart: {
+        empty: "No data to chart.",
+        label: "Chart",
+      },
       embed: {
         missing: "Це вбудовування ще не має URL.",
         blockedExternal: "Зовнішні вбудовування вимкнено політикою вашого Gateway.",

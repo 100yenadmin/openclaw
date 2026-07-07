@@ -793,6 +793,10 @@ export const ja_JP: TranslationMap = {
       activity: {
         empty: "最近のアクティビティはありません。",
       },
+      chart: {
+        empty: "No data to chart.",
+        label: "Chart",
+      },
       embed: {
         missing: "この埋め込みにはまだURLがありません。",
         blockedExternal: "Gatewayポリシーにより、外部埋め込みは無効になっています。",

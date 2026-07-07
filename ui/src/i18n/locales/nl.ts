@@ -790,6 +790,10 @@ export const nl: TranslationMap = {
       activity: {
         empty: "Geen recente activiteit.",
       },
+      chart: {
+        empty: "No data to chart.",
+        label: "Chart",
+      },
       embed: {
         missing: "Deze embed heeft nog geen URL.",
         blockedExternal: "Externe embeds zijn uitgeschakeld door uw gatewaybeleid.",

@@ -786,6 +786,10 @@ export const id: TranslationMap = {
       activity: {
         empty: "Tidak ada aktivitas terbaru.",
       },
+      chart: {
+        empty: "No data to chart.",
+        label: "Chart",
+      },
       embed: {
         missing: "Embed ini belum memiliki URL.",
         blockedExternal: "Embed eksternal dinonaktifkan oleh kebijakan Gateway Anda.",
