@@ -13,10 +13,26 @@ import type { TemplateResult } from "lit";
 import type { ApplicationConfig } from "../../../app/config.ts";
 import type { DashboardWidget } from "../types.ts";
 
+/**
+ * Widget-id-bound accessor for the write-back state store. The host binds both
+ * methods to THAT widget's id before handing this to the renderer, so a renderer
+ * never names a widget id itself — it can only read/write its own state. Present
+ * only for stateful builtins (notes); absent renderers degrade to read-only.
+ */
+export type BuiltinWidgetState = {
+  get(): Promise<{ state: unknown; version?: number }>;
+  set(blob: unknown): Promise<{ version: number }>;
+};
+
 /** Ambient context a builtin may need beyond its own binding value. */
 export type BuiltinWidgetContext = {
   /** Control UI embed policy — only the iframe-embed widget consumes it. */
   embed: Pick<ApplicationConfig, "embedSandboxMode" | "allowExternalEmbedUrls">;
+  /**
+   * Persistence accessor bound to the current widget's id. Only stateful
+   * builtins (notes) consume it; absent when the host has no gateway client.
+   */
+  state?: BuiltinWidgetState;
 };
 
 /** A builtin widget renderer: pure, side-effect-free, throws only on real bugs. */
