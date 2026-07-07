@@ -7,8 +7,8 @@ read_when:
 title: "Dashboard widget authoring"
 ---
 
-The [Dashboard plugin](/plugins/workboard) (Control UI "Workspaces") renders
-widgets in two different ways. Pick the right one before you start:
+The Dashboard plugin (Control UI "Workspaces") renders widgets in two
+different ways. Pick the right one before you start:
 
 | Path               | Runs where                              | Who can add one                                                                          | Data access                                           |
 | ------------------ | --------------------------------------- | ---------------------------------------------------------------------------------------- | ----------------------------------------------------- |
@@ -194,11 +194,14 @@ what it loaded here):
     manifest itself (useful for the scaffold default and for widgets that
     need no live data at all).
 - **`capabilities`** — subset of `["data:read", "prompt:send"]`.
-  - `data:read` is required to declare any bindings at all in practice (a
-    widget with bindings but no capability can still declare them in the
-    manifest, but see the note on capability enforcement below — the
-    concrete gate today is per-binding-id declaration, and `prompt:send` is
-    enforced explicitly).
+  - `data:read` is declarative today, not enforced at resolve time: the
+    bridge's `getData` handler (`handleGetData` in
+    `ui/src/lib/dashboard/bridge.ts`) gates purely on whether the requested
+    `bindingId` is declared in `manifest.bindings`, and never checks
+    `capabilities` at all. Declare it anyway — it documents intent to
+    reviewers and may become an enforced gate later — but don't rely on
+    omitting it as a way to prevent binding reads; the only real gate is
+    "is this binding declared in the manifest."
   - `prompt:send` gates `sendPrompt` (see below) — without it, every
     `dashboard:sendPrompt` message is denied with `capability_denied` before
     any confirm dialog is shown.
