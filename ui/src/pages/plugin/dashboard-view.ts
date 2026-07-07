@@ -488,6 +488,39 @@ function ensureManifests(
   }
 }
 
+/**
+ * Builds the L4 builtin-widget context for ONE widget. The write-back `state`
+ * accessor is bound to THIS widget's own `widget.id` — the id is taken from the
+ * host's tracked widget, NEVER from the widget itself — so a stateful builtin
+ * (notes) can only ever read/write its own state. Present only when a gateway
+ * client exists; otherwise stateful builtins degrade to read-only.
+ */
+export function buildBuiltinContext(
+  props: DashboardProps,
+  widget: DashboardWidget,
+): BuiltinWidgetContext {
+  const embed = props.embed ?? DEFAULT_EMBED_CONTEXT;
+  const client = props.client;
+  if (!client) {
+    return { embed };
+  }
+  return {
+    embed,
+    state: {
+      get: () =>
+        client.request("dashboard.widget.state.get", { widgetId: widget.id }) as Promise<{
+          state: unknown;
+          version?: number;
+        }>,
+      set: (blob) =>
+        client.request("dashboard.widget.state.set", {
+          widgetId: widget.id,
+          state: blob,
+        }) as Promise<{ version: number }>,
+    },
+  };
+}
+
 /** Builds the L5 custom-widget context for one `custom:<name>` widget, or null. */
 function buildCustomContext(
   props: DashboardProps,
@@ -535,7 +568,6 @@ function renderGrid(
     `;
   }
   const callbacks = makeCallbacks(props, state, viewState, tab);
-  const builtinContext: BuiltinWidgetContext = { embed: props.embed ?? DEFAULT_EMBED_CONTEXT };
   const rows = gridRowCount(tab.widgets);
   const minHeight = rows * DASHBOARD_ROW_HEIGHT + Math.max(0, rows - 1) * DASHBOARD_GRID_GAP;
   return html`
@@ -548,7 +580,7 @@ function renderGrid(
           menuOpen: viewState.openMenuWidgetId === widget.id,
           pending: state.pendingWidgetIds.has(widget.id),
           dragging: viewState.drag?.widgetId === widget.id,
-          builtinContext,
+          builtinContext: buildBuiltinContext(props, widget),
           callbacks,
           ...(custom ? { custom } : {}),
         });
