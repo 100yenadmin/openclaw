@@ -25,6 +25,8 @@ export type DashboardWidgetCellCallbacks = {
   onRemove: (widget: DashboardWidget) => void;
   onEditTitle: (widget: DashboardWidget) => void;
   onMoveToTab: (widget: DashboardWidget) => void;
+  /** Pin a temporary (ephemeral) widget so the TTL sweep keeps it. */
+  onPin: (widget: DashboardWidget) => void;
   onMovePointerDown: (widget: DashboardWidget, event: PointerEvent) => void;
   onResizePointerDown: (widget: DashboardWidget, event: PointerEvent) => void;
   onKeyboardNudge: (
@@ -85,12 +87,36 @@ function renderProvenanceChip(widget: DashboardWidget): TemplateResult | typeof 
   >`;
 }
 
+/** Subtle badge marking a temporary (ephemeral) Living Answer; pinning clears it. */
+function renderEphemeralBadge(widget: DashboardWidget): TemplateResult | typeof nothing {
+  if (!widget.ephemeral) {
+    return nothing;
+  }
+  return html`<span
+    class="dashboard-widget__ephemeral"
+    data-test-id="dashboard-widget-ephemeral"
+    title=${t("dashboard.widget.ephemeralTooltip")}
+    >${t("dashboard.widget.ephemeralBadge")}</span
+  >`;
+}
+
 function renderMenu(
   widget: DashboardWidget,
   callbacks: DashboardWidgetCellCallbacks,
 ): TemplateResult {
   return html`
     <div class="dashboard-widget__menu" role="menu">
+      ${widget.ephemeral
+        ? html`<button
+            class="dashboard-widget__menu-item"
+            type="button"
+            role="menuitem"
+            data-test-id="dashboard-widget-pin"
+            @click=${() => callbacks.onPin(widget)}
+          >
+            ${t("dashboard.widget.menu.pin")}
+          </button>`
+        : nothing}
       <button
         class="dashboard-widget__menu-item"
         type="button"
@@ -303,7 +329,7 @@ export function renderWidgetCell(props: DashboardWidgetCellProps): TemplateResul
         <span class="dashboard-widget__title" title=${widget.title}
           >${displayWidgetTitle(widget.title)}</span
         >
-        ${renderProvenanceChip(widget)}
+        ${renderProvenanceChip(widget)} ${renderEphemeralBadge(widget)}
         <span
           class="dashboard-widget__handle"
           role="button"

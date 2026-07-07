@@ -13,6 +13,7 @@ import {
   moveWidgetToTab,
   normalizeWorkspace,
   orderedTabs,
+  pinWidget,
   registerActiveDrag,
   removeWidgetFromTab,
   resolveActiveSlug,
@@ -88,6 +89,32 @@ describe("normalizeWorkspace", () => {
       ],
     });
     expect(ws.tabs[0].widgets[0].grid).toEqual({ x: 0, y: 0, w: 12, h: 1 });
+  });
+
+  it("carries a well-formed ephemeral marker and drops a malformed one", () => {
+    const ws = normalizeWorkspace({
+      tabs: [
+        {
+          slug: "t",
+          widgets: [
+            {
+              id: "keep",
+              kind: "k",
+              grid: { x: 0, y: 0, w: 2, h: 2 },
+              ephemeral: { expiresAt: "2026-07-09T12:00:00Z" },
+            },
+            {
+              id: "drop",
+              kind: "k",
+              grid: { x: 2, y: 0, w: 2, h: 2 },
+              ephemeral: { expiresAt: 42 },
+            },
+          ],
+        },
+      ],
+    });
+    expect(ws.tabs[0].widgets[0].ephemeral).toEqual({ expiresAt: "2026-07-09T12:00:00Z" });
+    expect(ws.tabs[0].widgets[1].ephemeral).toBeUndefined();
   });
 });
 
@@ -206,6 +233,35 @@ describe("optimistic mutations", () => {
       tab: "main",
       id: "w1",
       toTab: "archive",
+    });
+  });
+
+  it("pins an ephemeral widget by clearing the flag optimistically and via ephemeral: null", async () => {
+    const host = {};
+    const state = getDashboardState(host);
+    state.workspace = normalizeWorkspace({
+      ...sampleDoc,
+      tabs: [
+        {
+          ...sampleDoc.tabs[0],
+          widgets: [
+            { ...sampleDoc.tabs[0].widgets[0], ephemeral: { expiresAt: "2026-07-09T12:00:00Z" } },
+          ],
+        },
+        sampleDoc.tabs[1],
+      ],
+    });
+    expect(state.workspace?.tabs[0].widgets[0].ephemeral).toEqual({
+      expiresAt: "2026-07-09T12:00:00Z",
+    });
+    const request = vi.fn(async () => ({}));
+    const client = mockClient({ request: request as never });
+    await pinWidget(state, client, { slug: "main", widgetId: "w1" });
+    expect(state.workspace?.tabs[0].widgets[0].ephemeral).toBeUndefined();
+    expect(request).toHaveBeenCalledWith("dashboard.widget.update", {
+      slug: "main",
+      widgetId: "w1",
+      ephemeral: null,
     });
   });
 

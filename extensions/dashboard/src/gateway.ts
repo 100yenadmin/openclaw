@@ -7,6 +7,7 @@ import {
   validateWorkspaceDoc,
   type DashboardActor,
   type DashboardBinding,
+  type DashboardEphemeral,
   type DashboardGrid,
   type DashboardTab,
   type DashboardWidget,
@@ -225,13 +226,30 @@ function findWidget(tab: DashboardTab, id: string): DashboardWidget {
   return widget;
 }
 
+function readEphemeralInput(value: unknown): DashboardEphemeral {
+  if (!isRecord(value)) {
+    throw new Error("widget.ephemeral must be an object");
+  }
+  return { expiresAt: readRequiredString(value, "expiresAt", "widget.ephemeral.expiresAt") };
+}
+
 function readWidgetInput(value: unknown, doc: WorkspaceDoc): DashboardWidget {
   if (!isRecord(value)) {
     throw new Error("widget must be an object");
   }
   for (const key of Object.keys(value)) {
     if (
-      !["id", "kind", "title", "grid", "collapsed", "hidden", "bindings", "props"].includes(key)
+      ![
+        "id",
+        "kind",
+        "title",
+        "grid",
+        "collapsed",
+        "hidden",
+        "bindings",
+        "props",
+        "ephemeral",
+      ].includes(key)
     ) {
       throw new Error(`widget.${key} is not allowed`);
     }
@@ -248,6 +266,7 @@ function readWidgetInput(value: unknown, doc: WorkspaceDoc): DashboardWidget {
       ? { bindings: value.bindings as Record<string, DashboardBinding> }
       : {}),
     ...(value.props !== undefined ? { props: value.props as JsonValue } : {}),
+    ...(value.ephemeral !== undefined ? { ephemeral: readEphemeralInput(value.ephemeral) } : {}),
   };
 }
 
@@ -278,7 +297,15 @@ function readTabPatch(value: unknown): Partial<Pick<DashboardTab, "title" | "ico
 }
 
 function readWidgetPatch(value: unknown): Partial<DashboardWidget> {
-  const patch = readParams(value, ["title", "grid", "collapsed", "hidden", "bindings", "props"]);
+  const patch = readParams(value, [
+    "title",
+    "grid",
+    "collapsed",
+    "hidden",
+    "bindings",
+    "props",
+    "ephemeral",
+  ]);
   const title = readOptionalString(patch, "title");
   if (title !== undefined && title.length > 80) {
     throw new Error("patch.title must be 80 characters or fewer");
@@ -296,6 +323,11 @@ function readWidgetPatch(value: unknown): Partial<DashboardWidget> {
       ? { bindings: patch.bindings as Record<string, DashboardBinding> }
       : {}),
     ...(patch.props !== undefined ? { props: patch.props as JsonValue } : {}),
+    // `ephemeral: null` pins the widget (clears the flag); an object sets it. The
+    // resulting `undefined` is stripped by validateWorkspaceDoc on write.
+    ...(Object.hasOwn(patch, "ephemeral")
+      ? { ephemeral: patch.ephemeral === null ? undefined : readEphemeralInput(patch.ephemeral) }
+      : {}),
   };
 }
 

@@ -174,7 +174,18 @@ function normalizeWidget(value: unknown): DashboardWidget | null {
     ...(typeof value.createdBy === "string" ? { createdBy: value.createdBy } : {}),
     ...(normalizeBindings(value.bindings) ? { bindings: normalizeBindings(value.bindings) } : {}),
     ...(isRecord(value.props) ? { props: value.props } : {}),
+    ...(normalizeEphemeral(value.ephemeral)
+      ? { ephemeral: normalizeEphemeral(value.ephemeral)! }
+      : {}),
   };
+}
+
+/** Read the ephemeral marker if present and well-formed (`{ expiresAt: string }`). */
+function normalizeEphemeral(value: unknown): { expiresAt: string } | null {
+  if (!isRecord(value) || typeof value.expiresAt !== "string" || !value.expiresAt.trim()) {
+    return null;
+  }
+  return { expiresAt: value.expiresAt };
 }
 
 function normalizeTab(value: unknown): DashboardTab | null {
@@ -583,6 +594,28 @@ export function updateWidgetTitle(
         ...widget,
         title: params.title,
       })),
+  });
+}
+
+/**
+ * Pin a temporary (ephemeral) Living Answer: clear its `ephemeral` flag so the
+ * store's TTL sweep never removes it. Mirrors the other widget.update actions —
+ * `ephemeral: null` is the clear signal the plugin patch reader understands.
+ */
+export function pinWidget(
+  state: DashboardUiState,
+  client: GatewayBrowserClient | null,
+  params: { slug: string; widgetId: string },
+): Promise<void> {
+  return optimisticMutation(state, client, {
+    widgetId: params.widgetId,
+    method: "dashboard.widget.update",
+    rpcParams: { slug: params.slug, widgetId: params.widgetId, ephemeral: null },
+    optimistic: (workspace) =>
+      replaceWidget(workspace, params.slug, params.widgetId, (widget) => {
+        const { ephemeral: _ephemeral, ...rest } = widget;
+        return rest;
+      }),
   });
 }
 

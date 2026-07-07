@@ -226,4 +226,46 @@ describe("dashboard gateway methods", () => {
       expect(broadcast).toHaveBeenCalledTimes(8);
     });
   });
+
+  it("sets an ephemeral flag on add and clears it via a pin (ephemeral: null) patch", async () => {
+    await withTempStateDir(async (stateDir) => {
+      const { api, methods } = createApi();
+      registerDashboardGatewayMethods({ api, store: new DashboardStore({ stateDir }) });
+      const broadcast = vi.fn();
+
+      await callMethod(
+        methods.get("dashboard.tab.create")!,
+        { slug: "ans", title: "Answers" },
+        broadcast,
+      );
+      const added = await callMethod(
+        methods.get("dashboard.widget.add")!,
+        {
+          tab: "ans",
+          widget: {
+            id: "answer-1",
+            kind: "builtin:markdown",
+            grid: { x: 0, y: 0, w: 4, h: 2 },
+            ephemeral: { expiresAt: "2026-07-09T12:00:00Z" },
+          },
+        },
+        broadcast,
+      );
+      const addedWidget = added.response?.[1]?.doc.tabs
+        .find((tab: { slug: string }) => tab.slug === "ans")
+        .widgets.find((w: { id: string }) => w.id === "answer-1");
+      expect(addedWidget.ephemeral).toEqual({ expiresAt: "2026-07-09T12:00:00Z" });
+
+      const pinned = await callMethod(
+        methods.get("dashboard.widget.update")!,
+        { tab: "ans", id: "answer-1", patch: { ephemeral: null } },
+        broadcast,
+      );
+      const pinnedWidget = pinned.response?.[1]?.doc.tabs
+        .find((tab: { slug: string }) => tab.slug === "ans")
+        .widgets.find((w: { id: string }) => w.id === "answer-1");
+      expect(pinnedWidget.ephemeral).toBeUndefined();
+      expect("ephemeral" in pinnedWidget).toBe(false);
+    });
+  });
 });

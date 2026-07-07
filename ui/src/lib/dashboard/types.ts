@@ -35,6 +35,9 @@ export type DashboardGridRect = {
   h: number;
 };
 
+/** Auto-expiry marker (Living Answers): the plugin store sweeps the widget once past `expiresAt`. */
+export type DashboardEphemeral = { expiresAt: string };
+
 export type DashboardWidget = {
   id: string;
   kind: DashboardWidgetKind;
@@ -44,6 +47,8 @@ export type DashboardWidget = {
   createdBy?: DashboardCreatedBy;
   bindings?: Record<string, DashboardBinding>;
   props?: Record<string, unknown>;
+  /** Present while the widget is a temporary (unpinned) Living Answer. */
+  ephemeral?: DashboardEphemeral;
 };
 
 export type DashboardTab = {

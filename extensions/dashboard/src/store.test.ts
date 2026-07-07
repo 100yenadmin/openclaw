@@ -131,6 +131,67 @@ describe("DashboardStore", () => {
       expect((await store.read()).tabs[0]?.title).toBe("First Second");
     });
   });
+
+  describe("ephemeral TTL sweep", () => {
+    const expiredAt = new Date(1_000).toISOString();
+
+    async function seedEphemeral(stateDir: string): Promise<number> {
+      // A writer whose clock predates the expiry adds the widget without sweeping it.
+      const writer = new DashboardStore({ stateDir, now: () => 500 });
+      const result = await writer.mutate(
+        (draft) => {
+          draft.tabs[0]!.widgets.push({
+            id: "living-answer",
+            kind: "builtin:markdown",
+            grid: { x: 0, y: 40, w: 4, h: 2 },
+            collapsed: false,
+            hidden: false,
+            ephemeral: { expiresAt: expiredAt },
+          });
+        },
+        { actor: "user" },
+      );
+      return result.doc.workspaceVersion;
+    }
+
+    it("removes expired ephemeral widgets on read, bumps version, and persists once", async () => {
+      await withTempStateDir(async (stateDir) => {
+        const seededVersion = await seedEphemeral(stateDir);
+
+        // A reader past the expiry sweeps the widget on read.
+        const reader = new DashboardStore({ stateDir, now: () => 2_000 });
+        const doc = await reader.read();
+
+        expect(doc.tabs[0]!.widgets.some((w) => w.id === "living-answer")).toBe(false);
+        expect(doc.tabs[0]!.widgets.some((w) => w.id === "cost-today")).toBe(true);
+        expect(doc.workspaceVersion).toBe(seededVersion + 1);
+        // The sweep persisted exactly the returned doc (one atomic write).
+        expect(await readJsonFile(reader.workspacePath)).toEqual(doc);
+      });
+    });
+
+    it("keeps unexpired ephemeral widgets and does not rewrite the doc", async () => {
+      await withTempStateDir(async (stateDir) => {
+        const seededVersion = await seedEphemeral(stateDir);
+
+        // A reader before the expiry leaves the widget and the version untouched.
+        const reader = new DashboardStore({ stateDir, now: () => 800 });
+        const doc = await reader.read();
+
+        expect(doc.tabs[0]!.widgets.some((w) => w.id === "living-answer")).toBe(true);
+        expect(doc.workspaceVersion).toBe(seededVersion);
+      });
+    });
+
+    it("treats an expiry at exactly now as expired", async () => {
+      await withTempStateDir(async (stateDir) => {
+        await seedEphemeral(stateDir);
+        const reader = new DashboardStore({ stateDir, now: () => 1_000 });
+        const doc = await reader.read();
+        expect(doc.tabs[0]!.widgets.some((w) => w.id === "living-answer")).toBe(false);
+      });
+    });
+  });
 });
 
 async function viWaitFor(assertion: () => void): Promise<void> {

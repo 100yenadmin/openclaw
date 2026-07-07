@@ -5,6 +5,36 @@ import { resolveStateDir } from "openclaw/plugin-sdk/state-paths";
 import { DEFAULT_DASHBOARD_WORKSPACE } from "./default-workspace.js";
 import { migrateWorkspaceDoc, validateWorkspaceDoc, type WorkspaceDoc } from "./schema.js";
 
+/**
+ * Drop ephemeral widgets whose `expiresAt` is at or before `nowMs` (Living
+ * Answers TTL sweep). Returns a new doc with `workspaceVersion` bumped when
+ * anything expired, or null when nothing did — so the caller writes exactly once
+ * and only when the sweep changed something.
+ */
+function sweepExpiredEphemeral(doc: WorkspaceDoc, nowMs: number): WorkspaceDoc | null {
+  let removed = false;
+  const tabs = doc.tabs.map((tab) => {
+    const widgets = tab.widgets.filter((widget) => {
+      const expiresAt = widget.ephemeral?.expiresAt;
+      if (expiresAt === undefined) {
+        return true;
+      }
+      const expiry = Date.parse(expiresAt);
+      // A validated doc always parses; keep an unparseable stamp rather than guess.
+      if (Number.isNaN(expiry) || expiry > nowMs) {
+        return true;
+      }
+      removed = true;
+      return false;
+    });
+    return widgets.length === tab.widgets.length ? tab : { ...tab, widgets };
+  });
+  if (!removed) {
+    return null;
+  }
+  return { ...doc, tabs, workspaceVersion: doc.workspaceVersion + 1 };
+}
+
 export type DashboardMutationOptions = { actor: string };
 export type DashboardMutationResult = { doc: WorkspaceDoc; changed: boolean };
 
@@ -42,12 +72,14 @@ export class DashboardStore {
   readonly workspacePath: string;
   readonly undoDir: string;
   private queue: Promise<void> = Promise.resolve();
+  private readonly now: () => number;
 
-  constructor(options: { stateDir?: string } = {}) {
+  constructor(options: { stateDir?: string; now?: () => number } = {}) {
     this.stateDir = options.stateDir ?? resolveStateDir();
     this.dashboardDir = path.join(this.stateDir, "dashboard");
     this.workspacePath = path.join(this.dashboardDir, "workspace.json");
     this.undoDir = path.join(this.dashboardDir, "undo");
+    this.now = options.now ?? (() => Date.now());
   }
 
   async read(): Promise<WorkspaceDoc> {
@@ -58,10 +90,19 @@ export class DashboardStore {
       return seeded;
     }
     const migrated = migrateWorkspaceDoc(raw);
-    if (migrated.changed) {
-      await this.writeWorkspaceDoc(migrated.doc);
+    let doc = migrated.doc;
+    let mustWrite = migrated.changed;
+    // Living Answers TTL: expired ephemeral widgets are swept lazily on read, in a
+    // single atomic write folded together with any migration write above.
+    const swept = sweepExpiredEphemeral(doc, this.now());
+    if (swept) {
+      doc = swept;
+      mustWrite = true;
     }
-    return migrated.doc;
+    if (mustWrite) {
+      await this.writeWorkspaceDoc(doc);
+    }
+    return doc;
   }
 
   async mutate(

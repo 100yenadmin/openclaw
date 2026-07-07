@@ -14,6 +14,8 @@ export type DashboardRpcBinding = { source: "rpc"; method: string };
 export type DashboardFileBinding = { source: "file"; path: string; pointer?: string };
 export type DashboardStaticBinding = { source: "static"; value: JsonValue };
 export type DashboardBinding = DashboardRpcBinding | DashboardFileBinding | DashboardStaticBinding;
+/** Marks a widget as auto-expiring (Living Answers); the store sweeps it once past `expiresAt`. */
+export type DashboardEphemeral = { expiresAt: string };
 export type DashboardWidget = {
   id: string;
   kind: string;
@@ -23,6 +25,7 @@ export type DashboardWidget = {
   hidden: boolean;
   bindings?: Record<string, DashboardBinding>;
   props?: JsonValue;
+  ephemeral?: DashboardEphemeral;
 };
 export type DashboardTab = {
   slug: string;
@@ -52,10 +55,25 @@ const TAB_SLUG_PATTERN = /^[a-z0-9-]{1,40}$/;
 const ACTOR_PATTERN = /^(user|system|agent:[A-Za-z0-9._-]{1,64})$/;
 const WIDGET_ID_PATTERN = /^[A-Za-z0-9_-]{1,48}$/;
 const BUILTIN_KIND_PATTERN =
-  /^builtin:(stat-card|markdown|table|iframe-embed|sessions|usage|cron|instances|activity)$/;
+  /^builtin:(stat-card|markdown|table|iframe-embed|sessions|usage|cron|instances|activity|action-form)$/;
 const CUSTOM_KIND_PATTERN = /^custom:[A-Za-z0-9._-]{1,64}$/;
 const CUSTOM_WIDGET_NAME_PATTERN = /^[A-Za-z0-9._-]{1,64}$/;
 const MAX_STATIC_BINDING_BYTES = 8 * 1024;
+// ISO 8601 date-time with an explicit timezone (Z or ±HH:MM). Ephemeral expiries
+// are compared against Date.now() at read time, so the offset must be unambiguous.
+const ISO_TIMESTAMP_PATTERN =
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})$/;
+// builtin:action-form caps. The template is workspace-authored and versioned; only
+// declared field VALUES vary per click, so both the template and the field set are
+// hard-bounded at write time and each slot must name a declared field.
+const ACTION_FORM_FIELD_NAME_PATTERN = /^[A-Za-z0-9_]{1,32}$/;
+// Same alphabet as the UI interpolation matcher (widgets/action-form.ts) — keep in sync.
+const ACTION_FORM_SLOT_PATTERN = /\{([A-Za-z0-9_]+)\}/g;
+const ACTION_FORM_MAX_TEMPLATE_CHARS = 2000;
+const ACTION_FORM_MAX_FIELDS = 8;
+const ACTION_FORM_MAX_OPTIONS = 20;
+const ACTION_FORM_MAX_FIELD_MAX_LENGTH = 1000;
+const ACTION_FORM_FIELD_TYPES = ["text", "number", "select"] as const;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -218,11 +236,98 @@ function validateBindingRecord(value: unknown, path: string): Record<string, Das
   return bindings;
 }
 
+function validateEphemeral(value: unknown, path: string): DashboardEphemeral {
+  const record = assertRecord(value, path);
+  assertKnownKeys(record, ["expiresAt"], path);
+  const expiresAt = requireString(record, "expiresAt", path);
+  if (!ISO_TIMESTAMP_PATTERN.test(expiresAt) || Number.isNaN(Date.parse(expiresAt))) {
+    throw new Error(`${path}.expiresAt must be an ISO 8601 timestamp`);
+  }
+  return { expiresAt };
+}
+
+/**
+ * Write-time validation for a `builtin:action-form` widget's props. The template
+ * is authored here (not at click time); each `{slot}` MUST name a declared field,
+ * so an operator-approved form can never interpolate an undeclared value. Field
+ * values are supplied at click time and are separately typed/length-capped by the
+ * renderer — this gate only bounds the authored template + field set.
+ */
+function validateActionFormProps(value: unknown, path: string): void {
+  const record = assertRecord(value, path);
+  assertKnownKeys(record, ["template", "fields", "buttonLabel"], path);
+  const template = requireString(record, "template", path);
+  if (template.length < 1 || template.length > ACTION_FORM_MAX_TEMPLATE_CHARS) {
+    throw new Error(`${path}.template must be 1-${ACTION_FORM_MAX_TEMPLATE_CHARS} characters`);
+  }
+  const fields = requireArray(record.fields, `${path}.fields`);
+  if (fields.length < 1 || fields.length > ACTION_FORM_MAX_FIELDS) {
+    throw new Error(`${path}.fields must contain 1 to ${ACTION_FORM_MAX_FIELDS} entries`);
+  }
+  const names = new Set<string>();
+  fields.forEach((field, index) => {
+    const fieldPath = `${path}.fields[${index}]`;
+    const fieldRecord = assertRecord(field, fieldPath);
+    assertKnownKeys(fieldRecord, ["name", "label", "type", "options", "maxLength"], fieldPath);
+    const name = requireString(fieldRecord, "name", fieldPath);
+    if (!ACTION_FORM_FIELD_NAME_PATTERN.test(name)) {
+      throw new Error(`${fieldPath}.name is invalid`);
+    }
+    if (names.has(name)) {
+      throw new Error(`${fieldPath}.name is a duplicate: ${name}`);
+    }
+    names.add(name);
+    const label = requireString(fieldRecord, "label", fieldPath);
+    if (label.length < 1 || label.length > 80) {
+      throw new Error(`${fieldPath}.label must be 1-80 characters`);
+    }
+    const type = requireString(fieldRecord, "type", fieldPath);
+    if (!ACTION_FORM_FIELD_TYPES.includes(type as (typeof ACTION_FORM_FIELD_TYPES)[number])) {
+      throw new Error(`${fieldPath}.type must be text, number, or select`);
+    }
+    if (type === "select") {
+      const options = requireArray(fieldRecord.options, `${fieldPath}.options`);
+      if (options.length < 1 || options.length > ACTION_FORM_MAX_OPTIONS) {
+        throw new Error(
+          `${fieldPath}.options must contain 1 to ${ACTION_FORM_MAX_OPTIONS} entries`,
+        );
+      }
+      options.forEach((option, optionIndex) => {
+        if (typeof option !== "string" || option.length < 1 || option.length > 80) {
+          throw new Error(`${fieldPath}.options[${optionIndex}] must be a 1-80 character string`);
+        }
+      });
+    } else if (fieldRecord.options !== undefined) {
+      throw new Error(`${fieldPath}.options is only allowed for select fields`);
+    }
+    if (fieldRecord.maxLength !== undefined) {
+      assertIntegerRange(
+        fieldRecord.maxLength,
+        `${fieldPath}.maxLength`,
+        1,
+        ACTION_FORM_MAX_FIELD_MAX_LENGTH,
+      );
+    }
+  });
+  if (record.buttonLabel !== undefined) {
+    const buttonLabel = requireString(record, "buttonLabel", path);
+    if (buttonLabel.length < 1 || buttonLabel.length > 40) {
+      throw new Error(`${path}.buttonLabel must be 1-40 characters`);
+    }
+  }
+  for (const match of template.matchAll(ACTION_FORM_SLOT_PATTERN)) {
+    const slot = match[1]!;
+    if (!names.has(slot)) {
+      throw new Error(`${path}.template references unknown field: {${slot}}`);
+    }
+  }
+}
+
 function validateWidget(value: unknown, path: string): DashboardWidget {
   const record = assertRecord(value, path);
   assertKnownKeys(
     record,
-    ["id", "kind", "title", "grid", "collapsed", "hidden", "bindings", "props"],
+    ["id", "kind", "title", "grid", "collapsed", "hidden", "bindings", "props", "ephemeral"],
     path,
   );
   const id = requireString(record, "id", path);
@@ -243,6 +348,13 @@ function validateWidget(value: unknown, path: string): DashboardWidget {
       : validateBindingRecord(record.bindings, `${path}.bindings`);
   const props =
     record.props === undefined ? undefined : assertJsonValue(record.props, `${path}.props`);
+  const ephemeral =
+    record.ephemeral === undefined
+      ? undefined
+      : validateEphemeral(record.ephemeral, `${path}.ephemeral`);
+  if (kind === "builtin:action-form") {
+    validateActionFormProps(props, `${path}.props`);
+  }
   return {
     id,
     kind,
@@ -252,6 +364,7 @@ function validateWidget(value: unknown, path: string): DashboardWidget {
     hidden: requireBoolean(record, "hidden", path),
     ...(bindings !== undefined ? { bindings } : {}),
     ...(props !== undefined ? { props } : {}),
+    ...(ephemeral !== undefined ? { ephemeral } : {}),
   };
 }
 

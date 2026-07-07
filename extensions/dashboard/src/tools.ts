@@ -15,6 +15,7 @@ import {
   validateWorkspaceDoc,
   type DashboardActor,
   type DashboardBinding,
+  type DashboardEphemeral,
   type DashboardGrid,
   type DashboardTab,
   type DashboardWidget,
@@ -102,6 +103,12 @@ const BindingSchema = Type.Union([
 const BindingsRecordSchema = Type.Record(Type.String(), BindingSchema, {
   description: "Widget binding map keyed by binding id.",
 });
+const EphemeralSchema = Type.Object(
+  {
+    expiresAt: Type.String({ description: "ISO 8601 expiry timestamp (auto-swept when past)." }),
+  },
+  { additionalProperties: false },
+);
 const WidgetPatchSchema = Type.Object(
   {
     title: Type.Optional(Type.String({ description: "Widget title, 80 chars max." })),
@@ -110,6 +117,11 @@ const WidgetPatchSchema = Type.Object(
     hidden: Type.Optional(Type.Boolean({ description: "Hide widget." })),
     bindings: Type.Optional(BindingsRecordSchema),
     props: Type.Optional(JsonSchema),
+    ephemeral: Type.Optional(
+      Type.Union([EphemeralSchema, Type.Null()], {
+        description: "Set an auto-expiry, or null to pin (clear the flag).",
+      }),
+    ),
   },
   { additionalProperties: false },
 );
@@ -123,6 +135,7 @@ const WidgetInputSchema = Type.Object(
     hidden: Type.Optional(Type.Boolean({ description: "Initial hidden state." })),
     bindings: Type.Optional(BindingsRecordSchema),
     props: Type.Optional(JsonSchema),
+    ephemeral: Type.Optional(EphemeralSchema),
   },
   { additionalProperties: false },
 );
@@ -227,6 +240,14 @@ function readBindings(value: unknown): Record<string, DashboardBinding> | undefi
   return value as Record<string, DashboardBinding>;
 }
 
+/** Read an ephemeral flag input (`{ expiresAt }`); the ISO format is enforced by the schema on write. */
+function readEphemeralInput(value: unknown): DashboardEphemeral {
+  if (!isRecord(value)) {
+    throw new Error("ephemeral must be an object");
+  }
+  return { expiresAt: readRequiredString(value, "expiresAt", "ephemeral.expiresAt") };
+}
+
 function slugBase(value: string): string {
   return value
     .trim()
@@ -323,6 +344,7 @@ function readWidgetInput(value: unknown, doc: WorkspaceDoc): DashboardWidget {
     "hidden",
     "bindings",
     "props",
+    "ephemeral",
   ]);
   const title = readOptionalString(record, "title");
   const bindings = readBindings(record.bindings);
@@ -335,11 +357,20 @@ function readWidgetInput(value: unknown, doc: WorkspaceDoc): DashboardWidget {
     hidden: readOptionalBoolean(record, "hidden") ?? false,
     ...(bindings !== undefined ? { bindings } : {}),
     ...(record.props !== undefined ? { props: record.props as JsonValue } : {}),
+    ...(record.ephemeral !== undefined ? { ephemeral: readEphemeralInput(record.ephemeral) } : {}),
   };
 }
 
 function readWidgetPatch(value: unknown): Partial<DashboardWidget> {
-  const record = readRecord(value, ["title", "grid", "collapsed", "hidden", "bindings", "props"]);
+  const record = readRecord(value, [
+    "title",
+    "grid",
+    "collapsed",
+    "hidden",
+    "bindings",
+    "props",
+    "ephemeral",
+  ]);
   const title = readOptionalString(record, "title");
   const collapsed = readOptionalBoolean(record, "collapsed");
   const hidden = readOptionalBoolean(record, "hidden");
@@ -351,6 +382,11 @@ function readWidgetPatch(value: unknown): Partial<DashboardWidget> {
     ...(hidden !== undefined ? { hidden } : {}),
     ...(bindings !== undefined ? { bindings } : {}),
     ...(record.props !== undefined ? { props: record.props as JsonValue } : {}),
+    // `ephemeral: null` clears the flag (Pin); an object sets it. The resulting
+    // `undefined` is dropped by validateWorkspaceDoc so the field leaves the doc.
+    ...(Object.hasOwn(record, "ephemeral")
+      ? { ephemeral: record.ephemeral === null ? undefined : readEphemeralInput(record.ephemeral) }
+      : {}),
   };
 }
 
@@ -791,6 +827,7 @@ export function createDashboardTools(params: DashboardToolParams): AnyAgentTool[
           "hidden",
           "bindings",
           "props",
+          "ephemeral",
         ]);
         const tabSlug = readSlug(record, "tab");
         const widgetInput = { ...record };
@@ -826,6 +863,7 @@ export function createDashboardTools(params: DashboardToolParams): AnyAgentTool[
           "hidden",
           "bindings",
           "props",
+          "ephemeral",
         ]);
         const tabSlug = readSlug(record, "tab");
         const id = readWidgetId(record);

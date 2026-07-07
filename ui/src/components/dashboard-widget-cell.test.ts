@@ -23,6 +23,7 @@ function noopCallbacks(): DashboardWidgetCellCallbacks {
     onRemove: vi.fn(),
     onEditTitle: vi.fn(),
     onMoveToTab: vi.fn(),
+    onPin: vi.fn(),
     onMovePointerDown: vi.fn(),
     onResizePointerDown: vi.fn(),
     onKeyboardNudge: vi.fn(),
@@ -153,6 +154,29 @@ describe("dashboard widget cell", () => {
     );
     const items = container.querySelectorAll(".dashboard-widget__menu-item");
     expect(items.length).toBe(4);
+    // A non-ephemeral widget shows no Pin action.
+    expect(container.querySelector('[data-test-id="dashboard-widget-pin"]')).toBeNull();
+  });
+
+  it("shows a Temporary badge and a Pin menu item for ephemeral widgets", () => {
+    const callbacks = noopCallbacks();
+    const ephemeral = widget({ ephemeral: { expiresAt: "2026-07-09T12:00:00Z" } });
+    const container = renderToContainer(
+      renderWidgetCell({
+        widget: ephemeral,
+        binding: { value: 1 },
+        menuOpen: true,
+        pending: false,
+        dragging: false,
+        builtinContext: BUILTIN_CONTEXT,
+        callbacks,
+      }),
+    );
+    expect(container.querySelector('[data-test-id="dashboard-widget-ephemeral"]')).not.toBeNull();
+    const pin = container.querySelector<HTMLButtonElement>('[data-test-id="dashboard-widget-pin"]');
+    expect(pin).not.toBeNull();
+    pin!.click();
+    expect(callbacks.onPin).toHaveBeenCalledWith(ephemeral);
   });
 
   it("renders a stat-card value formatted as currency", () => {
