@@ -799,6 +799,15 @@ export const ja_JP: TranslationMap = {
         idle: "Idle",
         progress: "{percent}% of budget",
       },
+      approvals: {
+        empty: "No pending approvals.",
+        approve: "承認する",
+        deny: "Deny",
+        requestedBy: "Requested by {agent}",
+        kind: {
+          widget: "Widget",
+        },
+      },
       embed: {
         missing: "この埋め込みにはまだURLがありません。",
         blockedExternal: "Gatewayポリシーにより、外部埋め込みは無効になっています。",

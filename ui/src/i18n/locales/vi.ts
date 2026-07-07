@@ -795,6 +795,15 @@ export const vi: TranslationMap = {
         idle: "Idle",
         progress: "{percent}% of budget",
       },
+      approvals: {
+        empty: "No pending approvals.",
+        approve: "Phê duyệt",
+        deny: "Deny",
+        requestedBy: "Requested by {agent}",
+        kind: {
+          widget: "Widget",
+        },
+      },
       embed: {
         missing: "Embed này chưa có URL.",
         blockedExternal: "Các embed bên ngoài bị vô hiệu hóa theo chính sách Gateway của bạn.",

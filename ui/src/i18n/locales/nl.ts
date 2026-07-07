@@ -796,6 +796,15 @@ export const nl: TranslationMap = {
         idle: "Idle",
         progress: "{percent}% of budget",
       },
+      approvals: {
+        empty: "No pending approvals.",
+        approve: "Goedkeuren",
+        deny: "Deny",
+        requestedBy: "Requested by {agent}",
+        kind: {
+          widget: "Widget",
+        },
+      },
       embed: {
         missing: "Deze embed heeft nog geen URL.",
         blockedExternal: "Externe embeds zijn uitgeschakeld door uw gatewaybeleid.",

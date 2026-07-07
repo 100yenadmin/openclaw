@@ -13,10 +13,38 @@ import type { TemplateResult } from "lit";
 import type { ApplicationConfig } from "../../../app/config.ts";
 import type { DashboardWidget } from "../types.ts";
 
+/** Operator decision on a pending approval, in the approvals widget's own terms. */
+export type ApprovalDecision = "approve" | "reject";
+
+/** One pending approval row rendered by the `approvals` builtin. */
+export type PendingApprovalItem = {
+  /** Stable resolve key (the custom-widget name for `widget` approvals). */
+  id: string;
+  /** Approval class; only `widget` is reachable from a builtin today (see approvals.ts). */
+  kind: "widget";
+  /** Human label for the pending item. */
+  title: string;
+  /** Requesting agent id when the item carries agent provenance, else null. */
+  requestedBy: string | null;
+};
+
+/**
+ * Pending-approval data + resolver for the `approvals` builtin. Supplied via
+ * context (like `embed`) rather than the primary binding, because the pending
+ * queue is in-memory workspace state, not an allowlisted RPC read. The view wires
+ * `onDecide` through the same client path the custom-widget pending card uses.
+ */
+export type ApprovalsWidgetSource = {
+  pending: PendingApprovalItem[];
+  onDecide: (item: PendingApprovalItem, decision: ApprovalDecision) => void;
+};
+
 /** Ambient context a builtin may need beyond its own binding value. */
 export type BuiltinWidgetContext = {
   /** Control UI embed policy — only the iframe-embed widget consumes it. */
   embed: Pick<ApplicationConfig, "embedSandboxMode" | "allowExternalEmbedUrls">;
+  /** Pending-approvals slice — only the `approvals` widget consumes it. */
+  approvals?: ApprovalsWidgetSource;
 };
 
 /** A builtin widget renderer: pure, side-effect-free, throws only on real bugs. */

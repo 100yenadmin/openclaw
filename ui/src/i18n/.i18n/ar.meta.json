@@ -3,14 +3,18 @@
     "dashboard.widget.agentStatus.busy",
     "dashboard.widget.agentStatus.empty",
     "dashboard.widget.agentStatus.idle",
-    "dashboard.widget.agentStatus.progress"
+    "dashboard.widget.agentStatus.progress",
+    "dashboard.widget.approvals.deny",
+    "dashboard.widget.approvals.empty",
+    "dashboard.widget.approvals.kind.widget",
+    "dashboard.widget.approvals.requestedBy"
   ],
-  "generatedAt": "2026-07-07T04:29:28.895Z",
+  "generatedAt": "2026-07-07T16:25:00.301Z",
   "locale": "ar",
   "model": "claude-opus-4-8",
   "provider": "anthropic",
-  "sourceHash": "57d90db8fd27c2e91a98f6d1f0b6135dfb6fe4711bbba2a4f99144e9abb1c215",
-  "totalKeys": 1689,
-  "translatedKeys": 1685,
+  "sourceHash": "1f777edd3ba2bf13dd65a362ccab7a2ed993486be490f82ff8e024206cf35e28",
+  "totalKeys": 1694,
+  "translatedKeys": 1686,
   "workflow": 1
 }

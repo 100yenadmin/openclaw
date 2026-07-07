@@ -797,6 +797,15 @@ export const tr: TranslationMap = {
         idle: "Idle",
         progress: "{percent}% of budget",
       },
+      approvals: {
+        empty: "No pending approvals.",
+        approve: "Onayla",
+        deny: "Deny",
+        requestedBy: "Requested by {agent}",
+        kind: {
+          widget: "Widget",
+        },
+      },
       embed: {
         missing: "Bu gömülü içeriğin henüz URL'si yok.",
         blockedExternal: "Harici gömülü içerikler gateway ilkeniz tarafından devre dışı bırakıldı.",

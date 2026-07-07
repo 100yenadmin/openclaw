@@ -3,10 +3,17 @@
 // separately (empty/populated) to lock the empty/loading/error affordances.
 
 import { render } from "lit";
-import { describe, expect, it } from "vitest";
-import type { DashboardWidget } from "../types.ts";
+import { describe, expect, it, vi } from "vitest";
+import { approveWidget, getDashboardState } from "../index.ts";
+import type { DashboardWidget, DashboardWorkspace } from "../types.ts";
 import { mapActivity, renderActivity } from "./activity.ts";
 import { mapAgentStatus, renderAgentStatus } from "./agent-status.ts";
+import {
+  buildWidgetApprovalsSource,
+  mapApprovals,
+  renderApprovals,
+  toWidgetApprovalDecision,
+} from "./approvals.ts";
 import { mapCron, renderCron } from "./cron.ts";
 import { evaluateEmbedUrl, renderIframeEmbed } from "./iframe-embed.ts";
 import { mapInstances, renderInstances } from "./instances.ts";
@@ -263,6 +270,88 @@ describe("agent-status mapping", () => {
     expect(populated.querySelector(".dashboard-dot--live")).not.toBeNull();
     const empty = renderToContainer(renderAgentStatus(widget(), { sessions: [] }));
     expect(empty.querySelector(".dashboard-widget__placeholder")).not.toBeNull();
+  });
+});
+
+describe("approvals mapping", () => {
+  function workspace(registry: DashboardWorkspace["widgetsRegistry"] = {}): DashboardWorkspace {
+    return {
+      schemaVersion: 1,
+      workspaceVersion: 1,
+      tabs: [],
+      prefs: { tabOrder: [] },
+      widgetsRegistry: registry,
+    };
+  }
+
+  it("derives only pending widget approvals from the registry, with agent provenance", () => {
+    const source = buildWidgetApprovalsSource(
+      workspace({
+        chart: { status: "pending", createdBy: "agent:main" },
+        notes: { status: "approved", createdBy: "agent:main" },
+        old: { status: "rejected" },
+      }),
+      () => {},
+    );
+    expect(source.pending).toEqual([
+      { id: "chart", kind: "widget", title: "chart", requestedBy: "main" },
+    ]);
+  });
+
+  it("maps decisions to the registry vocabulary and limits the row count", () => {
+    expect(toWidgetApprovalDecision("approve")).toBe("approved");
+    expect(toWidgetApprovalDecision("reject")).toBe("rejected");
+    const source = buildWidgetApprovalsSource(
+      workspace({
+        a: { status: "pending" },
+        b: { status: "pending" },
+        c: { status: "pending" },
+      }),
+      () => {},
+    );
+    const model = mapApprovals(widget({ props: { limit: 2 } }), source);
+    expect(model.total).toBe(3);
+    expect(model.items).toHaveLength(2);
+  });
+
+  it("renders a row per pending approval and an empty state", () => {
+    const source = buildWidgetApprovalsSource(
+      workspace({ chart: { status: "pending", createdBy: "agent:main" } }),
+      () => {},
+    );
+    const populated = renderToContainer(
+      renderApprovals(widget(), undefined, { ...STRICT_EMBED, approvals: source }),
+    );
+    expect(populated.querySelectorAll(".dashboard-approvals .dashboard-list__row")).toHaveLength(1);
+    const empty = renderToContainer(renderApprovals(widget(), undefined, STRICT_EMBED));
+    expect(empty.querySelector(".dashboard-widget__placeholder")).not.toBeNull();
+  });
+
+  it("wires Approve/Deny through the dashboard.widget.approve client path", () => {
+    const request = vi.fn().mockResolvedValue(undefined);
+    const client = { request } as unknown as Parameters<typeof approveWidget>[1];
+    const state = getDashboardState({});
+    const source = buildWidgetApprovalsSource(
+      workspace({ chart: { status: "pending", createdBy: "agent:main" } }),
+      (name, decision) => void approveWidget(state, client, { name, decision }),
+    );
+    const container = renderToContainer(
+      renderApprovals(widget(), undefined, { ...STRICT_EMBED, approvals: source }),
+    );
+    container
+      .querySelector<HTMLButtonElement>('[data-test-id="dashboard-approvals-approve"]')
+      ?.click();
+    expect(request).toHaveBeenCalledWith("dashboard.widget.approve", {
+      name: "chart",
+      decision: "approved",
+    });
+    container
+      .querySelector<HTMLButtonElement>('[data-test-id="dashboard-approvals-deny"]')
+      ?.click();
+    expect(request).toHaveBeenLastCalledWith("dashboard.widget.approve", {
+      name: "chart",
+      decision: "rejected",
+    });
   });
 });
 

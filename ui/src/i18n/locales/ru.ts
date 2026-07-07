@@ -798,6 +798,15 @@ export const ru: TranslationMap = {
         idle: "Бездействует",
         progress: "{percent}% of budget",
       },
+      approvals: {
+        empty: "No pending approvals.",
+        approve: "Одобрить",
+        deny: "Запретить",
+        requestedBy: "Requested by {agent}",
+        kind: {
+          widget: "Widget",
+        },
+      },
       embed: {
         missing: "У этого встраивания пока нет URL.",
         blockedExternal: "Внешние встраивания отключены политикой вашего Gateway.",

@@ -793,6 +793,15 @@ export const pl: TranslationMap = {
         idle: "Idle",
         progress: "{percent}% of budget",
       },
+      approvals: {
+        empty: "No pending approvals.",
+        approve: "Zatwierdź",
+        deny: "Deny",
+        requestedBy: "Requested by {agent}",
+        kind: {
+          widget: "Widget",
+        },
+      },
       embed: {
         missing: "To osadzenie nie ma jeszcze adresu URL.",
         blockedExternal: "Zewnętrzne osadzenia są wyłączone przez politykę Gateway.",

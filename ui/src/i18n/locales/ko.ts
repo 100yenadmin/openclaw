@@ -790,6 +790,15 @@ export const ko: TranslationMap = {
         idle: "Idle",
         progress: "{percent}% of budget",
       },
+      approvals: {
+        empty: "No pending approvals.",
+        approve: "승인",
+        deny: "Deny",
+        requestedBy: "Requested by {agent}",
+        kind: {
+          widget: "Widget",
+        },
+      },
       embed: {
         missing: "이 임베드에는 아직 URL이 없습니다.",
         blockedExternal: "외부 임베드는 Gateway 정책에 의해 비활성화되었습니다.",

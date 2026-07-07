@@ -791,6 +791,15 @@ export const en: TranslationMap = {
         idle: "Idle",
         progress: "{percent}% of budget",
       },
+      approvals: {
+        empty: "No pending approvals.",
+        approve: "Approve",
+        deny: "Deny",
+        requestedBy: "Requested by {agent}",
+        kind: {
+          widget: "Widget",
+        },
+      },
       embed: {
         missing: "This embed has no URL yet.",
         blockedExternal: "External embeds are disabled by your gateway policy.",

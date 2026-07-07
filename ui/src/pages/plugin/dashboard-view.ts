@@ -60,6 +60,7 @@ import type {
   DashboardWorkspace,
   WidgetManifestView,
 } from "../../lib/dashboard/types.ts";
+import { buildWidgetApprovalsSource } from "../../lib/dashboard/widgets/approvals.ts";
 import type { BuiltinWidgetContext } from "../../lib/dashboard/widgets/index.ts";
 import { getSafeLocalStorage } from "../../local-storage.ts";
 import { pluginTabRefFromSearch } from "./route.ts";
@@ -535,7 +536,15 @@ function renderGrid(
     `;
   }
   const callbacks = makeCallbacks(props, state, viewState, tab);
-  const builtinContext: BuiltinWidgetContext = { embed: props.embed ?? DEFAULT_EMBED_CONTEXT };
+  const builtinContext: BuiltinWidgetContext = {
+    embed: props.embed ?? DEFAULT_EMBED_CONTEXT,
+    // The approvals builtin resolves pending widget approvals through the same
+    // `dashboard.widget.approve` path the custom-widget pending card uses.
+    approvals: buildWidgetApprovalsSource(
+      workspace,
+      (name, decision) => void approveWidget(state, props.client, { name, decision }),
+    ),
+  };
   const rows = gridRowCount(tab.widgets);
   const minHeight = rows * DASHBOARD_ROW_HEIGHT + Math.max(0, rows - 1) * DASHBOARD_GRID_GAP;
   return html`

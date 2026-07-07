@@ -6,6 +6,7 @@
 
 import { renderActivity } from "./activity.ts";
 import { renderAgentStatus } from "./agent-status.ts";
+import { renderApprovals } from "./approvals.ts";
 import { renderCron } from "./cron.ts";
 import { renderIframeEmbed } from "./iframe-embed.ts";
 import { renderInstances } from "./instances.ts";
@@ -27,6 +28,7 @@ export const BUILTIN_WIDGET_RENDERERS: Record<string, BuiltinWidgetRenderer> = {
   instances: (widget, value) => renderInstances(widget, value),
   activity: (widget, value) => renderActivity(widget, value),
   "agent-status": (widget, value) => renderAgentStatus(widget, value),
+  approvals: renderApprovals,
 };
 
 export function getBuiltinRenderer(kind: string): BuiltinWidgetRenderer | undefined {

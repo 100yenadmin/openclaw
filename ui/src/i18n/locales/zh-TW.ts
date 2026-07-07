@@ -787,6 +787,15 @@ export const zh_TW: TranslationMap = {
         idle: "Idle",
         progress: "{percent}% of budget",
       },
+      approvals: {
+        empty: "No pending approvals.",
+        approve: "核准",
+        deny: "Deny",
+        requestedBy: "Requested by {agent}",
+        kind: {
+          widget: "Widget",
+        },
+      },
       embed: {
         missing: "此嵌入尚無 URL。",
         blockedExternal: "外部嵌入已透過您的 Gateway 原則停用。",

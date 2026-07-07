@@ -791,6 +791,15 @@ export const ar: TranslationMap = {
         idle: "Idle",
         progress: "{percent}% of budget",
       },
+      approvals: {
+        empty: "No pending approvals.",
+        approve: "موافقة",
+        deny: "Deny",
+        requestedBy: "Requested by {agent}",
+        kind: {
+          widget: "Widget",
+        },
+      },
       embed: {
         missing: "هذا التضمين لا يحتوي على رابط URL بعد.",
         blockedExternal: "تم تعطيل التضمينات الخارجية بواسطة سياسة الـ Gateway الخاصة بك.",

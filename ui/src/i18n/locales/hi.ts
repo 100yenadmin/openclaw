@@ -790,6 +790,15 @@ export const hi: TranslationMap = {
         idle: "निष्क्रिय",
         progress: "{percent}% of budget",
       },
+      approvals: {
+        empty: "No pending approvals.",
+        approve: "स्वीकृत करें",
+        deny: "अस्वीकार करें",
+        requestedBy: "Requested by {agent}",
+        kind: {
+          widget: "Widget",
+        },
+      },
       embed: {
         missing: "इस एम्बेड में अभी तक कोई URL नहीं है।",
         blockedExternal: "आपकी Gateway पॉलिसी द्वारा बाहरी एम्बेड अक्षम हैं।",

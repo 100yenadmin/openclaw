@@ -793,6 +793,15 @@ export const fa: TranslationMap = {
         idle: "Idle",
         progress: "{percent}% of budget",
       },
+      approvals: {
+        empty: "No pending approvals.",
+        approve: "تأیید",
+        deny: "Deny",
+        requestedBy: "Requested by {agent}",
+        kind: {
+          widget: "Widget",
+        },
+      },
       embed: {
         missing: "این جاسازی هنوز URL ندارد.",
         blockedExternal: "جاسازی‌های خارجی توسط خط‌مشی Gateway شما غیرفعال شده‌اند.",

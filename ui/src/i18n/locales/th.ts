@@ -788,6 +788,15 @@ export const th: TranslationMap = {
         idle: "Idle",
         progress: "{percent}% of budget",
       },
+      approvals: {
+        empty: "No pending approvals.",
+        approve: "อนุมัติ",
+        deny: "Deny",
+        requestedBy: "Requested by {agent}",
+        kind: {
+          widget: "Widget",
+        },
+      },
       embed: {
         missing: "Embed นี้ยังไม่มี URL",
         blockedExternal: "Embed ภายนอกถูกปิดใช้งานโดยนโยบาย Gateway ของคุณ",

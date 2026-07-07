@@ -792,6 +792,15 @@ export const id: TranslationMap = {
         idle: "Idle",
         progress: "{percent}% of budget",
       },
+      approvals: {
+        empty: "No pending approvals.",
+        approve: "Setujui",
+        deny: "Deny",
+        requestedBy: "Requested by {agent}",
+        kind: {
+          widget: "Widget",
+        },
+      },
       embed: {
         missing: "Embed ini belum memiliki URL.",
         blockedExternal: "Embed eksternal dinonaktifkan oleh kebijakan Gateway Anda.",

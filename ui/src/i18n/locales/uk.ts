@@ -797,6 +797,15 @@ export const uk: TranslationMap = {
         idle: "Idle",
         progress: "{percent}% of budget",
       },
+      approvals: {
+        empty: "No pending approvals.",
+        approve: "Схвалити",
+        deny: "Deny",
+        requestedBy: "Requested by {agent}",
+        kind: {
+          widget: "Widget",
+        },
+      },
       embed: {
         missing: "Це вбудовування ще не має URL.",
         blockedExternal: "Зовнішні вбудовування вимкнено політикою вашого Gateway.",

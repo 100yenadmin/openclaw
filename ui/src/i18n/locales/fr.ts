@@ -800,6 +800,15 @@ export const fr: TranslationMap = {
         idle: "Idle",
         progress: "{percent}% of budget",
       },
+      approvals: {
+        empty: "No pending approvals.",
+        approve: "Approuver",
+        deny: "Deny",
+        requestedBy: "Requested by {agent}",
+        kind: {
+          widget: "Widget",
+        },
+      },
       embed: {
         missing: "Cet embed n'a pas encore d'URL.",
         blockedExternal: "Les intégrations externes sont désactivées par votre stratégie Gateway.",
