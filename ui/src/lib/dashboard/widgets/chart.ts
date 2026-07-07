@@ -169,8 +169,8 @@ function drawChart(model: ChartModel, props: Record<string, unknown>): SVGTempla
       return drawArea(model);
     case "gauge":
       return drawGauge(model, props);
-    case "line":
-    case "sparkline":
+    default:
+      // line + sparkline share the polyline renderer.
       return drawLine(model);
   }
 }
