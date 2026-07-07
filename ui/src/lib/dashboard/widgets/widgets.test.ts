@@ -3,8 +3,15 @@
 // separately (empty/populated) to lock the empty/loading/error affordances.
 
 import { render } from "lit";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { DashboardWidget } from "../types.ts";
+import {
+  buildActionFormPrompt,
+  coerceFieldValue,
+  mapActionForm,
+  renderActionForm,
+  type ActionFormModel,
+} from "./action-form.ts";
 import { mapActivity, renderActivity } from "./activity.ts";
 import { mapCron, renderCron } from "./cron.ts";
 import { evaluateEmbedUrl, renderIframeEmbed } from "./iframe-embed.ts";
@@ -302,5 +309,121 @@ describe("iframe-embed render × sandbox mode", () => {
     );
     expect(container.querySelector('[data-test-id="dashboard-embed-blocked"]')).not.toBeNull();
     expect(container.querySelector('[data-test-id="dashboard-embed-frame"]')).toBeNull();
+  });
+});
+
+describe("action-form interpolation + caps", () => {
+  const textField = (name: string, extra: Partial<ActionFormModel["fields"][number]> = {}) => ({
+    name,
+    label: name,
+    type: "text" as const,
+    ...extra,
+  });
+  const model = (over: Partial<ActionFormModel> = {}): ActionFormModel => ({
+    template: "{a}",
+    fields: [textField("a")],
+    buttonLabel: null,
+    ...over,
+  });
+
+  it("fills only declared slots and leaves undeclared slots literal", () => {
+    expect(
+      buildActionFormPrompt(model({ template: "{a} then {b}" }), { a: "run", b: "ignored" }),
+    ).toBe("run then {b}");
+  });
+
+  it("never double-expands: a value containing a declared slot stays literal", () => {
+    // `evil` IS a declared field, but `{evil}` arriving via a's VALUE must not expand.
+    const m = model({
+      template: "{a}",
+      fields: [textField("a"), textField("evil")],
+    });
+    expect(buildActionFormPrompt(m, { a: "{evil}", evil: "PWNED" })).toBe("{evil}");
+  });
+
+  it("enforces the per-field length cap and the 200-char default", () => {
+    expect(
+      buildActionFormPrompt(model({ fields: [textField("a", { maxLength: 3 })] }), { a: "abcdef" }),
+    ).toBe("abc");
+    expect(buildActionFormPrompt(model(), { a: "x".repeat(500) }).length).toBe(200);
+  });
+
+  it("coerces number and select values, collapsing invalid input to empty", () => {
+    expect(coerceFieldValue({ name: "n", label: "N", type: "number" }, "42")).toBe("42");
+    expect(coerceFieldValue({ name: "n", label: "N", type: "number" }, "not-a-number")).toBe("");
+    const select = { name: "s", label: "S", type: "select" as const, options: ["a", "b"] };
+    expect(coerceFieldValue(select, "a")).toBe("a");
+    expect(coerceFieldValue(select, "c")).toBe("");
+  });
+
+  it("maps well-formed props and drops malformed fields", () => {
+    const mapped = mapActionForm(
+      widget({
+        kind: "builtin:action-form",
+        props: {
+          template: "{a}",
+          fields: [
+            { name: "a", label: "A", type: "text" },
+            { name: "bad", label: "B", type: "select" }, // select without options → dropped
+          ],
+          buttonLabel: "Go",
+        },
+      }),
+    );
+    expect(mapped.fields.map((f) => f.name)).toEqual(["a"]);
+    expect(mapped.buttonLabel).toBe("Go");
+  });
+});
+
+describe("action-form dispatch", () => {
+  const STRICT_CTX: BuiltinWidgetContext = {
+    embed: { embedSandboxMode: "strict", allowExternalEmbedUrls: false },
+  };
+
+  it("submits the interpolated prompt through ctx.dispatchPrompt", () => {
+    const dispatchPrompt = vi.fn(async () => "sent" as const);
+    const container = renderToContainer(
+      renderActionForm(
+        widget({
+          id: "af",
+          kind: "builtin:action-form",
+          props: {
+            template: "Deploy {service} to {env}",
+            fields: [
+              { name: "service", label: "Service", type: "text" },
+              { name: "env", label: "Environment", type: "select", options: ["staging", "prod"] },
+            ],
+            buttonLabel: "Deploy",
+          },
+        }),
+        undefined,
+        { ...STRICT_CTX, dispatchPrompt },
+      ),
+    );
+    const form = container.querySelector<HTMLFormElement>(
+      '[data-test-id="dashboard-action-form"]',
+    )!;
+    (form.elements.namedItem("service") as HTMLInputElement).value = "web";
+    (form.elements.namedItem("env") as HTMLSelectElement).value = "prod";
+    form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
+    expect(dispatchPrompt).toHaveBeenCalledWith({
+      widgetKey: "builtin:action-form:af",
+      text: "Deploy web to prod",
+    });
+  });
+
+  it("is inert (no dispatch) when no dispatch gate is wired", () => {
+    const container = renderToContainer(
+      renderActionForm(
+        widget({
+          id: "af2",
+          kind: "builtin:action-form",
+          props: { template: "{a}", fields: [{ name: "a", label: "A", type: "text" }] },
+        }),
+        undefined,
+        STRICT_CTX,
+      ),
+    );
+    expect(container.querySelector('[data-test-id="dashboard-action-form-inert"]')).not.toBeNull();
   });
 });

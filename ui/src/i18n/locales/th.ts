@@ -750,9 +750,12 @@ export const th: TranslationMap = {
       editTitleLabel: "ชื่อวิดเจ็ต",
       moveToTabTitle: "ย้ายไปยังแท็บ",
       moveToTabEmpty: "ไม่มีแท็บอื่นให้ย้ายวิดเจ็ตนี้ไป",
+      ephemeralBadge: "Temporary",
+      ephemeralTooltip: "Temporary answer — pin it to keep it here.",
       menu: {
         editTitle: "แก้ไขชื่อ",
         moveToTab: "ย้ายไปยังแท็บ…",
+        pin: "Pin",
         hide: "ซ่อน",
         remove: "ลบ",
       },
@@ -781,6 +784,10 @@ export const th: TranslationMap = {
       },
       activity: {
         empty: "ไม่มีกิจกรรมล่าสุด",
+      },
+      actionForm: {
+        empty: "This action form has no fields yet.",
+        submit: "Send",
       },
       embed: {
         missing: "Embed นี้ยังไม่มี URL",

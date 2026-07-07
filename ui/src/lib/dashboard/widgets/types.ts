@@ -11,12 +11,20 @@
 
 import type { TemplateResult } from "lit";
 import type { ApplicationConfig } from "../../../app/config.ts";
+import type { PromptDispatchOutcome } from "../bridge.ts";
 import type { DashboardWidget } from "../types.ts";
 
 /** Ambient context a builtin may need beyond its own binding value. */
 export type BuiltinWidgetContext = {
   /** Control UI embed policy — only the iframe-embed widget consumes it. */
   embed: Pick<ApplicationConfig, "embedSandboxMode" | "allowExternalEmbedUrls">;
+  /**
+   * Confirm + rate-limited prompt dispatch — only the action-form widget consumes
+   * it. Wired (in dashboard-view) to the SAME shared gate the custom-widget bridge
+   * uses (`dispatchRateLimitedPrompt`), so builtins gain no new dispatch privilege.
+   * Absent in isolated unit renders; the form then treats submit as inert.
+   */
+  dispatchPrompt?: (params: { widgetKey: string; text: string }) => Promise<PromptDispatchOutcome>;
 };
 
 /** A builtin widget renderer: pure, side-effect-free, throws only on real bugs. */

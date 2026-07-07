@@ -762,9 +762,12 @@ export const de: TranslationMap = {
       editTitleLabel: "Widget-Titel",
       moveToTabTitle: "In Tab verschieben",
       moveToTabEmpty: "Es gibt keine anderen Tabs, in die dieses Widget verschoben werden kann.",
+      ephemeralBadge: "Temporary",
+      ephemeralTooltip: "Temporary answer — pin it to keep it here.",
       menu: {
         editTitle: "Titel bearbeiten",
         moveToTab: "Auf Tab verschieben…",
+        pin: "Pin",
         hide: "Ausblenden",
         remove: "Entfernen",
       },
@@ -793,6 +796,10 @@ export const de: TranslationMap = {
       },
       activity: {
         empty: "Keine aktuellen Aktivitäten.",
+      },
+      actionForm: {
+        empty: "This action form has no fields yet.",
+        submit: "Send",
       },
       embed: {
         missing: "Dieser Embed hat noch keine URL.",

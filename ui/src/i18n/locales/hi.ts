@@ -752,9 +752,12 @@ export const hi: TranslationMap = {
       editTitleLabel: "विजेट शीर्षक",
       moveToTabTitle: "टैब पर ले जाएं",
       moveToTabEmpty: "इस विजेट को स्थानांतरित करने के लिए कोई अन्य टैब नहीं है।",
+      ephemeralBadge: "Temporary",
+      ephemeralTooltip: "Temporary answer — pin it to keep it here.",
       menu: {
         editTitle: "शीर्षक संपादित करें",
         moveToTab: "टैब में ले जाएं…",
+        pin: "पिन करें",
         hide: "छिपाएं",
         remove: "हटाएँ",
       },
@@ -783,6 +786,10 @@ export const hi: TranslationMap = {
       },
       activity: {
         empty: "कोई हालिया गतिविधि नहीं है।",
+      },
+      actionForm: {
+        empty: "This action form has no fields yet.",
+        submit: "भेजें",
       },
       embed: {
         missing: "इस एम्बेड में अभी तक कोई URL नहीं है।",

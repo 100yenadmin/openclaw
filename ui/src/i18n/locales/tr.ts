@@ -759,9 +759,12 @@ export const tr: TranslationMap = {
       editTitleLabel: "Widget başlığı",
       moveToTabTitle: "Sekmeye taşı",
       moveToTabEmpty: "Bu widget'ı taşıyacak başka bir sekme yok.",
+      ephemeralBadge: "Temporary",
+      ephemeralTooltip: "Temporary answer — pin it to keep it here.",
       menu: {
         editTitle: "Başlığı düzenle",
         moveToTab: "Sekmeye taşı…",
+        pin: "Pin",
         hide: "Gizle",
         remove: "Kaldır",
       },
@@ -790,6 +793,10 @@ export const tr: TranslationMap = {
       },
       activity: {
         empty: "Son etkinlik yok.",
+      },
+      actionForm: {
+        empty: "This action form has no fields yet.",
+        submit: "Send",
       },
       embed: {
         missing: "Bu gömülü içeriğin henüz URL'si yok.",

@@ -758,9 +758,12 @@ export const nl: TranslationMap = {
       editTitleLabel: "Widgettitel",
       moveToTabTitle: "Verplaatsen naar tabblad",
       moveToTabEmpty: "Er zijn geen andere tabbladen om dit widget naar te verplaatsen.",
+      ephemeralBadge: "Temporary",
+      ephemeralTooltip: "Temporary answer — pin it to keep it here.",
       menu: {
         editTitle: "Titel bewerken",
         moveToTab: "Verplaatsen naar tabblad…",
+        pin: "Pin",
         hide: "Verbergen",
         remove: "Verwijderen",
       },
@@ -789,6 +792,10 @@ export const nl: TranslationMap = {
       },
       activity: {
         empty: "Geen recente activiteit.",
+      },
+      actionForm: {
+        empty: "This action form has no fields yet.",
+        submit: "Send",
       },
       embed: {
         missing: "Deze embed heeft nog geen URL.",

@@ -755,9 +755,12 @@ export const fa: TranslationMap = {
       editTitleLabel: "عنوان ویجت",
       moveToTabTitle: "انتقال به تب",
       moveToTabEmpty: "هیچ زبانه دیگری برای جابه‌جایی این ویجت وجود ندارد.",
+      ephemeralBadge: "Temporary",
+      ephemeralTooltip: "Temporary answer — pin it to keep it here.",
       menu: {
         editTitle: "ویرایش عنوان",
         moveToTab: "انتقال به زبانه…",
+        pin: "Pin",
         hide: "مخفی کردن",
         remove: "حذف",
       },
@@ -786,6 +789,10 @@ export const fa: TranslationMap = {
       },
       activity: {
         empty: "فعالیت اخیری وجود ندارد.",
+      },
+      actionForm: {
+        empty: "This action form has no fields yet.",
+        submit: "Send",
       },
       embed: {
         missing: "این جاسازی هنوز URL ندارد.",

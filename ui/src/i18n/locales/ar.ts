@@ -753,9 +753,12 @@ export const ar: TranslationMap = {
       editTitleLabel: "عنوان الأداة",
       moveToTabTitle: "نقل إلى علامة التبويب",
       moveToTabEmpty: "لا توجد علامات تبويب أخرى لنقل هذا العنصر إليها.",
+      ephemeralBadge: "Temporary",
+      ephemeralTooltip: "Temporary answer — pin it to keep it here.",
       menu: {
         editTitle: "تعديل العنوان",
         moveToTab: "نقل إلى تبويب…",
+        pin: "Pin",
         hide: "إخفاء",
         remove: "إزالة",
       },
@@ -784,6 +787,10 @@ export const ar: TranslationMap = {
       },
       activity: {
         empty: "لا يوجد نشاط حديث.",
+      },
+      actionForm: {
+        empty: "This action form has no fields yet.",
+        submit: "Send",
       },
       embed: {
         missing: "هذا التضمين لا يحتوي على رابط URL بعد.",

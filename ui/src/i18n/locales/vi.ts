@@ -757,9 +757,12 @@ export const vi: TranslationMap = {
       editTitleLabel: "Tiêu đề tiện ích",
       moveToTabTitle: "Di chuyển đến thẻ",
       moveToTabEmpty: "Không có thẻ nào khác để chuyển widget này đến.",
+      ephemeralBadge: "Temporary",
+      ephemeralTooltip: "Temporary answer — pin it to keep it here.",
       menu: {
         editTitle: "Chỉnh sửa tiêu đề",
         moveToTab: "Chuyển đến tab…",
+        pin: "Pin",
         hide: "Ẩn",
         remove: "Xóa",
       },
@@ -788,6 +791,10 @@ export const vi: TranslationMap = {
       },
       activity: {
         empty: "Không có hoạt động gần đây.",
+      },
+      actionForm: {
+        empty: "This action form has no fields yet.",
+        submit: "Send",
       },
       embed: {
         missing: "Embed này chưa có URL.",

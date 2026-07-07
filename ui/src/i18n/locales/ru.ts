@@ -760,9 +760,12 @@ export const ru: TranslationMap = {
       editTitleLabel: "Название виджета",
       moveToTabTitle: "Переместить на вкладку",
       moveToTabEmpty: "Нет других вкладок, куда можно переместить этот виджет.",
+      ephemeralBadge: "Temporary",
+      ephemeralTooltip: "Temporary answer — pin it to keep it here.",
       menu: {
         editTitle: "Изменить название",
         moveToTab: "Переместить на вкладку…",
+        pin: "Закрепить",
         hide: "Скрыть",
         remove: "Удалить",
       },
@@ -791,6 +794,10 @@ export const ru: TranslationMap = {
       },
       activity: {
         empty: "Недавней активности нет.",
+      },
+      actionForm: {
+        empty: "This action form has no fields yet.",
+        submit: "Отправить",
       },
       embed: {
         missing: "У этого встраивания пока нет URL.",

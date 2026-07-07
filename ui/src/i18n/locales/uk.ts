@@ -759,9 +759,12 @@ export const uk: TranslationMap = {
       editTitleLabel: "Назва віджета",
       moveToTabTitle: "Перемістити на вкладку",
       moveToTabEmpty: "Немає інших вкладок, куди можна перемістити цей віджет.",
+      ephemeralBadge: "Temporary",
+      ephemeralTooltip: "Temporary answer — pin it to keep it here.",
       menu: {
         editTitle: "Редагувати заголовок",
         moveToTab: "Перемістити на вкладку…",
+        pin: "Pin",
         hide: "Приховати",
         remove: "Видалити",
       },
@@ -790,6 +793,10 @@ export const uk: TranslationMap = {
       },
       activity: {
         empty: "Немає недавньої активності.",
+      },
+      actionForm: {
+        empty: "This action form has no fields yet.",
+        submit: "Send",
       },
       embed: {
         missing: "Це вбудовування ще не має URL.",

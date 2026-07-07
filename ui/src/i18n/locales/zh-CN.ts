@@ -749,9 +749,12 @@ export const zh_CN: TranslationMap = {
       editTitleLabel: "小组件标题",
       moveToTabTitle: "移动到标签页",
       moveToTabEmpty: "没有其他标签页可以移动此小组件。",
+      ephemeralBadge: "Temporary",
+      ephemeralTooltip: "Temporary answer — pin it to keep it here.",
       menu: {
         editTitle: "编辑标题",
         moveToTab: "移动到标签页…",
+        pin: "Pin",
         hide: "隐藏",
         remove: "移除",
       },
@@ -780,6 +783,10 @@ export const zh_CN: TranslationMap = {
       },
       activity: {
         empty: "最近没有活动。",
+      },
+      actionForm: {
+        empty: "This action form has no fields yet.",
+        submit: "Send",
       },
       embed: {
         missing: "此嵌入尚未设置 URL。",

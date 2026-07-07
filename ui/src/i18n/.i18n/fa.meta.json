@@ -1,11 +1,17 @@
 {
-  "fallbackKeys": [],
-  "generatedAt": "2026-07-06T17:42:16.831Z",
+  "fallbackKeys": [
+    "dashboard.widget.actionForm.empty",
+    "dashboard.widget.actionForm.submit",
+    "dashboard.widget.ephemeralBadge",
+    "dashboard.widget.ephemeralTooltip",
+    "dashboard.widget.menu.pin"
+  ],
+  "generatedAt": "2026-07-07T21:31:38.314Z",
   "locale": "fa",
   "model": "claude-opus-4-8",
   "provider": "anthropic",
-  "sourceHash": "01aa34c3e5e294afdbb2a240519fc7b0e9169661342e28a315deb8139eafeab9",
-  "totalKeys": 1685,
+  "sourceHash": "42485afd8d979e2873925b59cfa8809874e5abe3cab4d42751bfde9da4d0bb29",
+  "totalKeys": 1690,
   "translatedKeys": 1685,
   "workflow": 1
 }

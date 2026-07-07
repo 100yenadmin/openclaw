@@ -760,9 +760,12 @@ export const it: TranslationMap = {
       editTitleLabel: "Titolo widget",
       moveToTabTitle: "Sposta nella scheda",
       moveToTabEmpty: "Non ci sono altre schede in cui spostare questo widget.",
+      ephemeralBadge: "Temporary",
+      ephemeralTooltip: "Temporary answer — pin it to keep it here.",
       menu: {
         editTitle: "Modifica titolo",
         moveToTab: "Sposta nella scheda…",
+        pin: "Pin",
         hide: "Nascondi",
         remove: "Rimuovi",
       },
@@ -791,6 +794,10 @@ export const it: TranslationMap = {
       },
       activity: {
         empty: "Nessuna attività recente.",
+      },
+      actionForm: {
+        empty: "This action form has no fields yet.",
+        submit: "Send",
       },
       embed: {
         missing: "Questo embed non ha ancora un URL.",

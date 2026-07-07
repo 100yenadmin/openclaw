@@ -16,6 +16,7 @@ import {
 } from "../../components/dashboard-widget-cell.ts";
 import { icons } from "../../components/icons.ts";
 import { t } from "../../i18n/index.ts";
+import { dispatchRateLimitedPrompt } from "../../lib/dashboard/bridge.ts";
 import {
   beginDrag,
   collides,
@@ -41,6 +42,7 @@ import {
   moveWidget,
   moveWidgetToTab,
   orderedTabs,
+  pinWidget,
   removeWidgetFromTab,
   resolveActiveSlug,
   registerActiveDrag,
@@ -488,6 +490,29 @@ function ensureManifests(
   }
 }
 
+/**
+ * Wire the action-form builtin's prompt dispatch to the shared confirm + rate-limit
+ * gate — the SAME `dispatchRateLimitedPrompt` the custom-widget bridge uses, with the
+ * same `window.confirm` fallback and the same `chat.send` path. No new privilege.
+ */
+function makeBuiltinDispatchPrompt(props: DashboardProps): BuiltinWidgetContext["dispatchPrompt"] {
+  const client = props.client;
+  const sessionKey = props.sessionKey ?? "main";
+  return ({ widgetKey, text }) =>
+    dispatchRateLimitedPrompt({
+      widgetKey,
+      text,
+      confirmPrompt: async (prompt) =>
+        typeof window !== "undefined" ? window.confirm(prompt) : false,
+      sendPrompt: async (prompt) => {
+        if (!client) {
+          throw new Error("Not connected.");
+        }
+        await client.request("chat.send", { sessionKey, message: prompt, deliver: false });
+      },
+    });
+}
+
 /** Builds the L5 custom-widget context for one `custom:<name>` widget, or null. */
 function buildCustomContext(
   props: DashboardProps,
@@ -535,7 +560,10 @@ function renderGrid(
     `;
   }
   const callbacks = makeCallbacks(props, state, viewState, tab);
-  const builtinContext: BuiltinWidgetContext = { embed: props.embed ?? DEFAULT_EMBED_CONTEXT };
+  const builtinContext: BuiltinWidgetContext = {
+    embed: props.embed ?? DEFAULT_EMBED_CONTEXT,
+    dispatchPrompt: makeBuiltinDispatchPrompt(props),
+  };
   const rows = gridRowCount(tab.widgets);
   const minHeight = rows * DASHBOARD_ROW_HEIGHT + Math.max(0, rows - 1) * DASHBOARD_GRID_GAP;
   return html`
@@ -697,6 +725,11 @@ function makeCallbacks(
       // free-text slug entry).
       viewState.dialog = { kind: "moveToTab", slug: tab.slug, widgetId: widget.id };
       requestUpdate();
+    },
+    onPin: (widget) => {
+      viewState.openMenuWidgetId = null;
+      // Clearing the ephemeral flag makes a Living Answer permanent (pin).
+      void pinWidget(state, props.client, { slug: tab.slug, widgetId: widget.id });
     },
     onMovePointerDown: (widget, event) => {
       if (event.button !== 0) {

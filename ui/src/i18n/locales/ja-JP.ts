@@ -761,9 +761,12 @@ export const ja_JP: TranslationMap = {
       editTitleLabel: "ウィジェットのタイトル",
       moveToTabTitle: "タブに移動",
       moveToTabEmpty: "移動先のタブがありません。",
+      ephemeralBadge: "Temporary",
+      ephemeralTooltip: "Temporary answer — pin it to keep it here.",
       menu: {
         editTitle: "タイトルを編集",
         moveToTab: "タブに移動…",
+        pin: "Pin",
         hide: "非表示",
         remove: "削除",
       },
@@ -792,6 +795,10 @@ export const ja_JP: TranslationMap = {
       },
       activity: {
         empty: "最近のアクティビティはありません。",
+      },
+      actionForm: {
+        empty: "This action form has no fields yet.",
+        submit: "Send",
       },
       embed: {
         missing: "この埋め込みにはまだURLがありません。",

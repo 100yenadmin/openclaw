@@ -752,9 +752,12 @@ export const ko: TranslationMap = {
       editTitleLabel: "위젯 제목",
       moveToTabTitle: "탭으로 이동",
       moveToTabEmpty: "이 위젯을 이동할 다른 탭이 없습니다.",
+      ephemeralBadge: "Temporary",
+      ephemeralTooltip: "Temporary answer — pin it to keep it here.",
       menu: {
         editTitle: "제목 편집",
         moveToTab: "탭으로 이동…",
+        pin: "Pin",
         hide: "숨기기",
         remove: "제거",
       },
@@ -783,6 +786,10 @@ export const ko: TranslationMap = {
       },
       activity: {
         empty: "최근 활동이 없습니다.",
+      },
+      actionForm: {
+        empty: "This action form has no fields yet.",
+        submit: "Send",
       },
       embed: {
         missing: "이 임베드에는 아직 URL이 없습니다.",

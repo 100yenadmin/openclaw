@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createWidgetBridge,
+  dispatchRateLimitedPrompt,
   isRpcMethodAllowed,
   isWellFormedInbound,
   resetPromptRateStatesForTest,
@@ -219,6 +220,87 @@ describe("sendPrompt capability + confirm + rate limit", () => {
     expect(posted).toHaveLength(0);
     // The 11th within the same rolling minute is rejected.
     bridge.handleMessage({ v: 1, type: "dashboard:sendPrompt", requestId: "p10", text: "x" });
+    await vi.waitFor(() => expect(posted).toHaveLength(1));
+    expect(posted[0]).toMatchObject({ type: "dashboard:error", code: "rate_limited" });
+    expect(sent).toBe(10);
+  });
+});
+
+describe("dispatchRateLimitedPrompt (shared confirm + rate gate)", () => {
+  it("sends after an operator confirm", async () => {
+    const sendPrompt = vi.fn(async () => undefined);
+    const outcome = await dispatchRateLimitedPrompt({
+      widgetKey: "af-1",
+      text: "deploy",
+      confirmPrompt: async () => true,
+      sendPrompt,
+    });
+    expect(outcome).toBe("sent");
+    expect(sendPrompt).toHaveBeenCalledWith("deploy");
+  });
+
+  it("sends nothing when the operator declines", async () => {
+    const sendPrompt = vi.fn(async () => undefined);
+    const outcome = await dispatchRateLimitedPrompt({
+      widgetKey: "af-1",
+      text: "deploy",
+      confirmPrompt: async () => false,
+      sendPrompt,
+    });
+    expect(outcome).toBe("declined");
+    expect(sendPrompt).not.toHaveBeenCalled();
+  });
+
+  it("rate-limits a second in-flight dispatch for the same key", async () => {
+    let resolveConfirm!: (ok: boolean) => void;
+    const first = dispatchRateLimitedPrompt({
+      widgetKey: "af-1",
+      text: "one",
+      confirmPrompt: () => new Promise<boolean>((resolve) => (resolveConfirm = resolve)),
+      sendPrompt: async () => undefined,
+    });
+    const second = await dispatchRateLimitedPrompt({
+      widgetKey: "af-1",
+      text: "two",
+      confirmPrompt: async () => true,
+      sendPrompt: async () => undefined,
+    });
+    expect(second).toBe("rate_limited");
+    resolveConfirm(false);
+    expect(await first).toBe("declined");
+  });
+
+  it("shares the SAME budget with the bridge's sendPrompt for the same widget key", async () => {
+    const clock = 5_000_000;
+    let sent = 0;
+    // Exhaust the per-minute budget for key "shared" via the standalone gate.
+    for (let i = 0; i < 10; i += 1) {
+      const outcome = await dispatchRateLimitedPrompt({
+        widgetKey: "shared",
+        text: "x",
+        confirmPrompt: async () => true,
+        sendPrompt: async () => {
+          sent += 1;
+        },
+        now: () => clock,
+      });
+      expect(outcome).toBe("sent");
+    }
+    expect(sent).toBe(10);
+    // A bridge for a widget NAMED "shared" now hits the same exhausted budget.
+    const posted: WidgetOutboundMessage[] = [];
+    const bridge = createWidgetBridge({
+      manifest: manifest({ name: "shared", capabilities: ["prompt:send"] }),
+      resolveBinding: async () => null,
+      resolveTheme: () => ({}),
+      confirmPrompt: async () => true,
+      sendPrompt: async () => {
+        sent += 1;
+      },
+      post: (message) => posted.push(message),
+      now: () => clock,
+    });
+    bridge.handleMessage({ v: 1, type: "dashboard:sendPrompt", requestId: "s0", text: "x" });
     await vi.waitFor(() => expect(posted).toHaveLength(1));
     expect(posted[0]).toMatchObject({ type: "dashboard:error", code: "rate_limited" });
     expect(sent).toBe(10);

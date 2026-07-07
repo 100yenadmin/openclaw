@@ -754,9 +754,12 @@ export const id: TranslationMap = {
       editTitleLabel: "Judul widget",
       moveToTabTitle: "Pindahkan ke tab",
       moveToTabEmpty: "Tidak ada tab lain untuk memindahkan widget ini.",
+      ephemeralBadge: "Temporary",
+      ephemeralTooltip: "Temporary answer — pin it to keep it here.",
       menu: {
         editTitle: "Edit judul",
         moveToTab: "Pindahkan ke tab…",
+        pin: "Pin",
         hide: "Sembunyikan",
         remove: "Hapus",
       },
@@ -785,6 +788,10 @@ export const id: TranslationMap = {
       },
       activity: {
         empty: "Tidak ada aktivitas terbaru.",
+      },
+      actionForm: {
+        empty: "This action form has no fields yet.",
+        submit: "Send",
       },
       embed: {
         missing: "Embed ini belum memiliki URL.",

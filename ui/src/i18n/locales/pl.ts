@@ -755,9 +755,12 @@ export const pl: TranslationMap = {
       editTitleLabel: "Tytuł widżetu",
       moveToTabTitle: "Przenieś do karty",
       moveToTabEmpty: "Nie ma innych kart, do których można przenieść ten widżet.",
+      ephemeralBadge: "Temporary",
+      ephemeralTooltip: "Temporary answer — pin it to keep it here.",
       menu: {
         editTitle: "Edytuj tytuł",
         moveToTab: "Przenieś do karty…",
+        pin: "Pin",
         hide: "Ukryj",
         remove: "Usuń",
       },
@@ -786,6 +789,10 @@ export const pl: TranslationMap = {
       },
       activity: {
         empty: "Brak ostatniej aktywności.",
+      },
+      actionForm: {
+        empty: "This action form has no fields yet.",
+        submit: "Send",
       },
       embed: {
         missing: "To osadzenie nie ma jeszcze adresu URL.",

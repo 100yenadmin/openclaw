@@ -150,6 +150,47 @@ export function resetPromptRateStatesForTest(): void {
   promptRateStates.clear();
 }
 
+/** Outcome of a gated prompt dispatch; the caller maps it to UI feedback. */
+export type PromptDispatchOutcome = "sent" | "declined" | "rate_limited";
+
+/**
+ * The single confirm + rate-limit gate for dispatching a prompt to chat.send.
+ * Both the sandboxed custom-widget bridge (`handleSendPrompt`) and the trusted
+ * `builtin:action-form` widget route through THIS function, so there is exactly
+ * one dispatch privilege: the rate budget (1 in-flight, 10/min, keyed by
+ * `widgetKey`) and the per-invocation operator confirm are shared, never
+ * reimplemented. The gate order is fixed: rate check → confirm → send.
+ */
+export async function dispatchRateLimitedPrompt(params: {
+  /** Stable widget identity the rate budget is keyed by (custom name or builtin id). */
+  widgetKey: string;
+  text: string;
+  confirmPrompt: (text: string) => Promise<boolean>;
+  sendPrompt: (text: string) => Promise<void>;
+  now?: () => number;
+}): Promise<PromptDispatchOutcome> {
+  const now = params.now ?? (() => Date.now());
+  const rateState = getPromptRateState(params.widgetKey);
+  const cutoff = now() - PROMPT_RATE_WINDOW_MS;
+  rateState.timestamps = rateState.timestamps.filter((ts) => ts > cutoff);
+  if (rateState.inFlight || rateState.timestamps.length >= PROMPT_RATE_MAX) {
+    return "rate_limited";
+  }
+  rateState.inFlight = true;
+  try {
+    const confirmed = await params.confirmPrompt(params.text);
+    if (!confirmed) {
+      // Deny path sends NOTHING and does not consume a rate slot.
+      return "declined";
+    }
+    rateState.timestamps.push(now());
+    await params.sendPrompt(params.text);
+    return "sent";
+  } finally {
+    rateState.inFlight = false;
+  }
+}
+
 const INBOUND_TYPES = new Set<WidgetInboundType>([
   "dashboard:ready",
   "dashboard:getData",
@@ -254,33 +295,29 @@ export function createWidgetBridge(deps: WidgetBridgeDeps): WidgetBridge {
       error("capability_denied", "widget lacks the prompt:send capability", requestId);
       return;
     }
-    // Rate limit: at most one in-flight prompt and 10 per rolling minute, keyed by
-    // widget name so a remount cannot reset the budget.
-    const cutoff = now() - PROMPT_RATE_WINDOW_MS;
-    rateState.timestamps = rateState.timestamps.filter((ts) => ts > cutoff);
-    if (rateState.inFlight || rateState.timestamps.length >= PROMPT_RATE_MAX) {
-      error("rate_limited", "prompt send rate limit exceeded", requestId);
-      return;
-    }
-    rateState.inFlight = true;
+    // The rate limit (keyed by widget name so a remount cannot reset the budget)
+    // and the operator confirm both live in the shared gate, so this sandboxed
+    // path and the trusted action-form builtin cannot diverge.
     try {
-      const confirmed = await deps.confirmPrompt(text);
+      const outcome = await dispatchRateLimitedPrompt({
+        widgetKey: deps.manifest.name,
+        text,
+        confirmPrompt: deps.confirmPrompt,
+        sendPrompt: deps.sendPrompt,
+        now,
+      });
       if (disposed) {
         return;
       }
-      if (!confirmed) {
-        // Deny path sends NOTHING.
+      if (outcome === "rate_limited") {
+        error("rate_limited", "prompt send rate limit exceeded", requestId);
+      } else if (outcome === "declined") {
         error("prompt_declined", "operator declined the prompt", requestId);
-        return;
       }
-      rateState.timestamps.push(now());
-      await deps.sendPrompt(text);
     } catch (err) {
       if (!disposed) {
         error("resolve_failed", err instanceof Error ? err.message : String(err), requestId);
       }
-    } finally {
-      rateState.inFlight = false;
     }
   }
 
