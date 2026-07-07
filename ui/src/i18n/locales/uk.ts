@@ -791,6 +791,12 @@ export const uk: TranslationMap = {
       activity: {
         empty: "Немає недавньої активності.",
       },
+      agentStatus: {
+        empty: "No agents yet.",
+        busy: "Busy",
+        idle: "Idle",
+        progress: "{percent}% of budget",
+      },
       embed: {
         missing: "Це вбудовування ще не має URL.",
         blockedExternal: "Зовнішні вбудовування вимкнено політикою вашого Gateway.",

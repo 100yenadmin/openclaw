@@ -786,6 +786,12 @@ export const id: TranslationMap = {
       activity: {
         empty: "Tidak ada aktivitas terbaru.",
       },
+      agentStatus: {
+        empty: "No agents yet.",
+        busy: "Busy",
+        idle: "Idle",
+        progress: "{percent}% of budget",
+      },
       embed: {
         missing: "Embed ini belum memiliki URL.",
         blockedExternal: "Embed eksternal dinonaktifkan oleh kebijakan Gateway Anda.",

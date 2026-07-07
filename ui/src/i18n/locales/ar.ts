@@ -785,6 +785,12 @@ export const ar: TranslationMap = {
       activity: {
         empty: "لا يوجد نشاط حديث.",
       },
+      agentStatus: {
+        empty: "No agents yet.",
+        busy: "Busy",
+        idle: "Idle",
+        progress: "{percent}% of budget",
+      },
       embed: {
         missing: "هذا التضمين لا يحتوي على رابط URL بعد.",
         blockedExternal: "تم تعطيل التضمينات الخارجية بواسطة سياسة الـ Gateway الخاصة بك.",

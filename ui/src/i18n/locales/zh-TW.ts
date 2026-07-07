@@ -781,6 +781,12 @@ export const zh_TW: TranslationMap = {
       activity: {
         empty: "沒有近期活動。",
       },
+      agentStatus: {
+        empty: "No agents yet.",
+        busy: "Busy",
+        idle: "Idle",
+        progress: "{percent}% of budget",
+      },
       embed: {
         missing: "此嵌入尚無 URL。",
         blockedExternal: "外部嵌入已透過您的 Gateway 原則停用。",

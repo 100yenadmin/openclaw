@@ -787,6 +787,12 @@ export const pl: TranslationMap = {
       activity: {
         empty: "Brak ostatniej aktywności.",
       },
+      agentStatus: {
+        empty: "No agents yet.",
+        busy: "Busy",
+        idle: "Idle",
+        progress: "{percent}% of budget",
+      },
       embed: {
         missing: "To osadzenie nie ma jeszcze adresu URL.",
         blockedExternal: "Zewnętrzne osadzenia są wyłączone przez politykę Gateway.",

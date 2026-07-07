@@ -792,6 +792,12 @@ export const ru: TranslationMap = {
       activity: {
         empty: "Недавней активности нет.",
       },
+      agentStatus: {
+        empty: "No agents yet.",
+        busy: "Busy",
+        idle: "Бездействует",
+        progress: "{percent}% of budget",
+      },
       embed: {
         missing: "У этого встраивания пока нет URL.",
         blockedExternal: "Внешние встраивания отключены политикой вашего Gateway.",

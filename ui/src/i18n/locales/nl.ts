@@ -790,6 +790,12 @@ export const nl: TranslationMap = {
       activity: {
         empty: "Geen recente activiteit.",
       },
+      agentStatus: {
+        empty: "No agents yet.",
+        busy: "Busy",
+        idle: "Idle",
+        progress: "{percent}% of budget",
+      },
       embed: {
         missing: "Deze embed heeft nog geen URL.",
         blockedExternal: "Externe embeds zijn uitgeschakeld door uw gatewaybeleid.",

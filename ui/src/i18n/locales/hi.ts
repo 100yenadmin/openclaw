@@ -784,6 +784,12 @@ export const hi: TranslationMap = {
       activity: {
         empty: "कोई हालिया गतिविधि नहीं है।",
       },
+      agentStatus: {
+        empty: "No agents yet.",
+        busy: "Busy",
+        idle: "निष्क्रिय",
+        progress: "{percent}% of budget",
+      },
       embed: {
         missing: "इस एम्बेड में अभी तक कोई URL नहीं है।",
         blockedExternal: "आपकी Gateway पॉलिसी द्वारा बाहरी एम्बेड अक्षम हैं।",

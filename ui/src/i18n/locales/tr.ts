@@ -791,6 +791,12 @@ export const tr: TranslationMap = {
       activity: {
         empty: "Son etkinlik yok.",
       },
+      agentStatus: {
+        empty: "No agents yet.",
+        busy: "Busy",
+        idle: "Idle",
+        progress: "{percent}% of budget",
+      },
       embed: {
         missing: "Bu gömülü içeriğin henüz URL'si yok.",
         blockedExternal: "Harici gömülü içerikler gateway ilkeniz tarafından devre dışı bırakıldı.",

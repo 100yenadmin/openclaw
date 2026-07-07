@@ -793,6 +793,12 @@ export const ja_JP: TranslationMap = {
       activity: {
         empty: "最近のアクティビティはありません。",
       },
+      agentStatus: {
+        empty: "No agents yet.",
+        busy: "Busy",
+        idle: "Idle",
+        progress: "{percent}% of budget",
+      },
       embed: {
         missing: "この埋め込みにはまだURLがありません。",
         blockedExternal: "Gatewayポリシーにより、外部埋め込みは無効になっています。",

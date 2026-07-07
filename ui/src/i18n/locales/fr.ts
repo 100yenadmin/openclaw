@@ -794,6 +794,12 @@ export const fr: TranslationMap = {
       activity: {
         empty: "Aucune activité récente.",
       },
+      agentStatus: {
+        empty: "No agents yet.",
+        busy: "Busy",
+        idle: "Idle",
+        progress: "{percent}% of budget",
+      },
       embed: {
         missing: "Cet embed n'a pas encore d'URL.",
         blockedExternal: "Les intégrations externes sont désactivées par votre stratégie Gateway.",

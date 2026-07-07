@@ -794,6 +794,12 @@ export const de: TranslationMap = {
       activity: {
         empty: "Keine aktuellen Aktivitäten.",
       },
+      agentStatus: {
+        empty: "No agents yet.",
+        busy: "Busy",
+        idle: "Idle",
+        progress: "{percent}% of budget",
+      },
       embed: {
         missing: "Dieser Embed hat noch keine URL.",
         blockedExternal: "Externe Embeds sind durch Ihre Gateway-Richtlinie deaktiviert.",

@@ -789,6 +789,12 @@ export const vi: TranslationMap = {
       activity: {
         empty: "Không có hoạt động gần đây.",
       },
+      agentStatus: {
+        empty: "No agents yet.",
+        busy: "Busy",
+        idle: "Idle",
+        progress: "{percent}% of budget",
+      },
       embed: {
         missing: "Embed này chưa có URL.",
         blockedExternal: "Các embed bên ngoài bị vô hiệu hóa theo chính sách Gateway của bạn.",

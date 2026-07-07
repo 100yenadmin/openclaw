@@ -787,6 +787,12 @@ export const fa: TranslationMap = {
       activity: {
         empty: "فعالیت اخیری وجود ندارد.",
       },
+      agentStatus: {
+        empty: "No agents yet.",
+        busy: "Busy",
+        idle: "Idle",
+        progress: "{percent}% of budget",
+      },
       embed: {
         missing: "این جاسازی هنوز URL ندارد.",
         blockedExternal: "جاسازی‌های خارجی توسط خط‌مشی Gateway شما غیرفعال شده‌اند.",

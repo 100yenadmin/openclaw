@@ -782,6 +782,12 @@ export const th: TranslationMap = {
       activity: {
         empty: "ไม่มีกิจกรรมล่าสุด",
       },
+      agentStatus: {
+        empty: "No agents yet.",
+        busy: "Busy",
+        idle: "Idle",
+        progress: "{percent}% of budget",
+      },
       embed: {
         missing: "Embed นี้ยังไม่มี URL",
         blockedExternal: "Embed ภายนอกถูกปิดใช้งานโดยนโยบาย Gateway ของคุณ",

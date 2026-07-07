@@ -6,6 +6,7 @@ import { render } from "lit";
 import { describe, expect, it } from "vitest";
 import type { DashboardWidget } from "../types.ts";
 import { mapActivity, renderActivity } from "./activity.ts";
+import { mapAgentStatus, renderAgentStatus } from "./agent-status.ts";
 import { mapCron, renderCron } from "./cron.ts";
 import { evaluateEmbedUrl, renderIframeEmbed } from "./iframe-embed.ts";
 import { mapInstances, renderInstances } from "./instances.ts";
@@ -230,6 +231,38 @@ describe("activity mapping", () => {
   it("renders an empty state for no entries", () => {
     const container = renderToContainer(renderActivity(widget(), { entries: [] }));
     expect(container.querySelector(".dashboard-widget__placeholder")).not.toBeNull();
+  });
+});
+
+describe("agent-status mapping", () => {
+  it("reuses sessions.list rows for busy/idle + objective + budget progress", () => {
+    const model = mapAgentStatus(widget(), {
+      sessions: [
+        {
+          key: "main:1",
+          displayName: "Builder",
+          hasActiveRun: true,
+          goal: { objective: "Ship the widget", tokensUsed: 50, tokenBudget: 200 },
+        },
+        { key: "main:2", label: "Idler", status: "done" },
+        { key: "" }, // dropped: no key
+      ],
+    });
+    expect(model.rows.map((r) => r.key)).toEqual(["main:1", "main:2"]);
+    expect(model.rows[0]).toMatchObject({ active: true, task: "Ship the widget", progress: 0.25 });
+    expect(model.rows[1]).toMatchObject({ active: false, task: null, progress: null });
+    expect(model.activeCount).toBe(1);
+    expect(model.total).toBe(2);
+  });
+
+  it("renders busy/idle affordances and an empty state", () => {
+    const populated = renderToContainer(
+      renderAgentStatus(widget(), { sessions: [{ key: "main:1", hasActiveRun: true }] }),
+    );
+    expect(populated.querySelector(".dashboard-agent-status")).not.toBeNull();
+    expect(populated.querySelector(".dashboard-dot--live")).not.toBeNull();
+    const empty = renderToContainer(renderAgentStatus(widget(), { sessions: [] }));
+    expect(empty.querySelector(".dashboard-widget__placeholder")).not.toBeNull();
   });
 });
 

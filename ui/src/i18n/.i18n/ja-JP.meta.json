@@ -1,11 +1,16 @@
 {
-  "fallbackKeys": [],
-  "generatedAt": "2026-07-06T17:42:14.373Z",
+  "fallbackKeys": [
+    "dashboard.widget.agentStatus.busy",
+    "dashboard.widget.agentStatus.empty",
+    "dashboard.widget.agentStatus.idle",
+    "dashboard.widget.agentStatus.progress"
+  ],
+  "generatedAt": "2026-07-07T04:29:28.325Z",
   "locale": "ja-JP",
   "model": "claude-opus-4-8",
   "provider": "anthropic",
-  "sourceHash": "01aa34c3e5e294afdbb2a240519fc7b0e9169661342e28a315deb8139eafeab9",
-  "totalKeys": 1685,
+  "sourceHash": "57d90db8fd27c2e91a98f6d1f0b6135dfb6fe4711bbba2a4f99144e9abb1c215",
+  "totalKeys": 1689,
   "translatedKeys": 1685,
   "workflow": 1
 }
