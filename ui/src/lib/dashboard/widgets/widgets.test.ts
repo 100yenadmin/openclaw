@@ -6,6 +6,7 @@ import { render } from "lit";
 import { describe, expect, it } from "vitest";
 import type { DashboardWidget } from "../types.ts";
 import { mapActivity, renderActivity } from "./activity.ts";
+import { mapChart, normalizeSeries, renderChart } from "./chart.ts";
 import { mapCron, renderCron } from "./cron.ts";
 import { evaluateEmbedUrl, renderIframeEmbed } from "./iframe-embed.ts";
 import { mapInstances, renderInstances } from "./instances.ts";
@@ -230,6 +231,68 @@ describe("activity mapping", () => {
   it("renders an empty state for no entries", () => {
     const container = renderToContainer(renderActivity(widget(), { entries: [] }));
     expect(container.querySelector(".dashboard-widget__placeholder")).not.toBeNull();
+  });
+});
+
+describe("chart mapping", () => {
+  it("normalizes the tolerant value shapes to a plain number[]", () => {
+    expect(normalizeSeries([1, 2, 3])).toEqual([1, 2, 3]);
+    expect(normalizeSeries([{ y: 4 }, { value: 5 }, { x: 9, y: 6 }])).toEqual([4, 5, 6]);
+    expect(normalizeSeries({ points: [1, { value: 2 }] })).toEqual([1, 2]);
+    expect(normalizeSeries([1, "bad", null, { z: 3 }, 2])).toEqual([1, 2]);
+    expect(normalizeSeries(undefined)).toEqual([]);
+  });
+
+  it("defaults to a line chart and derives the value range", () => {
+    const model = mapChart(widget(), [3, 1, 5]);
+    expect(model.type).toBe("line");
+    expect(model.min).toBe(1);
+    expect(model.max).toBe(5);
+  });
+
+  it("honors a valid props.type and falls back on an unknown one", () => {
+    expect(mapChart(widget({ props: { type: "bar" } }), [1, 2]).type).toBe("bar");
+    expect(mapChart(widget({ props: { type: "pie" } }), [1, 2]).type).toBe("line");
+  });
+
+  it("draws a polyline for line and sparkline types", () => {
+    for (const type of ["line", "sparkline"]) {
+      const container = renderToContainer(renderChart(widget({ props: { type } }), [1, 2, 3, 4]));
+      const line = container.querySelector("polyline.dashboard-chart__line");
+      expect(line).not.toBeNull();
+      // 4 samples → 4 "x,y" coordinate pairs in the points attribute.
+      expect(line?.getAttribute("points")?.trim().split(/\s+/)).toHaveLength(4);
+    }
+  });
+
+  it("draws one rect per sample for a bar chart", () => {
+    const container = renderToContainer(renderChart(widget({ props: { type: "bar" } }), [1, 2, 3]));
+    expect(container.querySelectorAll(".dashboard-chart__bars rect")).toHaveLength(3);
+  });
+
+  it("draws a filled polygon plus a line for an area chart", () => {
+    const container = renderToContainer(
+      renderChart(widget({ props: { type: "area" } }), [1, 4, 2]),
+    );
+    expect(container.querySelector("polygon.dashboard-chart__area")).not.toBeNull();
+    expect(container.querySelector("polyline.dashboard-chart__line")).not.toBeNull();
+  });
+
+  it("draws a track, fill arc, and needle for a gauge", () => {
+    const container = renderToContainer(
+      renderChart(widget({ props: { type: "gauge", min: 0, max: 10 } }), [7]),
+    );
+    expect(container.querySelector(".dashboard-chart__gauge-track")).not.toBeNull();
+    expect(container.querySelector(".dashboard-chart__gauge-fill")).not.toBeNull();
+    expect(container.querySelector(".dashboard-chart__gauge-needle")).not.toBeNull();
+  });
+
+  it("renders an empty state for missing/empty data", () => {
+    for (const value of [[], undefined, { points: [] }, ["nope"]]) {
+      const container = renderToContainer(renderChart(widget({ props: { type: "line" } }), value));
+      expect(container.querySelector(".dashboard-widget__placeholder")).not.toBeNull();
+      expect(container.querySelector("svg")).toBeNull();
+    }
   });
 });
 

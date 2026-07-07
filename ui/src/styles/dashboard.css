@@ -696,6 +696,56 @@
   background: var(--bg-muted);
 }
 
+/* chart widget — dependency-free inline-SVG timeseries visuals. */
+.dashboard-chart {
+  width: 100%;
+  height: 100%;
+  min-height: 40px;
+  display: flex;
+}
+
+.dashboard-chart__svg {
+  width: 100%;
+  height: 100%;
+}
+
+.dashboard-chart__line {
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.dashboard-chart__area {
+  fill: var(--accent-subtle, color-mix(in srgb, var(--accent) 15%, transparent));
+  stroke: none;
+}
+
+.dashboard-chart__bars rect {
+  fill: var(--accent);
+}
+
+.dashboard-chart__gauge-track {
+  stroke: var(--bg-muted, color-mix(in srgb, var(--text) 12%, transparent));
+  stroke-width: 3;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.dashboard-chart__gauge-fill {
+  stroke: var(--accent);
+  stroke-width: 3;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.dashboard-chart__gauge-needle {
+  stroke: var(--text);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
 /* --- Responsive: single column below ~900px ------------------------------ */
 
 @media (max-width: 900px) {

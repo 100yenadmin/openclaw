@@ -785,6 +785,10 @@ export const en: TranslationMap = {
       activity: {
         empty: "No recent activity.",
       },
+      chart: {
+        empty: "No data to chart.",
+        label: "Chart",
+      },
       embed: {
         missing: "This embed has no URL yet.",
         blockedExternal: "External embeds are disabled by your gateway policy.",
