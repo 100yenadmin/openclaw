@@ -80,7 +80,7 @@ export type DashboardWorkspace = {
 };
 
 /** Capability names a custom widget may hold (00 §2). */
-export type DashboardWidgetCapability = "data:read" | "prompt:send";
+export type DashboardWidgetCapability = "data:read" | "prompt:send" | "state:persist";
 
 /**
  * The subset of a custom widget's `widget.json` manifest the parent bridge needs

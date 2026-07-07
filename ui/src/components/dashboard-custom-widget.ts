@@ -125,7 +125,8 @@ export async function loadWidgetManifestView(
       )
       .filter((id): id is string => typeof id === "string");
     const capabilities = (Array.isArray(record.capabilities) ? record.capabilities : []).filter(
-      (cap): cap is DashboardWidgetCapability => cap === "data:read" || cap === "prompt:send",
+      (cap): cap is DashboardWidgetCapability =>
+        cap === "data:read" || cap === "prompt:send" || cap === "state:persist",
     );
     return { name, bindingIds, capabilities };
   } catch {
@@ -192,6 +193,34 @@ export function attachWidgetBridge(params: {
         message: text,
         deliver: false,
       });
+    },
+    // Widget write-back (spec-101): the parent persists state under the widget's OWN
+    // tracked id (`widget.id`) — the widgetId is never taken from the child message,
+    // so a widget can only ever read/write its own state. Gated behind the manifest
+    // `state:persist` capability inside the bridge.
+    getWidgetState: async () => {
+      if (!context.client) {
+        throw new Error("Not connected.");
+      }
+      const payload = await context.client.request("dashboard.widget.state.get", {
+        widgetId: widget.id,
+      });
+      const record = payload as { state?: unknown; version?: number } | null;
+      return {
+        state: record?.state ?? null,
+        ...(typeof record?.version === "number" ? { version: record.version } : {}),
+      };
+    },
+    setWidgetState: async (blob) => {
+      if (!context.client) {
+        throw new Error("Not connected.");
+      }
+      const payload = await context.client.request("dashboard.widget.state.set", {
+        widgetId: widget.id,
+        state: blob,
+      });
+      const version = (payload as { version?: number } | null)?.version;
+      return { version: typeof version === "number" ? version : 0 };
     },
   });
 

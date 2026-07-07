@@ -60,14 +60,17 @@ export type WidgetInboundType =
   | "dashboard:ready"
   | "dashboard:getData"
   | "dashboard:getTheme"
-  | "dashboard:sendPrompt";
+  | "dashboard:sendPrompt"
+  | "dashboard:getState"
+  | "dashboard:setState";
 
 /** parent→child message types. */
 export type WidgetOutboundType =
   | "dashboard:data"
   | "dashboard:push"
   | "dashboard:theme"
-  | "dashboard:error";
+  | "dashboard:error"
+  | "dashboard:state";
 
 export type WidgetErrorCode =
   | "binding_denied"
@@ -82,6 +85,7 @@ export type WidgetOutboundMessage =
   | { v: 1; type: "dashboard:data"; requestId: string; bindingId: string; data: unknown }
   | { v: 1; type: "dashboard:push"; bindingId: string; data: unknown }
   | { v: 1; type: "dashboard:theme"; requestId: string; tokens: Record<string, string> }
+  | { v: 1; type: "dashboard:state"; requestId: string; state: unknown; version?: number }
   | { v: 1; type: "dashboard:error"; requestId?: string; code: WidgetErrorCode; message: string };
 
 /** Injected side effects — real implementations live in the browser host. */
@@ -102,6 +106,17 @@ export type WidgetBridgeDeps = {
   confirmPrompt: (text: string) => Promise<boolean>;
   /** Dispatch the prompt through the existing chat-send path. */
   sendPrompt: (text: string) => Promise<void>;
+  /**
+   * Read THIS widget's persisted state blob (or null). The parent binds the widgetId
+   * from the trusted iframe context; the widget cannot name another widget's state.
+   * Required only when the manifest holds `state:persist` — omitted otherwise.
+   */
+  getWidgetState?: () => Promise<{ state: unknown; version?: number }>;
+  /**
+   * Persist THIS widget's opaque state blob (parent-bound widgetId). Resolves to the
+   * new version on success. Required only when the manifest holds `state:persist`.
+   */
+  setWidgetState?: (blob: unknown) => Promise<{ version: number }>;
   /** Post a message to the child (host wires targetOrigin "*"). */
   post: (message: WidgetOutboundMessage) => void;
   /** getData answer deadline; posts a timeout error if the resolver overruns. Default 10s. */
@@ -155,6 +170,8 @@ const INBOUND_TYPES = new Set<WidgetInboundType>([
   "dashboard:getData",
   "dashboard:getTheme",
   "dashboard:sendPrompt",
+  "dashboard:getState",
+  "dashboard:setState",
 ]);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -284,6 +301,51 @@ export function createWidgetBridge(deps: WidgetBridgeDeps): WidgetBridge {
     }
   }
 
+  async function handleGetState(requestId: string): Promise<void> {
+    // Same capability-gate shape as sendPrompt: denied WITHOUT touching the gateway.
+    if (!capabilities.has("state:persist") || !deps.getWidgetState) {
+      error("capability_denied", "widget lacks the state:persist capability", requestId);
+      return;
+    }
+    try {
+      const result = await deps.getWidgetState();
+      if (disposed) {
+        return;
+      }
+      deps.post({
+        v: 1,
+        type: "dashboard:state",
+        requestId,
+        state: result.state,
+        ...(result.version !== undefined ? { version: result.version } : {}),
+      });
+    } catch (err) {
+      if (!disposed) {
+        error("resolve_failed", err instanceof Error ? err.message : String(err), requestId);
+      }
+    }
+  }
+
+  async function handleSetState(requestId: string, blob: unknown): Promise<void> {
+    if (!capabilities.has("state:persist") || !deps.setWidgetState) {
+      error("capability_denied", "widget lacks the state:persist capability", requestId);
+      return;
+    }
+    try {
+      // The parent supplies the widgetId (bound to THIS iframe); any widgetId in the
+      // child's message is ignored — only the blob crosses the trust boundary here.
+      const { version } = await deps.setWidgetState(blob);
+      if (disposed) {
+        return;
+      }
+      deps.post({ v: 1, type: "dashboard:state", requestId, state: blob, version });
+    } catch (err) {
+      if (!disposed) {
+        error("resolve_failed", err instanceof Error ? err.message : String(err), requestId);
+      }
+    }
+  }
+
   function handleMessage(data: unknown): boolean {
     if (disposed) {
       return false;
@@ -322,6 +384,26 @@ export function createWidgetBridge(deps: WidgetBridgeDeps): WidgetBridge {
           return false;
         }
         void handleSendPrompt(requestId, text);
+        return true;
+      }
+      case "dashboard:getState": {
+        const requestId = typeof data.requestId === "string" ? data.requestId : null;
+        if (requestId === null) {
+          dropped += 1;
+          return false;
+        }
+        void handleGetState(requestId);
+        return true;
+      }
+      case "dashboard:setState": {
+        const requestId = typeof data.requestId === "string" ? data.requestId : null;
+        // The `state` key must be present (any JSON value, incl. null). A widgetId in
+        // the message is deliberately NOT read here — the parent owns the id.
+        if (requestId === null || !Object.hasOwn(data, "state")) {
+          dropped += 1;
+          return false;
+        }
+        void handleSetState(requestId, data.state);
         return true;
       }
       default:

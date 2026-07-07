@@ -738,6 +738,53 @@ export function registerDashboardGatewayMethods(options: DashboardGatewayMethodO
     },
     { scope: READ_SCOPE },
   );
+
+  // Widget write-back (spec-101). The TRUSTED PARENT (Control UI bridge) calls these
+  // on a sandboxed widget's behalf with the widgetId it already tracks for that
+  // iframe — the widget never reaches the gateway and never supplies its own id.
+  // State lives under `state/<widgetId>.json`, jailed + size-capped in the store,
+  // SEPARATE from the workspace document.
+  api.registerGatewayMethod(
+    "dashboard.widget.state.get",
+    async ({ params: requestParams, respond }) => {
+      try {
+        const params = readParams(requestParams, ["widgetId"]);
+        const widgetId = readWidgetId(params, "widgetId");
+        const record = await store.readWidgetState(widgetId);
+        respond(
+          true,
+          record === null
+            ? { state: null }
+            : { state: record.blob, version: record.version, updatedAt: record.updatedAt },
+        );
+      } catch (error) {
+        respondError(respond, error);
+      }
+    },
+    { scope: READ_SCOPE },
+  );
+
+  api.registerGatewayMethod(
+    "dashboard.widget.state.set",
+    async (opts) => {
+      try {
+        const params = readParams(opts.params, ["widgetId", "state"]);
+        const widgetId = readWidgetId(params, "widgetId");
+        if (!Object.hasOwn(params, "state")) {
+          throw new Error("state is required");
+        }
+        // The blob is opaque to the plugin, but it must be JSON-serializable; the
+        // store rejects an oversize serialization WHOLE (nothing written).
+        const { version } = await store.writeWidgetState(widgetId, params.state as JsonValue);
+        // Minimal change marker: id + version only, NEVER the blob. Receivers refetch.
+        opts.context.broadcast("plugin.dashboard.widget-state.changed", { widgetId, version });
+        opts.respond(true, { widgetId, version });
+      } catch (error) {
+        respondError(opts.respond, error);
+      }
+    },
+    { scope: WRITE_SCOPE },
+  );
 }
 
 function readSlugOrder(value: unknown): string[] {

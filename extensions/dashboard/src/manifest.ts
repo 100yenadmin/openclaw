@@ -13,7 +13,7 @@ import { DATA_READ_RPC_ALLOWLIST, normalizeDashboardDataLogicalPath } from "./bi
 
 export const CUSTOM_WIDGET_NAME_PATTERN = /^[A-Za-z0-9._-]{1,64}$/;
 const BINDING_ID_PATTERN = /^[A-Za-z0-9._-]{1,64}$/;
-export const WIDGET_CAPABILITIES = ["data:read", "prompt:send"] as const;
+export const WIDGET_CAPABILITIES = ["data:read", "prompt:send", "state:persist"] as const;
 
 export type WidgetCapability = (typeof WIDGET_CAPABILITIES)[number];
 

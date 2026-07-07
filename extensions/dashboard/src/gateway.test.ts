@@ -1,3 +1,4 @@
+import fsSync from "node:fs";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -69,11 +70,20 @@ describe("dashboard gateway methods", () => {
       "dashboard.workspace.replace",
       "dashboard.workspace.undo",
       "dashboard.data.read",
+      "dashboard.widget.state.get",
+      "dashboard.widget.state.set",
+    ]);
+    const readMethods = new Set([
+      "dashboard.workspace.get",
+      "dashboard.data.read",
+      "dashboard.widget.state.get",
     ]);
     expect(methods.get("dashboard.workspace.get")?.opts).toEqual({ scope: "operator.read" });
     expect(methods.get("dashboard.data.read")?.opts).toEqual({ scope: "operator.read" });
+    expect(methods.get("dashboard.widget.state.get")?.opts).toEqual({ scope: "operator.read" });
+    expect(methods.get("dashboard.widget.state.set")?.opts).toEqual({ scope: "operator.write" });
     for (const [name, method] of methods) {
-      if (name === "dashboard.workspace.get" || name === "dashboard.data.read") {
+      if (readMethods.has(name)) {
         continue;
       }
       expect(method.opts).toEqual({ scope: "operator.write" });
@@ -224,6 +234,158 @@ describe("dashboard gateway methods", () => {
         undo.response?.[1]?.doc.tabs.some((tab: { slug: string }) => tab.slug === "main"),
       ).toBe(true);
       expect(broadcast).toHaveBeenCalledTimes(8);
+    });
+  });
+});
+
+describe("dashboard widget write-back methods", () => {
+  function setup(stateDir: string) {
+    const { api, methods } = createApi();
+    registerDashboardGatewayMethods({ api, store: new DashboardStore({ stateDir }) });
+    return methods;
+  }
+
+  it("persists a set and returns it from get; broadcasts id+version WITHOUT the blob", async () => {
+    await withTempStateDir(async (stateDir) => {
+      const methods = setup(stateDir);
+      const broadcast = vi.fn();
+
+      const empty = await callMethod(
+        methods.get("dashboard.widget.state.get")!,
+        { widgetId: "notes-1" },
+        broadcast,
+      );
+      expect(empty.response?.[1]).toEqual({ state: null });
+
+      const blob = { text: "hello", cursor: 5 };
+      const set = await callMethod(
+        methods.get("dashboard.widget.state.set")!,
+        { widgetId: "notes-1", state: blob },
+        broadcast,
+      );
+      expect(set.response?.[0]).toBe(true);
+      expect(set.response?.[1]).toEqual({ widgetId: "notes-1", version: 1 });
+      // Change marker carries only id + version; the blob NEVER ships in the event.
+      expect(broadcast).toHaveBeenCalledWith("plugin.dashboard.widget-state.changed", {
+        widgetId: "notes-1",
+        version: 1,
+      });
+      const eventPayload = broadcast.mock.calls.at(-1)?.[1] as Record<string, unknown>;
+      expect(eventPayload).not.toHaveProperty("state");
+      expect(eventPayload).not.toHaveProperty("blob");
+
+      const got = await callMethod(
+        methods.get("dashboard.widget.state.get")!,
+        { widgetId: "notes-1" },
+        broadcast,
+      );
+      expect(got.response?.[1]).toMatchObject({ state: blob, version: 1 });
+
+      // A second write increments the version.
+      const set2 = await callMethod(
+        methods.get("dashboard.widget.state.set")!,
+        { widgetId: "notes-1", state: { text: "again" } },
+        broadcast,
+      );
+      expect(set2.response?.[1]).toEqual({ widgetId: "notes-1", version: 2 });
+    });
+  });
+
+  it("state files live under state/, separate from workspace.json", async () => {
+    await withTempStateDir(async (stateDir) => {
+      const methods = setup(stateDir);
+      await callMethod(methods.get("dashboard.widget.state.set")!, {
+        widgetId: "notes-1",
+        state: { a: 1 },
+      });
+      const stateFile = path.join(stateDir, "dashboard", "state", "notes-1.json");
+      expect(fsSync.existsSync(stateFile)).toBe(true);
+      // Separation: the blob lives in state/, never in the workspace document.
+      // A state.set doesn't create or write workspace.json at all, so the file is
+      // simply absent here — and if a prior workspace op ever created it, it must
+      // not carry the widget's blob either.
+      const workspacePath = path.join(stateDir, "dashboard", "workspace.json");
+      const workspaceRaw = fsSync.existsSync(workspacePath)
+        ? await fs.readFile(workspacePath, "utf8")
+        : "";
+      expect(workspaceRaw).not.toContain('"a":1');
+    });
+  });
+
+  it("rejects an oversize blob WHOLE (nothing written)", async () => {
+    await withTempStateDir(async (stateDir) => {
+      const methods = setup(stateDir);
+      const broadcast = vi.fn();
+
+      const big = "x".repeat(70 * 1024);
+      const rejected = await callMethod(
+        methods.get("dashboard.widget.state.set")!,
+        { widgetId: "notes-1", state: { text: big } },
+        broadcast,
+      );
+      expect(rejected.response?.[0]).toBe(false);
+      expect(rejected.response?.[2]?.message).toContain("64 KB");
+      // No broadcast on failure, and nothing on disk for this widget.
+      expect(broadcast).not.toHaveBeenCalled();
+      const stateFile = path.join(stateDir, "dashboard", "state", "notes-1.json");
+      expect(fsSync.existsSync(stateFile)).toBe(false);
+    });
+  });
+
+  it("does not partially overwrite a prior value on an oversize write", async () => {
+    await withTempStateDir(async (stateDir) => {
+      const methods = setup(stateDir);
+      await callMethod(methods.get("dashboard.widget.state.set")!, {
+        widgetId: "notes-1",
+        state: { ok: true },
+      });
+      const rejected = await callMethod(methods.get("dashboard.widget.state.set")!, {
+        widgetId: "notes-1",
+        state: { text: "x".repeat(70 * 1024) },
+      });
+      expect(rejected.response?.[0]).toBe(false);
+      // The prior value survives intact (atomic replace never touched the file).
+      const got = await callMethod(methods.get("dashboard.widget.state.get")!, {
+        widgetId: "notes-1",
+      });
+      expect(got.response?.[1]).toMatchObject({ state: { ok: true }, version: 1 });
+    });
+  });
+
+  it("rejects widget ids that traverse or use an invalid charset", async () => {
+    await withTempStateDir(async (stateDir) => {
+      const methods = setup(stateDir);
+      for (const widgetId of ["../evil", "a/b", "foo.json", "..", "with space", "x".repeat(49)]) {
+        const set = await callMethod(methods.get("dashboard.widget.state.set")!, {
+          widgetId,
+          state: { x: 1 },
+        });
+        expect(set.response?.[0]).toBe(false);
+        const get = await callMethod(methods.get("dashboard.widget.state.get")!, { widgetId });
+        expect(get.response?.[0]).toBe(false);
+      }
+      // No files escaped the state dir.
+      const escaped = path.join(stateDir, "dashboard", "evil.json");
+      expect(fsSync.existsSync(escaped)).toBe(false);
+    });
+  });
+
+  it("rejects unknown params and a missing state field", async () => {
+    await withTempStateDir(async (stateDir) => {
+      const methods = setup(stateDir);
+      const unknown = await callMethod(methods.get("dashboard.widget.state.set")!, {
+        widgetId: "notes-1",
+        state: {},
+        extra: true,
+      });
+      expect(unknown.response?.[0]).toBe(false);
+      expect(unknown.response?.[2]?.message).toContain("unexpected param");
+
+      const missing = await callMethod(methods.get("dashboard.widget.state.set")!, {
+        widgetId: "notes-1",
+      });
+      expect(missing.response?.[0]).toBe(false);
+      expect(missing.response?.[2]?.message).toContain("state is required");
     });
   });
 });
