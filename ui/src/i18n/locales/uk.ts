@@ -1803,7 +1803,6 @@ export const uk: TranslationMap = {
       splitRight: "Розділити праворуч",
       splitDown: "Розділити вниз",
       closePane: "Закрити панель",
-      sessionSelect: "Сеанс панелі",
       dropSplit: "Розділити",
       dropOpenHere: "Відкрити тут",
     },

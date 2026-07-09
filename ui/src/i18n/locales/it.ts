@@ -1812,7 +1812,6 @@ export const it: TranslationMap = {
       splitRight: "Dividi a destra",
       splitDown: "Dividi in basso",
       closePane: "Chiudi riquadro",
-      sessionSelect: "Sessione del riquadro",
       dropSplit: "Dividi",
       dropOpenHere: "Apri qui",
     },

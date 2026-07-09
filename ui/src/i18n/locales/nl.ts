@@ -1805,7 +1805,6 @@ export const nl: TranslationMap = {
       splitRight: "Rechts splitsen",
       splitDown: "Omlaag splitsen",
       closePane: "Deelvenster sluiten",
-      sessionSelect: "Deelvenstersessie",
       dropSplit: "Splitsen",
       dropOpenHere: "Hier openen",
     },
