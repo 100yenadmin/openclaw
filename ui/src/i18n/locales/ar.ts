@@ -1783,7 +1783,6 @@ export const ar: TranslationMap = {
       splitRight: "تقسيم إلى اليمين",
       splitDown: "تقسيم إلى الأسفل",
       closePane: "إغلاق الجزء",
-      sessionSelect: "جلسة الجزء",
       dropSplit: "تقسيم",
       dropOpenHere: "افتح هنا",
     },

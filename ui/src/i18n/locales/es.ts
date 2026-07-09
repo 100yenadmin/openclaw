@@ -1816,7 +1816,6 @@ export const es: TranslationMap = {
       splitRight: "Dividir a la derecha",
       splitDown: "Dividir hacia abajo",
       closePane: "Cerrar panel",
-      sessionSelect: "Sesión del panel",
       dropSplit: "Dividir",
       dropOpenHere: "Abrir aquí",
     },

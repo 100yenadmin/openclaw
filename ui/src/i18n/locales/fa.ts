@@ -1804,7 +1804,6 @@ export const fa: TranslationMap = {
       splitRight: "تقسیم به راست",
       splitDown: "تقسیم به پایین",
       closePane: "بستن پنل",
-      sessionSelect: "نشست پنل",
       dropSplit: "تقسیم",
       dropOpenHere: "اینجا باز شود",
     },

@@ -1813,7 +1813,6 @@ export const tr: TranslationMap = {
       splitRight: "Sağa böl",
       splitDown: "Aşağı böl",
       closePane: "Bölmeyi kapat",
-      sessionSelect: "Bölme oturumu",
       dropSplit: "Böl",
       dropOpenHere: "Burada aç",
     },
