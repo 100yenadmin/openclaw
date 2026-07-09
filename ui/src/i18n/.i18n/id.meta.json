@@ -1,19 +1,11 @@
 {
-  "fallbackKeys": [
-    "dashboard.widget.preview.blockedExternal",
-    "dashboard.widget.preview.blockedScheme",
-    "dashboard.widget.preview.missing",
-    "dashboard.widget.preview.reload",
-    "dashboard.widget.preview.viewport.desktop",
-    "dashboard.widget.preview.viewport.mobile",
-    "dashboard.widget.preview.viewport.tablet"
-  ],
-  "generatedAt": "2026-07-07T03:46:14.141Z",
+  "fallbackKeys": [],
+  "generatedAt": "2026-07-09T21:02:28.837Z",
   "locale": "id",
-  "model": "claude-opus-4-8",
-  "provider": "anthropic",
-  "sourceHash": "16d386c80d46a35b0d7b754a70ff7be0df206aeed03e180199d24378813c33ea",
-  "totalKeys": 1692,
-  "translatedKeys": 1685,
+  "model": "gpt-5.5",
+  "provider": "openai",
+  "sourceHash": "7beea2850c807f18874ca3a1869302f90852406f2f6bee1fa1a037da6ae1b5e5",
+  "totalKeys": 1829,
+  "translatedKeys": 1829,
   "workflow": 1
 }
