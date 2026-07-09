@@ -1801,7 +1801,6 @@ export const vi: TranslationMap = {
       splitRight: "Chia sang phải",
       splitDown: "Chia xuống dưới",
       closePane: "Đóng khung",
-      sessionSelect: "Phiên trong khung",
       dropSplit: "Chia đôi",
       dropOpenHere: "Mở tại đây",
     },
