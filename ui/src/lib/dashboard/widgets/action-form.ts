@@ -156,7 +156,8 @@ export function renderActionForm(
     const values: Record<string, string> = {};
     for (const field of model.fields) {
       const control = form.elements.namedItem(field.name);
-      values[field.name] = control && "value" in control ? (control as HTMLInputElement).value : "";
+      values[field.name] =
+        control && "value" in control ? (control as unknown as HTMLInputElement).value : "";
     }
     const text = buildActionFormPrompt(model, values);
     if (!text.trim() || !ctx.dispatchPrompt) {

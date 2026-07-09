@@ -1,15 +1,11 @@
 {
-  "fallbackKeys": [
-    "dashboard.widget.actionForm.empty",
-    "dashboard.widget.ephemeralBadge",
-    "dashboard.widget.ephemeralTooltip"
-  ],
-  "generatedAt": "2026-07-07T21:31:39.394Z",
+  "fallbackKeys": [],
+  "generatedAt": "2026-07-09T21:34:23.673Z",
   "locale": "ru",
   "model": "gpt-5.5",
   "provider": "openai",
-  "sourceHash": "42485afd8d979e2873925b59cfa8809874e5abe3cab4d42751bfde9da4d0bb29",
-  "totalKeys": 1690,
-  "translatedKeys": 1687,
+  "sourceHash": "1252f559689359c21823f44c972f259fe9e2d4ff04f7feb3d2cfec6a034518f0",
+  "totalKeys": 1826,
+  "translatedKeys": 1826,
   "workflow": 1
 }

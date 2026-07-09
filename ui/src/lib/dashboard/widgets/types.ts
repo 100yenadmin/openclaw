@@ -10,14 +10,14 @@
 // error boundary before a renderer runs, so renderers only see values.
 
 import type { TemplateResult } from "lit";
-import type { ApplicationConfig } from "../../../app/config.ts";
+import type { ApplicationConfigCapability } from "../../../app/config.ts";
 import type { PromptDispatchOutcome } from "../bridge.ts";
 import type { DashboardWidget } from "../types.ts";
 
 /** Ambient context a builtin may need beyond its own binding value. */
 export type BuiltinWidgetContext = {
   /** Control UI embed policy — only the iframe-embed widget consumes it. */
-  embed: Pick<ApplicationConfig, "embedSandboxMode" | "allowExternalEmbedUrls">;
+  embed: Pick<ApplicationConfigCapability["current"], "embedSandboxMode" | "allowExternalEmbedUrls">;
   /**
    * Confirm + rate-limited prompt dispatch — only the action-form widget consumes
    * it. Wired (in dashboard-view) to the SAME shared gate the custom-widget bridge
