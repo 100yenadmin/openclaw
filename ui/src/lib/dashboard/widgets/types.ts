@@ -10,7 +10,7 @@
 // error boundary before a renderer runs, so renderers only see values.
 
 import type { TemplateResult } from "lit";
-import type { ApplicationConfig } from "../../../app/config.ts";
+import type { ApplicationConfigCapability } from "../../../app/config.ts";
 import type { DashboardWidget } from "../types.ts";
 
 /**
@@ -27,7 +27,7 @@ export type BuiltinWidgetState = {
 /** Ambient context a builtin may need beyond its own binding value. */
 export type BuiltinWidgetContext = {
   /** Control UI embed policy — only the iframe-embed widget consumes it. */
-  embed: Pick<ApplicationConfig, "embedSandboxMode" | "allowExternalEmbedUrls">;
+  embed: Pick<ApplicationConfigCapability["current"], "embedSandboxMode" | "allowExternalEmbedUrls">;
   /**
    * Persistence accessor bound to the current widget's id. Only stateful
    * builtins (notes) consume it; absent when the host has no gateway client.
