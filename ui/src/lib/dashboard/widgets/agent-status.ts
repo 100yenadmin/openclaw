@@ -113,7 +113,7 @@ export function renderAgentStatus(widget: DashboardWidget, value: unknown): Temp
             ${row.progress !== null
               ? html`<span class="dashboard-list__meta"
                   >${t("dashboard.widget.agentStatus.progress", {
-                    percent: Math.round(row.progress * 100),
+                    percent: String(Math.round(row.progress * 100)),
                   })}</span
                 >`
               : nothing}

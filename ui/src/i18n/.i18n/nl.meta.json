@@ -1,20 +1,11 @@
 {
-  "fallbackKeys": [
-    "dashboard.widget.agentStatus.busy",
-    "dashboard.widget.agentStatus.empty",
-    "dashboard.widget.agentStatus.idle",
-    "dashboard.widget.agentStatus.progress",
-    "dashboard.widget.approvals.deny",
-    "dashboard.widget.approvals.empty",
-    "dashboard.widget.approvals.kind.widget",
-    "dashboard.widget.approvals.requestedBy"
-  ],
-  "generatedAt": "2026-07-07T16:25:07.659Z",
+  "fallbackKeys": [],
+  "generatedAt": "2026-07-09T21:04:26.186Z",
   "locale": "nl",
-  "model": "claude-opus-4-8",
-  "provider": "anthropic",
-  "sourceHash": "1f777edd3ba2bf13dd65a362ccab7a2ed993486be490f82ff8e024206cf35e28",
-  "totalKeys": 1694,
-  "translatedKeys": 1686,
+  "model": "gpt-5.5",
+  "provider": "openai",
+  "sourceHash": "9e9301a7c832a3ab2eb479164268e3e1b3ec73170e6ee22616fae6b7eaf77878",
+  "totalKeys": 1831,
+  "translatedKeys": 1831,
   "workflow": 1
 }
