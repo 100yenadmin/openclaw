@@ -5509,6 +5509,23 @@ Do not edit it by hand; run `pnpm docs:map:gen`.
   - H3: Session-level GitHub token
   - H2: Related
 
+## plugins/dashboard-widget-authoring.md
+
+- Route: /plugins/dashboard-widget-authoring
+- Headings:
+  - H2: Path 1 — Builtin widgets
+  - H3: The contract
+  - H3: Worked example — stat-card
+  - H3: Registering a new builtin — the two-file rule
+  - H3: Checklist for a new builtin
+  - H2: Path 2 — Custom (sandboxed) widgets
+  - H3: The widget.json manifest
+  - H3: The postMessage bridge
+  - H3: Operator approval flow
+  - H3: Sandbox and CSP constraints
+  - H3: Checklist for a new custom widget
+  - H2: See also
+
 ## plugins/dependency-resolution.md
 
 - Route: /plugins/dependency-resolution
