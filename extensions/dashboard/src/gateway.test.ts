@@ -6,6 +6,9 @@ import { describe, expect, it, vi } from "vitest";
 import { registerDashboardGatewayMethods } from "./gateway.js";
 import { DashboardStore } from "./store.js";
 
+// Relative future expiry — a hardcoded date here becomes a time-bomb the day it passes.
+const FUTURE_EXPIRY = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+
 type RegisteredMethod = {
   handler: Parameters<OpenClawPluginApi["registerGatewayMethod"]>[1];
   opts: Parameters<OpenClawPluginApi["registerGatewayMethod"]>[2];
@@ -246,7 +249,7 @@ describe("dashboard gateway methods", () => {
             id: "answer-1",
             kind: "builtin:markdown",
             grid: { x: 0, y: 0, w: 4, h: 2 },
-            ephemeral: { expiresAt: "2026-07-09T12:00:00Z" },
+            ephemeral: { expiresAt: FUTURE_EXPIRY },
           },
         },
         broadcast,
@@ -254,7 +257,7 @@ describe("dashboard gateway methods", () => {
       const addedWidget = added.response?.[1]?.doc.tabs
         .find((tab: { slug: string }) => tab.slug === "ans")
         .widgets.find((w: { id: string }) => w.id === "answer-1");
-      expect(addedWidget.ephemeral).toEqual({ expiresAt: "2026-07-09T12:00:00Z" });
+      expect(addedWidget.ephemeral).toEqual({ expiresAt: FUTURE_EXPIRY });
 
       const pinned = await callMethod(
         methods.get("dashboard.widget.update")!,
