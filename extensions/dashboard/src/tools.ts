@@ -829,7 +829,13 @@ export function createDashboardTools(params: DashboardToolParams): AnyAgentTool[
         ]);
         const tabSlug = readSlug(record, "tab");
         const id = readWidgetId(record);
-        const patch = readWidgetPatch(record);
+        // Strip the addressing fields before the patch reader (its allowlist is
+        // patch-fields only) — without this every widget_update call threw
+        // "unexpected param: tab" and agents could never patch a widget.
+        const patchInput = { ...record };
+        delete patchInput.tab;
+        delete patchInput.id;
+        const patch = readWidgetPatch(patchInput);
         return await runMutation({
           ...mutationBase,
           changedTabSlug: tabSlug,
