@@ -238,6 +238,40 @@ describe("dashboard tools", () => {
     });
   });
 
+  it("patches a widget via dashboard_widget_update (regression: addressing params must not reach the patch reader)", async () => {
+    // The tool passed the WHOLE record (tab/id included) into readWidgetPatch, whose
+    // allowlist is patch-fields only — every widget_update call threw
+    // "unexpected param: tab", so agents could never patch a widget.
+    await withTempStateDir(async (stateDir) => {
+      const store = new DashboardStore({ stateDir });
+      const tools = toolsByName(store);
+      await tools.get("dashboard_tab_create")?.execute("c1", { title: "Ops", slug: "ops" });
+      await tools.get("dashboard_widget_add")?.execute("c2", {
+        tab: "ops",
+        id: "kpi",
+        kind: "builtin:markdown",
+        title: "Before",
+        grid: { x: 0, y: 0, w: 4, h: 2 },
+      });
+      const result = details(
+        await tools.get("dashboard_widget_update")?.execute("c3", {
+          tab: "ops",
+          id: "kpi",
+          title: "After",
+          collapsed: true,
+        }),
+      );
+      expect(result.doc).toMatchObject({
+        tabs: expect.arrayContaining([
+          expect.objectContaining({
+            slug: "ops",
+            widgets: [expect.objectContaining({ id: "kpi", title: "After", collapsed: true })],
+          }),
+        ]),
+      });
+    });
+  });
+
   it("mutates widgets, reads data, and broadcasts one change per write", async () => {
     await withTempStateDir(async (stateDir) => {
       const store = new DashboardStore({ stateDir });
