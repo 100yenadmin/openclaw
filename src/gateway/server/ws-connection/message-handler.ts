@@ -25,6 +25,7 @@ import {
   type ConnectParams,
   ErrorCodes,
   type ErrorShape,
+  type HelloOk,
   errorShape,
   formatValidationErrors,
   GATEWAY_SERVER_CAPS,
@@ -2293,6 +2294,7 @@ export function attachGatewayWsMessageHandler(params: GatewayWsMessageHandlerPar
         const nextClient: GatewayWsClient = {
           socket,
           connect: connectParams,
+          ...(authResult.principal ? { principal: authResult.principal } : {}),
           connId,
           connectionKind: "gateway",
           isDeviceTokenAuth: authMethod === "device-token",
@@ -2482,7 +2484,7 @@ export function attachGatewayWsMessageHandler(params: GatewayWsMessageHandlerPar
         }
         const helloOkAuthScopes = deviceToken ? deviceToken.scopes : scopes;
         const controlUiTabs = listControlUiPluginTabs(helloOkAuthScopes);
-        const helloOk = {
+        const helloOk: HelloOk = {
           type: "hello-ok",
           protocol: PROTOCOL_VERSION,
           server: {
@@ -2503,6 +2505,15 @@ export function attachGatewayWsMessageHandler(params: GatewayWsMessageHandlerPar
           auth: {
             role,
             scopes: helloOkAuthScopes,
+            ...(authResult.principal
+              ? {
+                  principal: {
+                    issuer: authResult.principal.issuer,
+                    subject: authResult.principal.subject,
+                    kind: authResult.principal.kind,
+                  },
+                }
+              : {}),
             ...(deviceToken
               ? {
                   deviceToken: deviceToken.token,
