@@ -17,6 +17,7 @@ import type { ChatType } from "../channels/chat-type.js";
 import type { InboundEventKind } from "../channels/inbound-event/kind.js";
 import type { ModelCompatConfig } from "../config/types.models.js";
 import type { OpenClawConfig } from "../config/types.openclaw.js";
+import type { GatewayAuthorizationSubject } from "../gateway/authorization/contracts.js";
 import type { DiagnosticTraceContext } from "../infra/diagnostic-trace-context.js";
 import { resolveEventSessionRoutingPolicy } from "../infra/event-session-routing.js";
 import { applyExecPolicyLayer } from "../infra/exec-policy.js";
@@ -345,6 +346,8 @@ type OpenClawCodingToolsOptions = {
   oneShotCliRun?: boolean;
   /** Stable run identifier for this agent invocation. */
   runId?: string;
+  /** Server-owned Teams authorization subject for plugin tool decisions. */
+  authorizationSubject?: GatewayAuthorizationSubject;
   /** Device-scoped operator session allowed to review approvals initiated by this run. */
   approvalReviewerDeviceId?: string;
   /** Diagnostic trace context for hook/log correlation during this run. */
@@ -915,6 +918,7 @@ function createOpenClawCodingToolsInternal(options?: OpenClawCodingToolsOptions)
             requesterAgentIdOverride: agentId,
             allowGatewaySubagentBinding: options?.allowGatewaySubagentBinding,
             authProfileStore: options?.authProfileStore,
+            authorizationSubject: options?.authorizationSubject,
           },
           resolvedConfig: options?.config,
         }),
@@ -1034,6 +1038,7 @@ function createOpenClawCodingToolsInternal(options?: OpenClawCodingToolsOptions)
             requesterSenderId: options?.senderId,
             senderIsOwner: options?.senderIsOwner,
             authProfileStore: options?.authProfileStore,
+            authorizationSubject: options?.authorizationSubject,
             sessionId: options?.sessionId,
             oneShotCliRun: options?.oneShotCliRun,
             inheritedToolAllowlist,

@@ -1705,6 +1705,7 @@ export async function runEmbeddedAttempt(
             runtimeToolAllowlist: effectiveToolsAllow,
             cronCreatorToolAllowlistRef: cronCreatorToolAllowlist,
             authProfileStore: params.authProfileStore,
+            authorizationSubject: params.authorizationSubject,
             recordToolPrepStage: (name) => corePluginToolStages.mark(name),
             onToolOutcome: params.onToolOutcome,
             allocateToolOutcomeOrdinal: params.allocateToolOutcomeOrdinal,
