@@ -120,6 +120,10 @@ import { verifyAgentRuntimeIdentityToken } from "../../agent-runtime-identity-to
 import { AUTH_RATE_LIMIT_SCOPE_NODE_PAIRING, type AuthRateLimiter } from "../../auth-rate-limit.js";
 import type { GatewayAuthResult, ResolvedGatewayAuth } from "../../auth.js";
 import { hasForwardedRequestHeaders, isLocalDirectRequest } from "../../auth.js";
+import {
+  bindGatewayClientAuthorizationDomain,
+  bindGatewayClientTeamsSession,
+} from "../../authorization/client-domain.js";
 import { listControlUiPluginTabs } from "../../control-ui-plugin-tabs.js";
 import { normalizeDeviceMetadataForAuth } from "../../device-auth.js";
 import { pruneSupersededSilentPairingsAfterApproval } from "../../device-pairing-prune.js";
@@ -154,7 +158,7 @@ import {
   setClientPluginNodeCapability,
 } from "../../plugin-node-capability.js";
 import { withSerializedRateLimitAttempt } from "../../rate-limit-attempt-serialization.js";
-import { parseGatewayRole } from "../../role-policy.js";
+import { filterAdvertisedGatewayMethodsForRole, parseGatewayRole } from "../../role-policy.js";
 import {
   MAX_BUFFERED_BYTES,
   MAX_PAYLOAD_BYTES,
@@ -163,6 +167,7 @@ import {
 } from "../../server-constants.js";
 import type { GatewayRequestContext, GatewayRequestHandlers } from "../../server-methods/types.js";
 import { formatError } from "../../server-utils.js";
+import { resolveTeamsSessionFromRequest } from "../../teams-http.js";
 import { formatForLog, logWs } from "../../ws-log.js";
 import { truncateCloseReason } from "../close-reason.js";
 import {
@@ -969,6 +974,15 @@ export function attachGatewayWsMessageHandler(params: GatewayWsMessageHandlerPar
         let scopes = Array.isArray(connectParams.scopes) ? connectParams.scopes : [];
         connectParams.role = role;
         connectParams.scopes = scopes;
+        const teamsSession =
+          role === "member" ? resolveTeamsSessionFromRequest(upgradeReq) : undefined;
+        if (role === "member" && scopes.length > 0) {
+          const message = "member sessions cannot request operator scopes";
+          markHandshakeFailure("member-scopes-forbidden", { scopeCount: scopes.length });
+          sendHandshakeErrorResponse(ErrorCodes.INVALID_REQUEST, message);
+          close(1008, message);
+          return;
+        }
 
         const isControlUi = isOperatorUiClient(connectParams.client);
         const isBrowserOperatorUi = isBrowserOperatorUiClient(connectParams.client);
@@ -1026,7 +1040,13 @@ export function attachGatewayWsMessageHandler(params: GatewayWsMessageHandlerPar
         const hasSharedAuth = hasTokenAuth || hasPasswordAuth;
         const controlUiAuthPolicy = resolveControlUiAuthPolicy({
           isControlUi,
-          controlUiConfig: configSnapshot.gateway?.controlUi,
+          controlUiConfig:
+            role === "member"
+              ? {
+                  ...configSnapshot.gateway?.controlUi,
+                  dangerouslyDisableDeviceAuth: false,
+                }
+              : configSnapshot.gateway?.controlUi,
           deviceRaw,
         });
         const device = controlUiAuthPolicy.device;
@@ -1038,7 +1058,7 @@ export function attachGatewayWsMessageHandler(params: GatewayWsMessageHandlerPar
         if (hasRawHandshakeCredentials) {
           advanceHandshakePhase("auth_credentials_received");
         }
-        const connectAuthState = await resolveConnectAuthState({
+        const sharedConnectAuthState = await resolveConnectAuthState({
           resolvedAuth,
           connectAuth: connectParams.auth,
           hasDeviceIdentity: Boolean(device),
@@ -1048,6 +1068,33 @@ export function attachGatewayWsMessageHandler(params: GatewayWsMessageHandlerPar
           rateLimiter: authRateLimiter,
           clientIp: browserRateLimitClientIp,
         });
+        const connectAuthState =
+          role !== "member"
+            ? sharedConnectAuthState
+            : teamsSession
+              ? {
+                  ...sharedConnectAuthState,
+                  authResult: {
+                    ok: true,
+                    method: "teams-session" as const,
+                    principal: teamsSession.principal,
+                  },
+                  authOk: true,
+                  authMethod: "teams-session" as const,
+                  sharedAuthOk: false,
+                  sharedAuthProvided: false,
+                }
+              : {
+                  ...sharedConnectAuthState,
+                  authResult: { ok: false, reason: "teams_session_required" },
+                  authOk: false,
+                  authMethod: "teams-session" as const,
+                  sharedAuthOk: false,
+                  sharedAuthProvided: false,
+                  bootstrapTokenCandidate: undefined,
+                  deviceTokenCandidate: undefined,
+                  deviceTokenCandidateSource: undefined,
+                };
         const {
           sharedAuthOk,
           bootstrapTokenCandidate,
@@ -1129,6 +1176,10 @@ export function attachGatewayWsMessageHandler(params: GatewayWsMessageHandlerPar
           });
           close(1008, truncateCloseReason(authMessage));
         };
+        if (role === "member" && !teamsSession) {
+          rejectUnauthorized(connectAuthState.authResult);
+          return;
+        }
         const clearUnboundScopes = () => {
           if (scopes.length > 0) {
             scopes = [];
@@ -1502,6 +1553,12 @@ export function attachGatewayWsMessageHandler(params: GatewayWsMessageHandlerPar
                 isNativeAppUi,
                 reason,
               });
+            const allowTeamsMemberSessionPairing =
+              authMethod === "teams-session" &&
+              teamsSession !== undefined &&
+              role === "member" &&
+              scopes.length === 0 &&
+              isControlUi;
             const allowSilentTrustedCidrsNodePairing = shouldAutoApproveNodePairingFromTrustedCidrs(
               {
                 existingPairedDevice: Boolean(existingPairedDevice),
@@ -1590,6 +1647,7 @@ export function attachGatewayWsMessageHandler(params: GatewayWsMessageHandlerPar
                 reason === "scope-upgrade"
                   ? false
                   : allowSilentLocalPairing ||
+                    allowTeamsMemberSessionPairing ||
                     allowSilentTrustedCidrsNodePairing ||
                     allowSetupCodeMobileBootstrapPairing ||
                     allowControlUiOperatorBootstrapPairing,
@@ -1640,7 +1698,11 @@ export function attachGatewayWsMessageHandler(params: GatewayWsMessageHandlerPar
                     // Same-host local approvals are prune-eligible "silent";
                     // trusted-CIDR approvals cross hosts and must never be
                     // auto-pruned, so they carry their own provenance.
-                    approvedVia: allowSilentLocalPairing ? "silent" : "trusted-cidr",
+                    approvedVia: allowTeamsMemberSessionPairing
+                      ? "teams-session"
+                      : allowSilentLocalPairing
+                        ? "silent"
+                        : "trusted-cidr",
                   });
               if (approved?.status === "approved") {
                 if (bootstrapApprovalProfile) {
@@ -2308,6 +2370,14 @@ export function attachGatewayWsMessageHandler(params: GatewayWsMessageHandlerPar
             ? { pluginNodeCapabilitySurfaces }
             : {}),
         };
+        if (teamsSession) {
+          bindGatewayClientAuthorizationDomain(nextClient, { id: teamsSession.domainId });
+          bindGatewayClientTeamsSession(nextClient, {
+            id: teamsSession.id,
+            principalId: teamsSession.principalId,
+            domainId: teamsSession.domainId,
+          });
+        }
         for (const entry of pendingPluginNodeCapabilities) {
           setClientPluginNodeCapability({
             client: nextClient,
@@ -2477,13 +2547,26 @@ export function attachGatewayWsMessageHandler(params: GatewayWsMessageHandlerPar
         const snapshot = buildGatewaySnapshot({
           includeSensitive: scopes.includes(ADMIN_SCOPE),
         });
-        const cachedHealth = getHealthCache();
-        if (cachedHealth) {
+        const cachedHealth = role === "member" ? null : getHealthCache();
+        if (role === "member") {
+          snapshot.presence = [];
+          snapshot.health = {};
+          snapshot.stateVersion.presence = 0;
+          snapshot.stateVersion.health = 0;
+          delete snapshot.sessionDefaults;
+          delete snapshot.updateAvailable;
+        } else if (cachedHealth) {
           snapshot.health = cachedHealth;
           snapshot.stateVersion.health = getHealthVersion();
         }
         const helloOkAuthScopes = deviceToken ? deviceToken.scopes : scopes;
         const controlUiTabs = listControlUiPluginTabs(helloOkAuthScopes);
+        const advertisedMethodRegistry = role === "member" ? getMethodRegistry?.() : undefined;
+        const advertisedGatewayMethods = filterAdvertisedGatewayMethodsForRole(
+          role,
+          gatewayMethods,
+          (method) => advertisedMethodRegistry?.getAccessPolicy(method),
+        );
         const helloOk: HelloOk = {
           type: "hello-ok",
           protocol: PROTOCOL_VERSION,
@@ -2492,16 +2575,18 @@ export function attachGatewayWsMessageHandler(params: GatewayWsMessageHandlerPar
             connId,
           },
           features: {
-            methods: gatewayMethods,
-            events,
+            methods: advertisedGatewayMethods,
+            events: role === "member" ? [] : events,
             capabilities: [
               GATEWAY_SERVER_CAPS.CHAT_SEND_ROUTING_CONTRACT,
               GATEWAY_SERVER_CAPS.CRESTODIAN_SETUP_MODEL_REF,
             ],
           },
           snapshot,
-          ...(controlUiTabs.length > 0 ? { controlUiTabs } : {}),
-          ...(Object.keys(pluginSurfaceUrls).length > 0 ? { pluginSurfaceUrls } : {}),
+          ...(role !== "member" && controlUiTabs.length > 0 ? { controlUiTabs } : {}),
+          ...(role !== "member" && Object.keys(pluginSurfaceUrls).length > 0
+            ? { pluginSurfaceUrls }
+            : {}),
           auth: {
             role,
             scopes: helloOkAuthScopes,
@@ -2638,7 +2723,7 @@ export function attachGatewayWsMessageHandler(params: GatewayWsMessageHandlerPar
         }
         logWs("out", "hello-ok", {
           connId,
-          methods: gatewayMethods.length,
+          methods: advertisedGatewayMethods.length,
           events: events.length,
           presence: snapshot.presence.length,
           stateVersion: snapshot.stateVersion.presence,
