@@ -1961,7 +1961,17 @@ describe("loadOpenClawPlugins", () => {
           body: `module.exports = {
   id: "allowed-config-path",
   register(api) {
-    api.registerGatewayMethod("allowed-config-path.ping", ({ respond }) => respond(true, { ok: true }));
+    api.registerGatewayMethod(
+      "allowed-config-path.ping",
+      ({ respond }) => respond(true, { ok: true }),
+      {
+        access: {
+          kind: "resource",
+          permission: "allowed-config-path.read",
+          resolveResources: () => [{ namespace: "allowed-config-path", type: "ping", id: "one" }],
+        },
+      },
+    );
   },
 };`,
         });
@@ -1984,6 +1994,10 @@ describe("loadOpenClawPlugins", () => {
           {
             name: "allowed-config-path.ping",
             owner: { kind: "plugin", pluginId: "allowed-config-path" },
+            access: {
+              kind: "resource",
+              permission: "allowed-config-path.read",
+            },
           },
         ]);
       },

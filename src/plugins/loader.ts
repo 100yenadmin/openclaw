@@ -446,6 +446,7 @@ function createGuardedPluginRegistrationApi(api: OpenClawPluginApi): {
         };
       },
     }),
+    { teams: api.teams },
   );
   return {
     api: guardedApi,

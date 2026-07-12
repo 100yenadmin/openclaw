@@ -813,7 +813,7 @@ export function createPluginRegistry(registryParams: PluginRegistryParams) {
     record: PluginRecord,
     method: string,
     handler: GatewayRequestHandler,
-    opts?: { scope?: OperatorScope },
+    opts?: Parameters<OpenClawPluginApi["registerGatewayMethod"]>[2],
   ) => {
     const trimmed = method.trim();
     if (!trimmed) {
@@ -845,6 +845,7 @@ export function createPluginRegistry(registryParams: PluginRegistryParams) {
         name: trimmed,
         handler: wrappedHandler,
         scope: normalizedScope.scope,
+        access: opts?.access,
       }),
     );
   };
