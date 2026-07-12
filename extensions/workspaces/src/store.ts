@@ -36,13 +36,13 @@ import {
 
 export type WorkspaceMutationOptions = { actor: WorkspaceActor };
 export type WorkspaceMutationResult = { doc: WorkspaceDoc; changed: boolean };
-export type WidgetStateRecord = {
+type WidgetStateRecord = {
   state: JsonValue;
   version: number;
   updatedAt: string;
 };
-export type WidgetStateWriteOptions = { expectedVersion?: number };
-export type WidgetStateWriteResult = { version: number };
+type WidgetStateWriteOptions = { expectedVersion?: number };
+type WidgetStateWriteResult = { version: number };
 
 const MAX_WORKSPACE_BYTES = 256 * 1024;
 const MAX_WIDGET_STATE_BYTES = 64 * 1024;
