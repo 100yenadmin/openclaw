@@ -469,6 +469,12 @@
   gap: 8px;
 }
 
+.workspace-approvals__actions {
+  display: inline-flex;
+  gap: 6px;
+  margin-inline-start: auto;
+}
+
 /* --- Builtin bodies ------------------------------------------------------ */
 
 .workspace-stat {
