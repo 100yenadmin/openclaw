@@ -7,7 +7,7 @@ import { render } from "lit";
 import { describe, expect, it } from "vitest";
 import type { WorkspaceWidget } from "../types.ts";
 import { mapActivity, renderActivity } from "./activity.ts";
-import { mapChart, normalizeChartData, renderChart } from "./chart.ts";
+import { renderChart } from "./chart.ts";
 import { mapCron, renderCron } from "./cron.ts";
 import { evaluateEmbedUrl, renderIframeEmbed } from "./iframe-embed.ts";
 import { mapInstances, renderInstances } from "./instances.ts";
@@ -238,38 +238,6 @@ describe("activity mapping", () => {
 });
 
 describe("chart mapping", () => {
-  it("accepts finite numeric series and rejects malformed chart data", () => {
-    expect(normalizeChartData([1, 2, 3])).toEqual({ ok: true, values: [1, 2, 3] });
-    expect(normalizeChartData({ points: [{ y: 4 }, { value: "5" }] })).toEqual({
-      ok: true,
-      values: [4, 5],
-    });
-    expect(normalizeChartData([1, "bad", 2])).toMatchObject({ ok: false });
-    expect(normalizeChartData({ points: [{ label: "missing value" }] })).toMatchObject({
-      ok: false,
-    });
-    expect(normalizeChartData({ points: Array.from({ length: 501 }, () => 1) })).toMatchObject({
-      ok: false,
-    });
-  });
-
-  it("validates chart options and derives a bounded model", () => {
-    expect(mapChart(widget({ props: { type: "bar" } }), [3, 1, 5])).toMatchObject({
-      status: "ready",
-      type: "bar",
-      values: [3, 1, 5],
-      min: 0,
-      max: 5,
-      dataMin: 1,
-      dataMax: 5,
-    });
-    expect(mapChart(widget({ props: { type: "pie" } }), [1])).toMatchObject({ status: "error" });
-    expect(mapChart(widget({ props: { type: null } }), [1])).toMatchObject({ status: "error" });
-    expect(mapChart(widget({ props: { min: 10, max: 2 } }), [4])).toMatchObject({
-      status: "error",
-    });
-  });
-
   it("renders single-point and constant series visibly", () => {
     const line = renderToContainer(renderChart(widget({ props: { type: "line" } }), [5]));
     expect(line.querySelector(".workspace-chart__point")).not.toBeNull();
@@ -331,6 +299,18 @@ describe("chart mapping", () => {
     const invalid = renderToContainer(renderChart(widget(), [1, "bad"]));
     expect(invalid.querySelector('[data-test-id="workspace-chart-error"]')).not.toBeNull();
     expect(invalid.querySelector("svg")).toBeNull();
+
+    for (const [configuredWidget, value] of [
+      [widget({ props: { type: "pie" } }), [1]],
+      [widget({ props: { type: null } }), [1]],
+      [widget({ props: { min: 10, max: 2 } }), [4]],
+      [widget(), { points: [{ label: "missing value" }] }],
+      [widget(), { points: Array.from({ length: 501 }, () => 1) }],
+    ] as const) {
+      const error = renderToContainer(renderChart(configuredWidget, value));
+      expect(error.querySelector('[data-test-id="workspace-chart-error"]')).not.toBeNull();
+      expect(error.querySelector("svg")).toBeNull();
+    }
   });
 });
 
