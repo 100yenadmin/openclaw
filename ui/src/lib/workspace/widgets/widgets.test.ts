@@ -7,6 +7,7 @@ import { render } from "lit";
 import { describe, expect, it } from "vitest";
 import type { WorkspaceWidget } from "../types.ts";
 import { mapActivity, renderActivity } from "./activity.ts";
+import { mapChart, normalizeChartData, renderChart } from "./chart.ts";
 import { mapCron, renderCron } from "./cron.ts";
 import { evaluateEmbedUrl, renderIframeEmbed } from "./iframe-embed.ts";
 import { mapInstances, renderInstances } from "./instances.ts";
@@ -233,6 +234,103 @@ describe("activity mapping", () => {
   it("renders an empty state for no entries", () => {
     const container = renderToContainer(renderActivity(widget(), { entries: [] }));
     expect(container.querySelector(".workspace-widget__placeholder")).not.toBeNull();
+  });
+});
+
+describe("chart mapping", () => {
+  it("accepts finite numeric series and rejects malformed chart data", () => {
+    expect(normalizeChartData([1, 2, 3])).toEqual({ ok: true, values: [1, 2, 3] });
+    expect(normalizeChartData({ points: [{ y: 4 }, { value: "5" }] })).toEqual({
+      ok: true,
+      values: [4, 5],
+    });
+    expect(normalizeChartData([1, "bad", 2])).toMatchObject({ ok: false });
+    expect(normalizeChartData({ points: [{ label: "missing value" }] })).toMatchObject({
+      ok: false,
+    });
+    expect(normalizeChartData({ points: Array.from({ length: 501 }, () => 1) })).toMatchObject({
+      ok: false,
+    });
+  });
+
+  it("validates chart options and derives a bounded model", () => {
+    expect(mapChart(widget({ props: { type: "bar" } }), [3, 1, 5])).toMatchObject({
+      status: "ready",
+      type: "bar",
+      values: [3, 1, 5],
+      min: 0,
+      max: 5,
+      dataMin: 1,
+      dataMax: 5,
+    });
+    expect(mapChart(widget({ props: { type: "pie" } }), [1])).toMatchObject({ status: "error" });
+    expect(mapChart(widget({ props: { type: null } }), [1])).toMatchObject({ status: "error" });
+    expect(mapChart(widget({ props: { min: 10, max: 2 } }), [4])).toMatchObject({
+      status: "error",
+    });
+  });
+
+  it("renders single-point and constant series visibly", () => {
+    const line = renderToContainer(renderChart(widget({ props: { type: "line" } }), [5]));
+    expect(line.querySelector(".workspace-chart__point")).not.toBeNull();
+
+    const bars = renderToContainer(renderChart(widget({ props: { type: "bar" } }), [5, 5]));
+    expect(
+      [...bars.querySelectorAll(".workspace-chart__bars rect")].every(
+        (bar) => Number(bar.getAttribute("height")) > 0.5,
+      ),
+    ).toBe(true);
+  });
+
+  it("keeps extreme finite ranges within valid SVG coordinates", () => {
+    const container = renderToContainer(
+      renderChart(widget(), [-Number.MAX_VALUE, Number.MAX_VALUE]),
+    );
+    const points = container.querySelector("polyline")?.getAttribute("points") ?? "";
+    expect(points).not.toMatch(/NaN|Infinity/);
+
+    const constant = renderToContainer(renderChart(widget(), [Number.MAX_VALUE]));
+    expect(constant.querySelector("circle")?.outerHTML).not.toMatch(/NaN|Infinity/);
+
+    const gauge = renderToContainer(
+      renderChart(widget({ props: { type: "gauge" } }), [-Number.MAX_VALUE, Number.MAX_VALUE]),
+    );
+    expect(gauge.querySelector(".workspace-chart__gauge")?.outerHTML).not.toMatch(/NaN|Infinity/);
+
+    const bounded = renderToContainer(renderChart(widget({ props: { min: 0, max: 1 } }), [1e308]));
+    expect(bounded.querySelector("svg")?.outerHTML).not.toMatch(/NaN|Infinity/);
+  });
+
+  it("announces data extrema rather than configured axis bounds", () => {
+    const container = renderToContainer(
+      renderChart(widget({ title: "Revenue", props: { min: 0, max: 10 } }), [2, 7]),
+    );
+    expect(container.querySelector("svg")?.getAttribute("aria-label")).toContain(
+      "ranging from 2 to 7",
+    );
+  });
+
+  it("renders responsive accessible line, bar, area, sparkline, and gauge charts", () => {
+    for (const type of ["line", "bar", "area", "sparkline", "gauge"] as const) {
+      const container = renderToContainer(
+        renderChart(widget({ title: "Revenue", props: { type, min: 0, max: 10 } }), [2, 7]),
+      );
+      const svg = container.querySelector('[data-test-id="workspace-chart"]');
+      expect(svg?.getAttribute("role")).toBe("img");
+      expect(svg?.getAttribute("aria-label")).toContain("Revenue");
+      expect(svg?.getAttribute("viewBox")).toBe("0 0 100 40");
+      expect(container.querySelector(`.workspace-chart--${type}`)).not.toBeNull();
+    }
+  });
+
+  it("renders localized empty and invalid-data states without an svg", () => {
+    const empty = renderToContainer(renderChart(widget(), []));
+    expect(empty.querySelector('[data-test-id="workspace-chart-empty"]')).not.toBeNull();
+    expect(empty.querySelector("svg")).toBeNull();
+
+    const invalid = renderToContainer(renderChart(widget(), [1, "bad"]));
+    expect(invalid.querySelector('[data-test-id="workspace-chart-error"]')).not.toBeNull();
+    expect(invalid.querySelector("svg")).toBeNull();
   });
 });
 
