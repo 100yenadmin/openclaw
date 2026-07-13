@@ -45,7 +45,7 @@ import {
 
 export type WorkspaceMutationOptions = { actor: WorkspaceActor };
 export type WorkspaceMutationResult = { doc: WorkspaceDoc; changed: boolean };
-export type WorkspaceHistoryEntry = { version: number; savedAt: string; bytes: number };
+type WorkspaceHistoryEntry = { version: number; savedAt: string; bytes: number };
 type WorkspaceHistoryRow = { version: number; doc: string; created_ms: number };
 type WorkspaceDatabase = {
   workspace: { id: number; version: number; doc: string; updated_ms: number };
