@@ -23,8 +23,8 @@ export type WorkspaceRpcBinding = {
 };
 export type WorkspaceFileBinding = { source: "file"; path: string; pointer?: string };
 export type WorkspaceStaticBinding = { source: "static"; value: JsonValue };
-export type WorkspaceStreamBinding = { source: "stream"; event: string; pointer?: string };
-export type WorkspaceComputedBinding = {
+type WorkspaceStreamBinding = { source: "stream"; event: string; pointer?: string };
+type WorkspaceComputedBinding = {
   source: "computed";
   op: ComputedOp;
   inputs: string[];
