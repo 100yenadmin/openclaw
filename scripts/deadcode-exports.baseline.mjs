@@ -5488,7 +5488,6 @@ export const KNIP_UNUSED_EXPORT_BASELINE = [
   "ui/src/lib/workspace/widgets/cron.ts: CronModel",
   "ui/src/lib/workspace/widgets/cron.ts: mapCron",
   "ui/src/lib/workspace/widgets/iframe-embed.ts: EmbedUrlDecision",
-  "ui/src/lib/workspace/widgets/iframe-embed.ts: evaluateEmbedUrl",
   "ui/src/lib/workspace/widgets/index.ts: BUILTIN_WIDGET_RENDERERS",
   "ui/src/lib/workspace/widgets/index.ts: BuiltinWidgetRenderer",
   "ui/src/lib/workspace/widgets/instances.ts: InstanceModel",
